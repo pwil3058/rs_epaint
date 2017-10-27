@@ -13,31 +13,17 @@
 // limitations under the License.
 
 use std::cell::RefCell;
-use std::rc::Rc;
 
 use cairo;
-use gtk;
 
 use cairox::*;
 use paint::*;
-
-pub struct CanvasContext {
-    centre_x: f64,
-    centre_y: f64,
-    zoom: f64,
-    scaled_size: f64,
-}
-
-impl CanvasContext {
-    pub fn transform(&self, x: f64, y: f64) -> (f64, f64) {
-        (self.centre_x + x * self.zoom, self.centre_y + y * self.zoom)
-    }
-}
+use paint::hue_wheel::*;
 
 pub trait ShapeInterface {
     fn encloses(&self, x:f64, y: f64, scaled_size: f64) -> bool;
     fn distance_to(&self, x: f64, y: f64) -> f64;
-    fn draw(&self, canvas: &CanvasContext, cairo_context: &cairo::Context);
+    fn draw(&self, canvas: &Geometry, cairo_context: &cairo::Context);
 }
 
 pub struct PaintShape<C>
@@ -51,17 +37,21 @@ pub struct PaintShape<C>
 impl<C> PaintShape<C>
     where   C: Hash + Clone + PartialEq + Copy
 {
-    pub fn create(paint: Paint<C>, attr: ScalarAttribute) -> PaintShape<C> {
+    pub fn create(paint: &Paint<C>, attr: ScalarAttribute) -> PaintShape<C> {
         let radius = paint.colour().scalar_attribute(attr);
         let angle = paint.colour().hue().angle().radians();
         if angle.is_nan() {
-            let x = 0.0;
-            let y = radius;
-            PaintShape::<C>{paint, x, y}
+            PaintShape::<C>{
+                paint: paint.clone(),
+                x: 0.0,
+                y: radius
+            }
         } else {
-            let x = radius * angle.cos();
-            let y = radius * angle.sin();
-            PaintShape::<C>{paint, x, y}
+            PaintShape::<C>{
+                paint: paint.clone(),
+                x: radius * angle.cos(),
+                y: radius * angle.sin()
+            }
         }
     }
 
@@ -86,22 +76,22 @@ impl<C> ShapeInterface for PaintShape<C>
         (self.x -x).hypot(self.y - y)
     }
 
-    fn draw(&self, canvas: &CanvasContext, cairo_context: &cairo::Context) {
+    fn draw(&self, canvas: &Geometry, cairo_context: &cairo::Context) {
         let fill_rgb = self.paint.colour().rgb();
         let outline_rgb = fill_rgb.best_foreground_rgb();
-        let (x, y) = canvas.transform(self.x, self.y);
+        let point = canvas.transform(self.x, self.y);
         match self.paint {
             Paint::Series(_) => {
                 cairo_context.set_source_colour_rgb(&fill_rgb);
-                cairo_context.draw_square((x, y), canvas.scaled_size, true);
+                cairo_context.draw_square(point, canvas.scaled_size(), true);
                 cairo_context.set_source_colour_rgb(&outline_rgb);
-                cairo_context.draw_square((x, y), canvas.scaled_size, false);
+                cairo_context.draw_square(point, canvas.scaled_size(), false);
             },
             Paint::Mixed(_) => {
                 cairo_context.set_source_colour_rgb(&fill_rgb);
-                cairo_context.draw_circle((x, y), canvas.scaled_size, true);
+                cairo_context.draw_circle(point, canvas.scaled_size(), true);
                 cairo_context.set_source_colour_rgb(&outline_rgb);
-                cairo_context.draw_circle((x, y), canvas.scaled_size, false);
+                cairo_context.draw_circle(point, canvas.scaled_size(), false);
             }
         }
     }
@@ -117,11 +107,79 @@ pub struct PaintShapeList<C>
 impl<C> PaintShapeList<C>
     where   C: Hash + Clone + PartialEq + Copy
 {
+    pub fn new(attr: ScalarAttribute) -> PaintShapeList<C> {
+        PaintShapeList::<C> {
+            attr: attr,
+            shapes: RefCell::new(Vec::new())
+        }
+    }
+
+    pub fn len(&self) -> usize {
+        self.shapes.borrow().len()
+    }
+
     fn find_paint(&self, paint: &Paint<C>) -> Result<usize, usize> {
         self.shapes.borrow().binary_search_by_key(
             paint,
             |shape| shape.paint()
         )
+    }
+
+    pub fn contains_paint(&self, paint: &Paint<C>) -> bool {
+        self.find_paint(paint).is_ok()
+    }
+
+    pub fn add_paint(&self, paint: &Paint<C>) {
+        match self.find_paint(paint) {
+            Ok(_) => panic!("File: {:?} Line: {:?} already includes: {:?}", file!(), line!(), paint.name()),
+            Err(index) => {
+                let shape = PaintShape::create(&paint, self.attr);
+                self.shapes.borrow_mut().insert(index, shape);
+            }
+        }
+    }
+
+    pub fn remove_paint(&self, paint: &Paint<C>) {
+        match self.find_paint(paint) {
+            Ok(index) => {
+                self.shapes.borrow_mut().remove(index);
+            },
+            Err(_) => panic!("File: {:?} Line: {:?} not found: {:?}", file!(), line!(), paint.name())
+        }
+    }
+
+    pub fn replace_paint(&self, old_paint: &Paint<C>, new_paint: &Paint<C>) {
+        self.remove_paint(old_paint);
+        self.add_paint(new_paint);
+    }
+
+    pub fn draw(&self, canvas: &Geometry, cairo_context: &cairo::Context) {
+        for shape in self.shapes.borrow().iter() {
+            shape.draw(canvas, cairo_context);
+        }
+    }
+
+    pub fn get_paint_at(&self, x: f64, y: f64, scaled_size: f64) -> Option<Paint<C>> {
+        let mut candidates: Vec<usize> = Vec::new();
+        for (index, shape) in self.shapes.borrow().iter().enumerate() {
+            if shape.encloses(x, y, scaled_size) {
+                candidates.push(index);
+            }
+        }
+        if candidates.len() == 0 {
+            None
+        } else if candidates.len() == 0 {
+            Some(self.shapes.borrow()[candidates[0]].paint())
+        } else {
+            let shapes = self.shapes.borrow();
+            let mut range = shapes[candidates[0]].distance_to(x, y);
+            let mut index = candidates[0];
+            for i in candidates[1..].iter() {
+                let r = shapes[*i].distance_to(x, y);
+                if r < range { range = r;  index = *i; }
+            }
+            Some(self.shapes.borrow()[index].paint())
+        }
     }
 }
 
