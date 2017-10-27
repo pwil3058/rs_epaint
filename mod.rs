@@ -13,6 +13,7 @@
 // limitations under the License.
 
 use std::cell::RefCell;
+use std::cmp::Ordering;
 use std::hash::*;
 //use std::ops::Index;
 use std::rc::Rc;
@@ -27,10 +28,12 @@ use rgb_math::rgb::*;
 pub mod characteristics;
 pub mod colour_mix;
 pub mod components;
+pub mod hue_wheel;
 pub mod mixer;
 pub mod model_paint;
+pub mod shape;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default, Hash)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, PartialOrd, Eq, Ord, Clone, Default, Hash)]
 pub struct PaintSeriesIdentityData {
     manufacturer: String,
     series_name: String,
@@ -76,6 +79,40 @@ impl<C> PartialEq for SeriesPaintCore<C>
     }
 }
 
+impl<C> Eq for SeriesPaintCore<C>
+    where   C: Hash + Clone + PartialEq + Copy
+{}
+
+impl<C> PartialOrd for SeriesPaintCore<C>
+    where   C: Hash + Clone + PartialEq + Copy
+{
+    fn partial_cmp(&self, other: &SeriesPaintCore<C>) -> Option<Ordering> {
+        if let Some(ordering) = self.series_id.partial_cmp(&other.series_id) {
+            if ordering == Ordering::Equal {
+                self.name.partial_cmp(&other.name)
+            } else {
+                Some(ordering)
+            }
+        } else {
+            //panic!("File: {:?} Line: {:?}", file!(), line!())
+            None
+        }
+    }
+}
+
+impl<C> Ord for SeriesPaintCore<C>
+    where   C: Hash + Clone + PartialEq + Copy
+{
+    fn cmp(&self, other: &SeriesPaintCore<C>) -> Ordering {
+        let ordering = self.series_id.cmp(&other.series_id);
+        if ordering == Ordering::Equal {
+            self.name.cmp(&other.name)
+        } else {
+            ordering
+        }
+    }
+}
+
 pub type SeriesPaint<C> = Rc<SeriesPaintCore<C>>;
 
 impl<C> BasicPaintInterface<C> for SeriesPaint<C>
@@ -112,7 +149,7 @@ pub trait MixedPaintInterface<C>
     fn components(&self) -> Rc<Vec<PaintComponent<C>>>;
 }
 
-#[derive(Debug, PartialEq, Clone, Hash)]
+#[derive(Debug, Clone, Hash)]
 pub struct MixedPaintCore<C>
     where   C: Hash + Clone + PartialEq + Copy
 {
@@ -121,6 +158,34 @@ pub struct MixedPaintCore<C>
     notes: String,
     characteristics: C,
     components: Rc<Vec<PaintComponent<C>>>
+}
+
+impl<C> PartialEq for MixedPaintCore<C>
+    where   C: Hash + Clone + PartialEq + Copy
+{
+    fn eq(&self, other: &MixedPaintCore<C>) -> bool {
+        self.name == other.name
+    }
+}
+
+impl<C> Eq for MixedPaintCore<C>
+    where   C: Hash + Clone + PartialEq + Copy
+{}
+
+impl<C> PartialOrd for MixedPaintCore<C>
+    where   C: Hash + Clone + PartialEq + Copy
+{
+    fn partial_cmp(&self, other: &MixedPaintCore<C>) -> Option<Ordering> {
+       self.name.partial_cmp(&other.name)
+    }
+}
+
+impl<C> Ord for MixedPaintCore<C>
+    where   C: Hash + Clone + PartialEq + Copy
+{
+    fn cmp(&self, other: &MixedPaintCore<C>) -> Ordering {
+       self.name.cmp(&other.name)
+    }
 }
 
 pub type MixedPaint<C> = Rc<MixedPaintCore<C>>;
@@ -153,12 +218,82 @@ impl<C> MixedPaintInterface<C> for MixedPaint<C>
     }
 }
 
-#[derive(Debug, PartialEq, Clone, Hash)]
+#[derive(Debug, Clone, Hash)]
 pub enum Paint<C>
     where   C: Hash + Clone + PartialEq + Copy
 {
     Series(SeriesPaint<C>),
     Mixed(MixedPaint<C>)
+}
+
+impl<C> PartialEq for Paint<C>
+    where   C: Hash + Clone + PartialEq + Copy
+{
+    fn eq(&self, other: &Paint<C>) -> bool {
+        match *self {
+            Paint::Series(ref paint) => {
+                match *other {
+                    Paint::Series(ref opaint) => paint == opaint,
+                    Paint::Mixed(_) => false,
+                }
+            },
+            Paint::Mixed(ref paint) => {
+                match *other {
+                    Paint::Series(_) => false,
+                    Paint::Mixed(ref opaint) => paint == opaint,
+                }
+
+            }
+        }
+    }
+}
+
+impl<C> Eq for Paint<C>
+    where   C: Hash + Clone + PartialEq + Copy
+{}
+
+impl<C> PartialOrd for Paint<C>
+    where   C: Hash + Clone + PartialEq + Copy
+{
+    fn partial_cmp(&self, other: &Paint<C>) -> Option<Ordering> {
+        match *self {
+            Paint::Series(ref paint) => {
+                match *other {
+                    Paint::Series(ref opaint) => paint.partial_cmp(opaint),
+                    Paint::Mixed(_) => Some(Ordering::Less),
+                }
+            },
+            Paint::Mixed(ref paint) => {
+                match *other {
+                    Paint::Series(_) => Some(Ordering::Greater),
+                    Paint::Mixed(ref opaint) => paint.partial_cmp(opaint),
+                }
+
+            }
+        }
+    }
+}
+
+impl<C> Ord for Paint<C>
+    where   C: Hash + Clone + PartialEq + Copy
+{
+    fn cmp(&self, other: &Paint<C>) -> Ordering {
+        match *self {
+            Paint::Series(ref paint) => {
+                match *other {
+                    Paint::Series(ref opaint) => paint.cmp(opaint),
+                    Paint::Mixed(_) => Ordering::Less,
+                }
+            },
+            Paint::Mixed(ref paint) => {
+                match *other {
+                    Paint::Series(_) => Ordering::Greater,
+                    Paint::Mixed(ref opaint) => paint.cmp(opaint),
+                }
+
+            }
+        }
+    }
 }
 
 impl<C> BasicPaintInterface<C> for Paint<C>
