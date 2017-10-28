@@ -33,8 +33,7 @@ pub struct Geometry {
     centre: Point,
     offset: Point,
     radius: f64,
-    scale: f64,
-    scaled_size: f64,
+    scaled_one: f64,
     zoom: f64,
 }
 
@@ -45,20 +44,23 @@ impl Geometry {
             centre: Point(0.0, 0.0),
             offset: Point(0.0, 0.0),
             radius: 0.0,
-            scale: 0.0,
-            scaled_size: 0.0,
+            scaled_one: 0.0,
             zoom: 1.0,
         };
         geometry.update_drawing_area(drawing_area);
         geometry
     }
 
-    pub fn transform(&self, x: f64, y: f64) -> Point {
-        self.centre + Point(x, y) * self.radius
+    pub fn transform(&self, point: Point) -> Point {
+        self.centre + point * self.radius
     }
 
-    pub fn scaled_size(&self) -> f64 {
-        self.scaled_size
+    pub fn reverse_transform(&self, point: Point) -> Point {
+        (point - self.centre) / self.radius
+    }
+
+    pub fn scaled(&self, value: f64) -> f64 {
+        value * self.scaled_one
     }
 
     fn update_drawing_area(&mut self, drawing_area: &gtk::DrawingArea) {
@@ -67,9 +69,8 @@ impl Geometry {
 
         self.raw_centre = Point(dw, dh) / 2.0;
         self.centre = self.raw_centre + self.offset;
-        self.scale = dw.min(dh) / 220.0;
-        self.scaled_size = self.scale * 6.0;
-        self.radius = 100.0 * self.zoom * self.scale;
+        self.scaled_one = dw.min(dh) / 2.2;
+        self.radius = self.zoom * self.scaled_one;
     }
 
     fn shift_offset(&mut self, delta_xy: Point) {
@@ -83,7 +84,7 @@ impl Geometry {
         self.offset *= ratio;
         self.centre = self.raw_centre + self.offset;
         self.zoom = new_zoom;
-        self.radius = 100.0 * self.zoom * self.scale;
+        self.radius = self.zoom * self.scaled_one;
     }
 
     fn decr_zoom(&mut self) {
@@ -132,6 +133,7 @@ impl<C> PaintHueAttrWheelInterface<C> for PaintHueAttrWheel<C>
     fn create(attr: ScalarAttribute) -> PaintHueAttrWheel<C> {
         let drawing_area = gtk::DrawingArea::new();
         drawing_area.set_size_request(300, 300);
+        drawing_area.set_has_tooltip(true);
         let events = gdk::SCROLL_MASK | gdk::BUTTON_PRESS_MASK |
             gdk::BUTTON_MOTION_MASK | gdk::LEAVE_NOTIFY_MASK |
             gdk::BUTTON_RELEASE_MASK;
@@ -230,6 +232,20 @@ impl<C> PaintHueAttrWheelInterface<C> for PaintHueAttrWheel<C>
                 Inhibit(false)
              }
         );
+        let wheel_c = wheel.clone();
+        wheel.drawing_area.connect_query_tooltip(
+            move |_, x, y, _, tooltip| {
+                let geometry = wheel_c.geometry.borrow();
+                let raw_point = Point(x as f64, y as f64);
+                let point = geometry.reverse_transform(raw_point);
+                if let Some(paint) = wheel_c.paints.get_paint_at(point) {
+                    tooltip.set_text(Some(paint.name().as_str()));
+                } else {
+                    tooltip.set_text(None);
+                };
+                true
+             }
+        );
         wheel
     }
 }
@@ -255,7 +271,7 @@ impl<C> PaintHueAttrWheelCore<C>
             let angle = DEG_60 * i;
             let hue = HueAngle::from(angle);
             cairo_context.set_source_colour_rgb(&hue.max_chroma_rgb());
-            let eol = geometry.transform(angle.cos(), angle.sin());
+            let eol = geometry.transform(Point(angle.cos(), angle.sin()));
             cairo_context.draw_line(geometry.centre, eol);
             cairo_context.stroke();
         };

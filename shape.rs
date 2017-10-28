@@ -21,17 +21,19 @@ use paint::*;
 use paint::hue_wheel::*;
 
 pub trait ShapeInterface {
-    fn encloses(&self, x:f64, y: f64, scaled_size: f64) -> bool;
-    fn distance_to(&self, x: f64, y: f64) -> f64;
+    fn encloses(&self, xy: Point) -> bool;
+    fn distance_to(&self, xy: Point) -> f64;
     fn draw(&self, canvas: &Geometry, cairo_context: &cairo::Context);
 }
+
+const SHAPE_SIDE: f64 = 0.06;
+const SHAPE_RADIUS: f64 = SHAPE_SIDE / 2.0;
 
 pub struct PaintShape<C>
     where   C: Hash + Clone + PartialEq + Copy
 {
     paint: Paint<C>,
-    x : f64,
-    y : f64,
+    xy: Point,
 }
 
 impl<C> PaintShape<C>
@@ -43,14 +45,12 @@ impl<C> PaintShape<C>
         if angle.is_nan() {
             PaintShape::<C>{
                 paint: paint.clone(),
-                x: 0.0,
-                y: radius
+                xy: Point(0.0, radius),
             }
         } else {
             PaintShape::<C>{
                 paint: paint.clone(),
-                x: radius * angle.cos(),
-                y: radius * angle.sin()
+                xy: Point(radius * angle.cos(), radius * angle.sin()),
             }
         }
     }
@@ -63,35 +63,36 @@ impl<C> PaintShape<C>
 impl<C> ShapeInterface for PaintShape<C>
     where   C: Hash + Clone + PartialEq + Copy
 {
-    fn encloses(&self, x:f64, y: f64, scaled_size: f64) -> bool {
-        let delta_x = self.x - x;
-        let delta_y = self.y - y;
+    fn encloses(&self, xy: Point) -> bool {
+        let delta_xy = self.xy - xy;
         match self.paint {
-            Paint::Series(_) => delta_x.abs() < scaled_size && delta_y.abs() < scaled_size,
-            Paint::Mixed(_) => delta_x.hypot(delta_y) < scaled_size
+            Paint::Series(_) => delta_xy.x().abs() < SHAPE_RADIUS && delta_xy.y().abs() < SHAPE_RADIUS,
+            Paint::Mixed(_) => delta_xy.hypot() < SHAPE_RADIUS
         }
     }
 
-    fn distance_to(&self, x: f64, y: f64) -> f64 {
-        (self.x -x).hypot(self.y - y)
+    fn distance_to(&self, xy: Point) -> f64 {
+        (self.xy - xy).hypot()
     }
 
     fn draw(&self, canvas: &Geometry, cairo_context: &cairo::Context) {
         let fill_rgb = self.paint.colour().rgb();
         let outline_rgb = fill_rgb.best_foreground_rgb();
-        let point = canvas.transform(self.x, self.y);
+        let point = canvas.transform(self.xy);
         match self.paint {
             Paint::Series(_) => {
+                let side = canvas.scaled(SHAPE_SIDE);
                 cairo_context.set_source_colour_rgb(&fill_rgb);
-                cairo_context.draw_square(point, canvas.scaled_size(), true);
+                cairo_context.draw_square(point, side, true);
                 cairo_context.set_source_colour_rgb(&outline_rgb);
-                cairo_context.draw_square(point, canvas.scaled_size(), false);
+                cairo_context.draw_square(point, side, false);
             },
             Paint::Mixed(_) => {
+                let radius = canvas.scaled(SHAPE_RADIUS);
                 cairo_context.set_source_colour_rgb(&fill_rgb);
-                cairo_context.draw_circle(point, canvas.scaled_size(), true);
+                cairo_context.draw_circle(point, radius, true);
                 cairo_context.set_source_colour_rgb(&outline_rgb);
-                cairo_context.draw_circle(point, canvas.scaled_size(), false);
+                cairo_context.draw_circle(point, radius, false);
             }
         }
     }
@@ -159,10 +160,10 @@ impl<C> PaintShapeList<C>
         }
     }
 
-    pub fn get_paint_at(&self, x: f64, y: f64, scaled_size: f64) -> Option<Paint<C>> {
+    pub fn get_paint_at(&self, xy: Point) -> Option<Paint<C>> {
         let mut candidates: Vec<usize> = Vec::new();
         for (index, shape) in self.shapes.borrow().iter().enumerate() {
-            if shape.encloses(x, y, scaled_size) {
+            if shape.encloses(xy) {
                 candidates.push(index);
             }
         }
@@ -172,10 +173,10 @@ impl<C> PaintShapeList<C>
             Some(self.shapes.borrow()[candidates[0]].paint())
         } else {
             let shapes = self.shapes.borrow();
-            let mut range = shapes[candidates[0]].distance_to(x, y);
+            let mut range = shapes[candidates[0]].distance_to(xy);
             let mut index = candidates[0];
             for i in candidates[1..].iter() {
-                let r = shapes[*i].distance_to(x, y);
+                let r = shapes[*i].distance_to(xy);
                 if r < range { range = r;  index = *i; }
             }
             Some(self.shapes.borrow()[index].paint())
