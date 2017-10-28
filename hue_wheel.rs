@@ -103,6 +103,7 @@ pub struct PaintHueAttrWheelCore<C>
 {
     drawing_area: gtk::DrawingArea,
     paints: PaintShapeList<C>,
+    current_target: RefCell<Option<CurrentTargetShape>>,
     attr: ScalarAttribute,
     geometry: Rc<RefCell<Geometry>>,
     last_xy: Cell<Point>,
@@ -139,6 +140,7 @@ impl<C> PaintHueAttrWheelInterface<C> for PaintHueAttrWheel<C>
             gdk::BUTTON_RELEASE_MASK;
         drawing_area.add_events(events.bits() as i32);
         let paints = PaintShapeList::<C>::new(attr);
+        let current_target: RefCell<Option<CurrentTargetShape>> = RefCell::new(None);
         let geometry = Rc::new(RefCell::new(Geometry::new(&drawing_area)));
         let motion_enabled = Cell::new(false);
         let last_xy: Cell<Point> = Cell::new(Point(0.0, 0.0));
@@ -146,6 +148,7 @@ impl<C> PaintHueAttrWheelInterface<C> for PaintHueAttrWheel<C>
             PaintHueAttrWheelCore::<C> {
                 drawing_area: drawing_area,
                 paints: paints,
+                current_target: current_target,
                 attr: attr,
                 geometry: geometry,
                 motion_enabled: motion_enabled,
@@ -277,10 +280,23 @@ impl<C> PaintHueAttrWheelCore<C>
         };
         cairo_context.set_line_width(2.0);
         self.paints.draw(&geometry, cairo_context);
+        if let Some(ref current_target) = *self.current_target.borrow() {
+            current_target.draw(&geometry, cairo_context);
+        }
     }
 
     pub fn add_paint(&self, paint: &Paint<C>) {
         self.paints.add_paint(paint);
+    }
+
+    pub fn set_target_colour(&self, ocolour: Option<&Colour>) {
+        match ocolour {
+            Some(colour) => {
+                let current_target = CurrentTargetShape::create(colour, self.attr);
+                *self.current_target.borrow_mut() = Some(current_target)
+            },
+            None => *self.current_target.borrow_mut() = None,
+        }
     }
 
     pub fn get_attr(&self) -> ScalarAttribute {

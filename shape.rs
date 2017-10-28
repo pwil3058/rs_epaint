@@ -184,6 +184,62 @@ impl<C> PaintShapeList<C>
     }
 }
 
+pub struct CurrentTargetShape {
+    colour: Colour,
+    xy: Point
+}
+
+impl CurrentTargetShape {
+    pub fn create(colour: &Colour, attr: ScalarAttribute) -> CurrentTargetShape {
+        let radius = colour.scalar_attribute(attr);
+        let angle = colour.hue().angle().radians();
+        if angle.is_nan() {
+            CurrentTargetShape {
+                colour: colour.clone(),
+                xy: Point(0.0, radius),
+            }
+        } else {
+            CurrentTargetShape {
+                colour: colour.clone(),
+                xy: Point(radius * angle.cos(), radius * angle.sin()),
+            }
+        }
+    }
+
+    pub fn colour(&self) -> Colour {
+        self.colour.clone()
+    }
+}
+
+impl ShapeInterface for CurrentTargetShape {
+    fn encloses(&self, xy: Point) -> bool {
+        let delta_xy = self.xy - xy;
+        delta_xy.hypot() < SHAPE_RADIUS
+    }
+
+    fn distance_to(&self, xy: Point) -> f64 {
+        (self.xy - xy).hypot()
+    }
+
+    fn draw(&self, canvas: &Geometry, cairo_context: &cairo::Context) {
+        let fill_rgb = self.colour.rgb();
+        let outline_rgb = fill_rgb.best_foreground_rgb();
+        let point = canvas.transform(self.xy);
+        let radius = canvas.scaled(SHAPE_RADIUS);
+        cairo_context.set_source_colour_rgb(&fill_rgb);
+        cairo_context.draw_circle(point, radius, true);
+        cairo_context.set_source_colour_rgb(&outline_rgb);
+        cairo_context.draw_circle(point, radius, false);
+
+        let half_len = canvas.scaled(SHAPE_SIDE);
+        let rel_end = Point(half_len, 0.0);
+        cairo_context.draw_line(point + rel_end, point - rel_end);
+        let rel_end = Point(0.0, half_len);
+        cairo_context.draw_line(point + rel_end, point - rel_end);
+    }
+}
+
+
 #[cfg(test)]
 mod tests {
     //use super::*;
