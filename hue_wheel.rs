@@ -120,6 +120,19 @@ impl<C> ChosenItem<C>
         }
     }
 
+    pub fn is_series_paint(&self) -> bool {
+        match *self {
+            ChosenItem::Paint(ref paint) => paint.is_series(),
+            _ => false
+        }
+    }
+    pub fn is_mixed_paint(&self) -> bool {
+        match *self {
+            ChosenItem::Paint(ref paint) => paint.is_mixed(),
+            _ => false
+        }
+    }
+
     pub fn is_target_colour(&self) -> bool {
         match *self {
             ChosenItem::TargetColour(_) => true,
@@ -151,6 +164,7 @@ pub struct PaintHueAttrWheelCore<C>
     geometry: Rc<RefCell<Geometry>>,
     last_xy: Cell<Point>,
     motion_enabled: Cell<bool>,
+    add_paint_callbacks: RefCell<Vec<Box<Fn(&SeriesPaint<C>)>>>
 }
 
 pub type PaintHueAttrWheel<C> = Rc<PaintHueAttrWheelCore<C>>;
@@ -195,6 +209,7 @@ impl<C> PaintHueAttrWheelInterface<C> for PaintHueAttrWheel<C>
         let geometry = Rc::new(RefCell::new(Geometry::new(&drawing_area)));
         let motion_enabled = Cell::new(false);
         let last_xy: Cell<Point> = Cell::new(Point(0.0, 0.0));
+        let add_paint_callbacks: RefCell<Vec<Box<Fn(&SeriesPaint<C>)>>> = RefCell::new(Vec::new());
         let wheel = Rc::new(
             PaintHueAttrWheelCore::<C> {
                 drawing_area: drawing_area,
@@ -209,6 +224,7 @@ impl<C> PaintHueAttrWheelInterface<C> for PaintHueAttrWheel<C>
                 motion_enabled: motion_enabled,
                 last_xy: last_xy,
                 chosen_item: RefCell::new(ChosenItem::None),
+                add_paint_callbacks: add_paint_callbacks
             }
         );
         let wheel_c = wheel.clone();
@@ -254,9 +270,9 @@ impl<C> PaintHueAttrWheelInterface<C> for PaintHueAttrWheel<C>
                     } else if event.get_button() == 3 {
                         let chosen_item = wheel_c.get_item_at(Point::from(event.get_position()));
                         wheel_c.paint_info_item.set_sensitive(!chosen_item.is_none());
-                        wheel_c.add_paint_item.set_sensitive(chosen_item.is_paint());
-                        //TODO: set "add paint" visibility based on somebody listening
-                        wheel_c.add_paint_item.set_visible(true);
+                        wheel_c.add_paint_item.set_sensitive(chosen_item.is_series_paint());
+                        let have_listeners = wheel_c.add_paint_callbacks.borrow().len() > 0;
+                        wheel_c.add_paint_item.set_visible(have_listeners);
                         *wheel_c.chosen_item.borrow_mut() = chosen_item;
                         wheel_c.menu.popup_at_pointer(None);
                         return Inhibit(true)
@@ -279,7 +295,11 @@ impl<C> PaintHueAttrWheelInterface<C> for PaintHueAttrWheel<C>
         add_paint_item.clone().connect_activate(
             move |_| {
                 if let ChosenItem::Paint(ref paint) = *wheel_c.chosen_item.borrow() {
-                    println!("Add \"{:?}\" to the mixer", paint);
+                    if let Paint::Series(ref series_paint) = *paint {
+                        wheel_c.inform_add_paint(series_paint);
+                    } else {
+                        panic!("File: {:?} Line: {:?} SHOULDN'T GET HERE", file!(), line!())
+                    }
                 } else {
                     panic!("File: {:?} Line: {:?} SHOULDN'T GET HERE", file!(), line!())
                 }
@@ -418,6 +438,16 @@ impl<C> PaintHueAttrWheelCore<C>
             ChosenItem::TargetColour(colour)
         } else {
             ChosenItem::None
+        }
+    }
+
+    pub fn connect_add_paint<F: 'static + Fn(&SeriesPaint<C>)>(&self, callback: F) {
+        self.add_paint_callbacks.borrow_mut().push(Box::new(callback))
+    }
+
+    pub fn inform_add_paint(&self, paint: &SeriesPaint<C>) {
+        for callback in self.add_paint_callbacks.borrow().iter() {
+            callback(&paint);
         }
     }
 }
