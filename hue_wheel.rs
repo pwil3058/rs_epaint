@@ -102,17 +102,13 @@ impl Geometry {
 
 // CHOSEN_ITEM
 #[derive(Debug)]
-pub enum ChosenItem<C>
-    where   C: Hash + Clone + PartialEq + Copy + Debug
-{
+pub enum ChosenItem<C: CharacteristicsInterface> {
     Paint(Paint<C>),
     TargetColour(TargetColour),
     None
 }
 
-impl<C> ChosenItem<C>
-    where   C: Hash + Clone + PartialEq + Copy + Debug
-{
+impl<C: CharacteristicsInterface> ChosenItem<C> {
     pub fn is_paint(&self) -> bool {
         match *self {
             ChosenItem::Paint(_) => true,
@@ -149,9 +145,7 @@ impl<C> ChosenItem<C>
 }
 
 // WHEEL
-pub struct PaintHueAttrWheelCore<C>
-    where   C: Hash + Clone + PartialEq + Copy + Debug
-{
+pub struct PaintHueAttrWheelCore<C: CharacteristicsInterface> {
     drawing_area: gtk::DrawingArea,
     menu: gtk::Menu,
     paint_info_item: gtk::MenuItem,
@@ -170,7 +164,7 @@ pub struct PaintHueAttrWheelCore<C>
 pub type PaintHueAttrWheel<C> = Rc<PaintHueAttrWheelCore<C>>;
 
 impl<C> PackableWidgetInterface for PaintHueAttrWheel<C>
-    where   C: Hash + Clone + PartialEq + Copy + Debug
+    where   C: CharacteristicsInterface
 {
     type PackableWidgetType = gtk::DrawingArea;
 
@@ -179,14 +173,12 @@ impl<C> PackableWidgetInterface for PaintHueAttrWheel<C>
     }
 }
 
-pub trait PaintHueAttrWheelInterface<C>
-    where   C: Hash + Clone + PartialEq + Copy + Debug
-{
+pub trait PaintHueAttrWheelInterface<C: CharacteristicsInterface> {
     fn create(attr: ScalarAttribute) -> PaintHueAttrWheel<C>;
 }
 
 impl<C> PaintHueAttrWheelInterface<C> for PaintHueAttrWheel<C>
-    where   C: Hash + Clone + PartialEq + Copy + Debug + 'static
+    where   C: CharacteristicsInterface + 'static
 {
     fn create(attr: ScalarAttribute) -> PaintHueAttrWheel<C> {
         let drawing_area = gtk::DrawingArea::new();
@@ -364,9 +356,7 @@ impl<C> PaintHueAttrWheelInterface<C> for PaintHueAttrWheel<C>
     }
 }
 
-impl<C> PaintHueAttrWheelCore<C>
-    where   C: Hash + Clone + PartialEq + Copy + Debug
-{
+impl<C: CharacteristicsInterface> PaintHueAttrWheelCore<C> {
     fn draw(&self, cairo_context: &cairo::Context) {
         let geometry = self.geometry.borrow();
 

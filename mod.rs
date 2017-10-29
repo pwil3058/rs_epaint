@@ -14,6 +14,7 @@
 
 use std::cell::RefCell;
 use std::cmp::Ordering;
+use std::fmt::Debug;
 use std::hash::*;
 //use std::ops::Index;
 use std::rc::Rc;
@@ -31,8 +32,16 @@ pub mod components;
 pub mod hue_wheel;
 pub mod mixer;
 pub mod model_paint;
+pub mod series;
 pub mod shape;
 pub mod target;
+
+
+pub trait CharacteristicsInterface:
+    Debug + Hash + PartialEq + Clone + Copy + FromStr
+{
+
+}
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, PartialOrd, Eq, Ord, Clone, Default, Hash)]
 pub struct PaintSeriesIdentityData {
@@ -43,7 +52,7 @@ pub struct PaintSeriesIdentityData {
 pub type PaintSeriesIdentity = Rc<PaintSeriesIdentityData>;
 
 pub trait BasicPaintInterface<C>: Hash + Clone + PartialEq
-    where   C: Hash + Clone + PartialEq + Copy
+    where   C: CharacteristicsInterface
 {
     fn name(&self) -> String;
     fn colour(&self) -> Colour;
@@ -53,15 +62,13 @@ pub trait BasicPaintInterface<C>: Hash + Clone + PartialEq
 }
 
 pub trait SeriesPaintInterface<C>: BasicPaintInterface<C>
-    where   C: Hash + Clone + PartialEq + Copy
+    where   C: CharacteristicsInterface
 {
     fn series(&self) -> PaintSeriesIdentity;
 }
 
 #[derive(Debug, Hash, Clone)]
-pub struct SeriesPaintCore<C>
-    where   C: Hash + Clone + PartialEq + Copy
-{
+pub struct SeriesPaintCore<C: CharacteristicsInterface> {
     colour: Colour,
     name: String,
     notes: String,
@@ -69,9 +76,7 @@ pub struct SeriesPaintCore<C>
     series_id: PaintSeriesIdentity
 }
 
-impl<C> PartialEq for SeriesPaintCore<C>
-    where   C: Hash + Clone + PartialEq + Copy
-{
+impl<C: CharacteristicsInterface> PartialEq for SeriesPaintCore<C> {
     fn eq(&self, other: &SeriesPaintCore<C>) -> bool {
         if self.series_id != other.series_id {
             false
@@ -81,13 +86,9 @@ impl<C> PartialEq for SeriesPaintCore<C>
     }
 }
 
-impl<C> Eq for SeriesPaintCore<C>
-    where   C: Hash + Clone + PartialEq + Copy
-{}
+impl<C: CharacteristicsInterface> Eq for SeriesPaintCore<C> {}
 
-impl<C> PartialOrd for SeriesPaintCore<C>
-    where   C: Hash + Clone + PartialEq + Copy
-{
+impl<C: CharacteristicsInterface> PartialOrd for SeriesPaintCore<C> {
     fn partial_cmp(&self, other: &SeriesPaintCore<C>) -> Option<Ordering> {
         if let Some(ordering) = self.series_id.partial_cmp(&other.series_id) {
             if ordering == Ordering::Equal {
@@ -102,9 +103,7 @@ impl<C> PartialOrd for SeriesPaintCore<C>
     }
 }
 
-impl<C> Ord for SeriesPaintCore<C>
-    where   C: Hash + Clone + PartialEq + Copy
-{
+impl<C: CharacteristicsInterface> Ord for SeriesPaintCore<C> {
     fn cmp(&self, other: &SeriesPaintCore<C>) -> Ordering {
         let ordering = self.series_id.cmp(&other.series_id);
         if ordering == Ordering::Equal {
@@ -118,7 +117,7 @@ impl<C> Ord for SeriesPaintCore<C>
 pub type SeriesPaint<C> = Rc<SeriesPaintCore<C>>;
 
 impl<C> BasicPaintInterface<C> for SeriesPaint<C>
-    where   C: Hash + Clone + PartialEq + Copy
+    where   C: CharacteristicsInterface
 {
     fn name(&self) -> String {
         self.name.clone()
@@ -154,23 +153,19 @@ impl<C> BasicPaintInterface<C> for SeriesPaint<C>
 }
 
 impl<C> SeriesPaintInterface<C> for SeriesPaint<C>
-    where   C: Hash + Clone + PartialEq + Copy
+    where   C: CharacteristicsInterface
 {
     fn series(&self) -> PaintSeriesIdentity {
         self.series_id.clone()
     }
 }
 
-pub trait MixedPaintInterface<C>
-    where   C: Hash + Clone + PartialEq + Copy
-{
+pub trait MixedPaintInterface<C: CharacteristicsInterface> {
     fn components(&self) -> Rc<Vec<PaintComponent<C>>>;
 }
 
 #[derive(Debug, Clone, Hash)]
-pub struct MixedPaintCore<C>
-    where   C: Hash + Clone + PartialEq + Copy
-{
+pub struct MixedPaintCore<C: CharacteristicsInterface> {
     colour: Colour,
     name: String,
     notes: String,
@@ -178,29 +173,21 @@ pub struct MixedPaintCore<C>
     components: Rc<Vec<PaintComponent<C>>>
 }
 
-impl<C> PartialEq for MixedPaintCore<C>
-    where   C: Hash + Clone + PartialEq + Copy
-{
+impl<C: CharacteristicsInterface> PartialEq for MixedPaintCore<C> {
     fn eq(&self, other: &MixedPaintCore<C>) -> bool {
         self.name == other.name
     }
 }
 
-impl<C> Eq for MixedPaintCore<C>
-    where   C: Hash + Clone + PartialEq + Copy
-{}
+impl<C: CharacteristicsInterface> Eq for MixedPaintCore<C> {}
 
-impl<C> PartialOrd for MixedPaintCore<C>
-    where   C: Hash + Clone + PartialEq + Copy
-{
+impl<C: CharacteristicsInterface> PartialOrd for MixedPaintCore<C> {
     fn partial_cmp(&self, other: &MixedPaintCore<C>) -> Option<Ordering> {
        self.name.partial_cmp(&other.name)
     }
 }
 
-impl<C> Ord for MixedPaintCore<C>
-    where   C: Hash + Clone + PartialEq + Copy
-{
+impl<C: CharacteristicsInterface> Ord for MixedPaintCore<C> {
     fn cmp(&self, other: &MixedPaintCore<C>) -> Ordering {
        self.name.cmp(&other.name)
     }
@@ -209,7 +196,7 @@ impl<C> Ord for MixedPaintCore<C>
 pub type MixedPaint<C> = Rc<MixedPaintCore<C>>;
 
 impl<C> BasicPaintInterface<C> for MixedPaint<C>
-    where   C: Hash + Clone + PartialEq + Copy
+    where   C: CharacteristicsInterface
 {
     fn name(&self) -> String {
         self.name.clone()
@@ -233,7 +220,7 @@ impl<C> BasicPaintInterface<C> for MixedPaint<C>
 }
 
 impl<C> MixedPaintInterface<C> for MixedPaint<C>
-    where   C: Hash + Clone + PartialEq + Copy
+    where   C: CharacteristicsInterface
 {
     fn components(&self) -> Rc<Vec<PaintComponent<C>>> {
         self.components.clone()
@@ -241,16 +228,12 @@ impl<C> MixedPaintInterface<C> for MixedPaint<C>
 }
 
 #[derive(Debug, Clone, Hash)]
-pub enum Paint<C>
-    where   C: Hash + Clone + PartialEq + Copy
-{
+pub enum Paint<C: CharacteristicsInterface> {
     Series(SeriesPaint<C>),
     Mixed(MixedPaint<C>)
 }
 
-impl<C> Paint<C>
-    where   C: Hash + Clone + PartialEq + Copy
-{
+impl<C: CharacteristicsInterface> Paint<C> {
     pub fn is_series(&self) ->bool {
         match *self {
             Paint::Series(_) => true,
@@ -264,9 +247,7 @@ impl<C> Paint<C>
     }
 }
 
-impl<C> PartialEq for Paint<C>
-    where   C: Hash + Clone + PartialEq + Copy
-{
+impl<C: CharacteristicsInterface> PartialEq for Paint<C> {
     fn eq(&self, other: &Paint<C>) -> bool {
         match *self {
             Paint::Series(ref paint) => {
@@ -286,13 +267,9 @@ impl<C> PartialEq for Paint<C>
     }
 }
 
-impl<C> Eq for Paint<C>
-    where   C: Hash + Clone + PartialEq + Copy
-{}
+impl<C: CharacteristicsInterface> Eq for Paint<C> {}
 
-impl<C> PartialOrd for Paint<C>
-    where   C: Hash + Clone + PartialEq + Copy
-{
+impl<C: CharacteristicsInterface> PartialOrd for Paint<C> {
     fn partial_cmp(&self, other: &Paint<C>) -> Option<Ordering> {
         match *self {
             Paint::Series(ref paint) => {
@@ -312,9 +289,7 @@ impl<C> PartialOrd for Paint<C>
     }
 }
 
-impl<C> Ord for Paint<C>
-    where   C: Hash + Clone + PartialEq + Copy
-{
+impl<C: CharacteristicsInterface> Ord for Paint<C> {
     fn cmp(&self, other: &Paint<C>) -> Ordering {
         match *self {
             Paint::Series(ref paint) => {
@@ -334,9 +309,7 @@ impl<C> Ord for Paint<C>
     }
 }
 
-impl<C> BasicPaintInterface<C> for Paint<C>
-    where   C: Hash + Clone + PartialEq + Copy
-{
+impl<C: CharacteristicsInterface> BasicPaintInterface<C> for Paint<C> {
     fn name(&self) -> String {
         match *self {
             Paint::Series(ref paint) => paint.name(),
@@ -374,9 +347,7 @@ impl<C> BasicPaintInterface<C> for Paint<C>
 }
 
 #[derive(Debug, PartialEq, Hash, Clone)]
-pub struct PaintComponent<C>
-    where   C: Hash + Clone + PartialEq + Copy
-{
+pub struct PaintComponent<C: CharacteristicsInterface> {
     paint: Paint<C>,
     parts: u32
 }
@@ -418,18 +389,14 @@ fn series_from_str(string: &str) -> Result<String, PaintError> {
 }
 
 #[derive(Debug, PartialEq)]
-pub struct SeriesPaintSpec<C>
-    where   C: Hash + Clone + PartialEq + FromStr + Copy
-{
+pub struct SeriesPaintSpec<C: CharacteristicsInterface> {
     rgb: RGB,
     name: String,
     notes: String,
     characteristics: C,
 }
 
-impl<C> FromStr for SeriesPaintSpec<C>
-    where   C: Hash + Clone + PartialEq + FromStr + Copy
-{
+impl<C: CharacteristicsInterface> FromStr for SeriesPaintSpec<C> {
     type Err = PaintError;
 
     fn from_str(string: &str) -> Result<SeriesPaintSpec<C>, PaintError> {
@@ -458,16 +425,12 @@ pub enum PaintError {
     PaintTypeMismatch,
 }
 
-pub struct PaintSeriesCore<C>
-    where   C: Hash + Clone + PartialEq + FromStr + Copy
-{
+pub struct PaintSeriesCore<C: CharacteristicsInterface> {
     series_id: PaintSeriesIdentity,
     paints: RefCell<Vec<SeriesPaint<C>>>
 }
 
-impl<C> FromStr for PaintSeriesCore<C>
-    where   C: Hash + Clone + PartialEq + FromStr + Copy
-{
+impl<C: CharacteristicsInterface> FromStr for PaintSeriesCore<C> {
     type Err = PaintError;
 
     fn from_str(string: &str) -> Result<PaintSeriesCore<C>, PaintError> {
@@ -495,9 +458,7 @@ impl<C> FromStr for PaintSeriesCore<C>
     }
 }
 
-impl<C> PaintSeriesCore<C>
-    where   C: Hash + Clone + PartialEq + FromStr + Copy
-{
+impl<C: CharacteristicsInterface> PaintSeriesCore<C> {
     fn find_name(&self, name: &str) -> Result<usize, usize> {
         self.paints.borrow().binary_search_by_key(
             &name.to_string(),
@@ -553,9 +514,7 @@ impl<C> PaintSeriesCore<C>
 
 pub type PaintSeries<C> = Rc<PaintSeriesCore<C>>;
 
-pub trait PaintSeriesInterface<C>
-    where   C: Hash + Clone + PartialEq + FromStr + Copy
-{
+pub trait PaintSeriesInterface<C: CharacteristicsInterface> {
     fn create(manufacturer: &str, series: &str) -> PaintSeries<C>;
 
     fn from_str(string: &str) -> Result<PaintSeries<C>, PaintError> {
@@ -565,7 +524,7 @@ pub trait PaintSeriesInterface<C>
 }
 
 impl<C> PaintSeriesInterface<C> for PaintSeries<C>
-    where   C: Hash + Clone + PartialEq + FromStr + Copy
+    where   C: CharacteristicsInterface
 {
     fn create(manufacturer: &str, series_name: &str) -> PaintSeries<C> {
         let manufacturer = manufacturer.to_string();

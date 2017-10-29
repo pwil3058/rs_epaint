@@ -28,6 +28,8 @@ pub struct ModelPaintCharacteristics {
     pub metallic: Metallic,
 }
 
+impl CharacteristicsInterface for ModelPaintCharacteristics {}
+
 impl FromStr for ModelPaintCharacteristics {
     type Err = PaintError;
 

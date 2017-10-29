@@ -27,7 +27,7 @@ use paint::colour_mix::*;
 use pwo::*;
 
 pub trait PaintPartsSpinButtonInterface<C>: PackableWidgetInterface
-    where   C: Hash + Clone + PartialEq + Copy
+    where   C: CharacteristicsInterface
 {
     type PaintPartsSpinButtonType;
 
@@ -44,9 +44,7 @@ pub trait PaintPartsSpinButtonInterface<C>: PackableWidgetInterface
     fn inform_remove_me(&self);
 }
 
-pub struct PaintPartsSpinButtonCore<C>
-    where   C: Hash + Clone + PartialEq + Copy
-{
+pub struct PaintPartsSpinButtonCore<C: CharacteristicsInterface> {
     event_box: gtk::EventBox,
     entry: gtk::SpinButton,
     label: gtk::Label,
@@ -57,7 +55,7 @@ pub struct PaintPartsSpinButtonCore<C>
 }
 
 impl<C> PartialEq for PaintPartsSpinButtonCore<C>
-    where   C: Hash + Clone + PartialEq + Copy
+    where   C: CharacteristicsInterface
 {
     fn eq(&self, other: &PaintPartsSpinButtonCore<C>) -> bool {
         self.paint == other.paint
@@ -67,7 +65,7 @@ impl<C> PartialEq for PaintPartsSpinButtonCore<C>
 pub type PaintPartsSpinButton<C> = Rc<PaintPartsSpinButtonCore<C>>;
 
 impl<C> PackableWidgetInterface for PaintPartsSpinButton<C>
-    where   C: Hash + Clone + PartialEq + Copy + Copy
+    where   C: CharacteristicsInterface
 {
     type PackableWidgetType = gtk::EventBox;
 
@@ -77,7 +75,7 @@ impl<C> PackableWidgetInterface for PaintPartsSpinButton<C>
 }
 
 impl<C> PaintPartsSpinButtonInterface<C> for PaintPartsSpinButton<C>
-    where   C: Hash + Clone + PartialEq + Copy + 'static
+    where   C: CharacteristicsInterface + 'static
 {
     type PaintPartsSpinButtonType = PaintPartsSpinButton<C>;
 
@@ -193,7 +191,7 @@ impl<C> PaintPartsSpinButtonInterface<C> for PaintPartsSpinButton<C>
 }
 
 pub trait PaintComponentsInterface<C>: PackableWidgetInterface
-    where   C: Hash + Clone + PartialEq + Copy
+    where   C: CharacteristicsInterface
 {
     type PaintComponentsType;
 
@@ -201,9 +199,7 @@ pub trait PaintComponentsInterface<C>: PackableWidgetInterface
     fn add_paint(&self, paint: &Paint<C>);
 }
 
-pub struct PaintComponentsBoxCore<C>
-    where   C: Hash + Clone + PartialEq + Copy
-{
+pub struct PaintComponentsBoxCore<C: CharacteristicsInterface> {
     vbox: gtk::Box,
     spin_buttons: RefCell<Vec<PaintPartsSpinButton<C>>>,
     h_boxes: RefCell<Vec<gtk::Box>>,
@@ -215,9 +211,7 @@ pub struct PaintComponentsBoxCore<C>
     paint_removed_callbacks: RefCell<Vec<Box<Fn(&Paint<C>)>>>
 }
 
-impl<C> PaintComponentsBoxCore<C>
-    where   C: Hash + Clone + PartialEq + Copy + 'static
-{
+impl<C: CharacteristicsInterface + 'static> PaintComponentsBoxCore<C> {
     pub fn set_sensitive(&self, sensitive: bool) {
         self.is_sensitive.set(sensitive);
         for spin_button in self.spin_buttons.borrow().iter() {
@@ -307,7 +301,7 @@ impl<C> PaintComponentsBoxCore<C>
 pub type PaintComponentsBox<C> = Rc<PaintComponentsBoxCore<C>>;
 
 impl<C> PackableWidgetInterface for PaintComponentsBox<C>
-    where   C: Hash + Clone + PartialEq + Copy
+    where   C: CharacteristicsInterface
 {
     type PackableWidgetType = gtk::Box;
 
@@ -317,7 +311,7 @@ impl<C> PackableWidgetInterface for PaintComponentsBox<C>
 }
 
 impl<C> PaintComponentsInterface<C> for PaintComponentsBox<C>
-    where   C: Hash + Clone + PartialEq + Copy + 'static
+    where   C: CharacteristicsInterface + 'static
 {
     type PaintComponentsType = PaintComponentsBox<C>;
 

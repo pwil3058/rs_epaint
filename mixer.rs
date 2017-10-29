@@ -137,7 +137,7 @@ impl ColourMatchAreaInterface for ColourMatchArea {
 
 pub trait PaintMixerInterface<CADS, C>: PackableWidgetInterface
     where   CADS: ColourAttributeDisplayStackInterface,
-            C: Hash + Clone + PartialEq + Copy
+            C: CharacteristicsInterface
 {
     type PaintMixerType;
 
@@ -146,7 +146,7 @@ pub trait PaintMixerInterface<CADS, C>: PackableWidgetInterface
 
 pub struct PaintMixerCore<CADS, C>
     where   CADS: ColourAttributeDisplayStackInterface,
-            C: Hash + Clone + PartialEq + Copy
+            C: CharacteristicsInterface
 {
     vbox: gtk::Box,
     cads: CADS,
@@ -158,7 +158,7 @@ pub type PaintMixer<CADS, C> = Rc<PaintMixerCore<CADS, C>>;
 
 impl<CADS, C> PackableWidgetInterface for PaintMixer<CADS, C>
     where   CADS: ColourAttributeDisplayStackInterface,
-            C: Hash + Clone + PartialEq + Copy
+            C: CharacteristicsInterface
 {
     type PackableWidgetType = gtk::Box;
 
@@ -169,7 +169,7 @@ impl<CADS, C> PackableWidgetInterface for PaintMixer<CADS, C>
 
 impl<CADS, C> PaintMixerInterface<CADS, C> for PaintMixer<CADS, C>
     where   CADS: ColourAttributeDisplayStackInterface + 'static,
-            C: Hash + Clone + PartialEq + Copy + 'static
+            C: CharacteristicsInterface + 'static
 {
     type PaintMixerType = PaintMixer<CADS, C>;
 

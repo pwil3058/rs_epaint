@@ -30,16 +30,12 @@ pub trait ShapeInterface {
 const SHAPE_SIDE: f64 = 0.06;
 const SHAPE_RADIUS: f64 = SHAPE_SIDE / 2.0;
 
-pub struct PaintShape<C>
-    where   C: Hash + Clone + PartialEq + Copy
-{
+pub struct PaintShape<C: CharacteristicsInterface> {
     paint: Paint<C>,
     xy: Point,
 }
 
-impl<C> PaintShape<C>
-    where   C: Hash + Clone + PartialEq + Copy
-{
+impl<C: CharacteristicsInterface> PaintShape<C> {
     pub fn create(paint: &Paint<C>, attr: ScalarAttribute) -> PaintShape<C> {
         let radius = paint.colour().scalar_attribute(attr);
         let angle = paint.colour().hue().angle();
@@ -54,9 +50,7 @@ impl<C> PaintShape<C>
     }
 }
 
-impl<C> ShapeInterface for PaintShape<C>
-    where   C: Hash + Clone + PartialEq + Copy
-{
+impl<C: CharacteristicsInterface> ShapeInterface for PaintShape<C> {
     fn encloses(&self, xy: Point) -> bool {
         let delta_xy = if self.paint.is_series() {
             self.xy - xy
@@ -92,16 +86,12 @@ impl<C> ShapeInterface for PaintShape<C>
     }
 }
 
-pub struct PaintShapeList<C>
-    where   C: Hash + Clone + PartialEq + Copy
-{
+pub struct PaintShapeList<C: CharacteristicsInterface> {
     attr: ScalarAttribute,
     shapes: RefCell<Vec<PaintShape<C>>>,
 }
 
-impl<C> PaintShapeList<C>
-    where   C: Hash + Clone + PartialEq + Copy
-{
+impl<C: CharacteristicsInterface> PaintShapeList<C> {
     pub fn new(attr: ScalarAttribute) -> PaintShapeList<C> {
         PaintShapeList::<C> {
             attr: attr,
