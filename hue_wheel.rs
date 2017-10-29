@@ -13,6 +13,7 @@
 // limitations under the License.
 
 use std::cell::{Cell, RefCell};
+use std::fmt::Debug;
 use std::rc::Rc;
 
 use cairo;
@@ -99,13 +100,53 @@ impl Geometry {
     }
 }
 
+// CHOSEN_ITEM
+#[derive(Debug)]
+pub enum ChosenItem<C>
+    where   C: Hash + Clone + PartialEq + Copy + Debug
+{
+    Paint(Paint<C>),
+    TargetColour(TargetColour),
+    None
+}
+
+impl<C> ChosenItem<C>
+    where   C: Hash + Clone + PartialEq + Copy + Debug
+{
+    pub fn is_paint(&self) -> bool {
+        match *self {
+            ChosenItem::Paint(_) => true,
+            _ => false
+        }
+    }
+
+    pub fn is_target_colour(&self) -> bool {
+        match *self {
+            ChosenItem::TargetColour(_) => true,
+            _ => false
+        }
+    }
+
+    pub fn is_none(&self) -> bool {
+        match *self {
+            ChosenItem::None => true,
+            _ => false
+        }
+    }
+}
+
+// WHEEL
 pub struct PaintHueAttrWheelCore<C>
-    where   C: Hash + Clone + PartialEq + Copy
+    where   C: Hash + Clone + PartialEq + Copy + Debug
 {
     drawing_area: gtk::DrawingArea,
+    menu: gtk::Menu,
+    paint_info_item: gtk::MenuItem,
+    add_paint_item: gtk::MenuItem,
     paints: PaintShapeList<C>,
     target_colours: TargetColourShapeList,
     current_target: RefCell<Option<CurrentTargetShape>>,
+    chosen_item: RefCell<ChosenItem<C>>,
     attr: ScalarAttribute,
     geometry: Rc<RefCell<Geometry>>,
     last_xy: Cell<Point>,
@@ -115,7 +156,7 @@ pub struct PaintHueAttrWheelCore<C>
 pub type PaintHueAttrWheel<C> = Rc<PaintHueAttrWheelCore<C>>;
 
 impl<C> PackableWidgetInterface for PaintHueAttrWheel<C>
-    where   C: Hash + Clone + PartialEq + Copy
+    where   C: Hash + Clone + PartialEq + Copy + Debug
 {
     type PackableWidgetType = gtk::DrawingArea;
 
@@ -125,13 +166,13 @@ impl<C> PackableWidgetInterface for PaintHueAttrWheel<C>
 }
 
 pub trait PaintHueAttrWheelInterface<C>
-    where   C: Hash + Clone + PartialEq + Copy
+    where   C: Hash + Clone + PartialEq + Copy + Debug
 {
     fn create(attr: ScalarAttribute) -> PaintHueAttrWheel<C>;
 }
 
 impl<C> PaintHueAttrWheelInterface<C> for PaintHueAttrWheel<C>
-    where   C: Hash + Clone + PartialEq + Copy + 'static
+    where   C: Hash + Clone + PartialEq + Copy + Debug + 'static
 {
     fn create(attr: ScalarAttribute) -> PaintHueAttrWheel<C> {
         let drawing_area = gtk::DrawingArea::new();
@@ -141,6 +182,13 @@ impl<C> PaintHueAttrWheelInterface<C> for PaintHueAttrWheel<C>
             gdk::BUTTON_MOTION_MASK | gdk::LEAVE_NOTIFY_MASK |
             gdk::BUTTON_RELEASE_MASK;
         drawing_area.add_events(events.bits() as i32);
+        let menu = gtk::Menu::new();
+        let paint_info_item = gtk::MenuItem::new_with_label("Information");
+        menu.append(&paint_info_item.clone());
+        let add_paint_item = gtk::MenuItem::new_with_label("Add to Mixer");
+        add_paint_item.set_visible(false);
+        menu.append(&add_paint_item.clone());
+        menu.show_all();
         let paints = PaintShapeList::<C>::new(attr);
         let target_colours = TargetColourShapeList::new(attr);
         let current_target: RefCell<Option<CurrentTargetShape>> = RefCell::new(None);
@@ -150,13 +198,17 @@ impl<C> PaintHueAttrWheelInterface<C> for PaintHueAttrWheel<C>
         let wheel = Rc::new(
             PaintHueAttrWheelCore::<C> {
                 drawing_area: drawing_area,
+                menu: menu,
+                paint_info_item: paint_info_item.clone(),
+                add_paint_item: add_paint_item.clone(),
                 paints: paints,
                 target_colours: target_colours,
                 current_target: current_target,
                 attr: attr,
                 geometry: geometry,
                 motion_enabled: motion_enabled,
-                last_xy: last_xy
+                last_xy: last_xy,
+                chosen_item: RefCell::new(ChosenItem::None),
             }
         );
         let wheel_c = wheel.clone();
@@ -195,14 +247,43 @@ impl<C> PaintHueAttrWheelInterface<C> for PaintHueAttrWheel<C>
             move |_, event| {
                 if event.get_event_type() == gdk::EventType::ButtonPress {
                     if event.get_button() == 1 {
-                        let (x, y) = event.get_position();
-                        wheel_c.last_xy.set(Point(x, y));
+                        let point = Point::from(event.get_position());
+                        wheel_c.last_xy.set(point);
                         wheel_c.motion_enabled.set(true);
+                        return Inhibit(true)
+                    } else if event.get_button() == 3 {
+                        let chosen_item = wheel_c.get_item_at(Point::from(event.get_position()));
+                        wheel_c.paint_info_item.set_sensitive(!chosen_item.is_none());
+                        wheel_c.add_paint_item.set_sensitive(chosen_item.is_paint());
+                        //TODO: set "add paint" visibility based on somebody listening
+                        wheel_c.add_paint_item.set_visible(true);
+                        *wheel_c.chosen_item.borrow_mut() = chosen_item;
+                        wheel_c.menu.popup_at_pointer(None);
                         return Inhibit(true)
                     }
                 }
                 Inhibit(false)
              }
+        );
+        let wheel_c = wheel.clone();
+        paint_info_item.clone().connect_activate(
+            move |_| {
+                match *wheel_c.chosen_item.borrow() {
+                    ChosenItem::Paint(ref paint) => println!("Show information for: {:?}", paint),
+                    ChosenItem::TargetColour(ref colour) => println!("Show information for: {:?}", colour),
+                    ChosenItem::None => panic!("File: {:?} Line: {:?} SHOULDN'T GET HERE", file!(), line!())
+                }
+            }
+        );
+        let wheel_c = wheel.clone();
+        add_paint_item.clone().connect_activate(
+            move |_| {
+                if let ChosenItem::Paint(ref paint) = *wheel_c.chosen_item.borrow() {
+                    println!("Add \"{:?}\" to the mixer", paint);
+                } else {
+                    panic!("File: {:?} Line: {:?} SHOULDN'T GET HERE", file!(), line!())
+                }
+            }
         );
         let wheel_c = wheel.clone();
         wheel.drawing_area.connect_motion_notify_event(
@@ -246,27 +327,17 @@ impl<C> PaintHueAttrWheelInterface<C> for PaintHueAttrWheel<C>
                 //let rectangle = gtk::Rectangle{x: x, y: y, width: 10, height: -10};
                 //println!("Rectangle: {:?}", rectangle);
                 //tooltip.set_tip_area(&rectangle);
-                let geometry = wheel_c.geometry.borrow();
-                let raw_point = Point(x as f64, y as f64);
-                let point = geometry.reverse_transform(raw_point);
-                let opr = wheel_c.paints.get_paint_at(point);
-                let ocr = wheel_c.target_colours.get_target_colour_at(point);
-                if let Some((paint, p_range)) = opr {
-                    if let Some((colour, c_range)) = ocr {
-                        if c_range < p_range {
-                            tooltip.set_text(Some(colour.tooltip_text().as_str()));
-                        } else {
-                            tooltip.set_text(Some(paint.tooltip_text().as_str()));
-                        }
-                    } else {
+                match wheel_c.get_item_at(Point(x as f64, y as f64)) {
+                    ChosenItem::Paint(paint) => {
                         tooltip.set_text(Some(paint.tooltip_text().as_str()));
-                    }
-                } else if let Some((colour, _)) = ocr {
-                    tooltip.set_text(Some(colour.tooltip_text().as_str()));
-                } else {
-                    tooltip.set_text(None);
-                };
-                true
+                        true
+                    },
+                    ChosenItem::TargetColour(colour) => {
+                        tooltip.set_text(Some(colour.tooltip_text().as_str()));
+                        true
+                    },
+                    ChosenItem::None => false,
+                }
              }
         );
         wheel
@@ -274,7 +345,7 @@ impl<C> PaintHueAttrWheelInterface<C> for PaintHueAttrWheel<C>
 }
 
 impl<C> PaintHueAttrWheelCore<C>
-    where   C: Hash + Clone + PartialEq + Copy
+    where   C: Hash + Clone + PartialEq + Copy + Debug
 {
     fn draw(&self, cairo_context: &cairo::Context) {
         let geometry = self.geometry.borrow();
@@ -326,6 +397,28 @@ impl<C> PaintHueAttrWheelCore<C>
 
     pub fn get_attr(&self) -> ScalarAttribute {
         self.attr
+    }
+
+    pub fn get_item_at(&self, raw_point: Point) -> ChosenItem<C> {
+        let geometry = self.geometry.borrow();
+        let point = geometry.reverse_transform(raw_point);
+        let opr = self.paints.get_paint_at(point);
+        let ocr = self.target_colours.get_target_colour_at(point);
+        if let Some((paint, p_range)) = opr {
+            if let Some((colour, c_range)) = ocr {
+                if c_range < p_range {
+                    ChosenItem::TargetColour(colour)
+                } else {
+                    ChosenItem::Paint(paint)
+                }
+            } else {
+                ChosenItem::Paint(paint)
+            }
+        } else if let Some((colour, _)) = ocr {
+            ChosenItem::TargetColour(colour)
+        } else {
+            ChosenItem::None
+        }
     }
 }
 

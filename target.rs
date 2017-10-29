@@ -17,6 +17,7 @@ use std::rc::Rc;
 
 use colour::*;
 
+#[derive(Debug)]
 pub struct TargetColourCore {
     name: String,
     notes: String,
