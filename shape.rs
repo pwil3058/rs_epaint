@@ -19,6 +19,7 @@ use cairo;
 use cairox::*;
 use paint::*;
 use paint::hue_wheel::*;
+use paint::target::*;
 
 pub trait ShapeInterface {
     fn encloses(&self, xy: Point) -> bool;
@@ -41,17 +42,10 @@ impl<C> PaintShape<C>
 {
     pub fn create(paint: &Paint<C>, attr: ScalarAttribute) -> PaintShape<C> {
         let radius = paint.colour().scalar_attribute(attr);
-        let angle = paint.colour().hue().angle().radians();
-        if angle.is_nan() {
-            PaintShape::<C>{
-                paint: paint.clone(),
-                xy: Point(0.0, radius),
-            }
-        } else {
-            PaintShape::<C>{
-                paint: paint.clone(),
-                xy: Point(radius * angle.cos(), radius * angle.sin()),
-            }
+        let angle = paint.colour().hue().angle();
+        PaintShape::<C>{
+            paint: paint.clone(),
+            xy: Point::from((angle, radius)),
         }
     }
 
@@ -64,11 +58,12 @@ impl<C> ShapeInterface for PaintShape<C>
     where   C: Hash + Clone + PartialEq + Copy
 {
     fn encloses(&self, xy: Point) -> bool {
-        let delta_xy = self.xy - xy;
-        match self.paint {
-            Paint::Series(_) => delta_xy.x().abs() < SHAPE_RADIUS && delta_xy.y().abs() < SHAPE_RADIUS,
-            Paint::Mixed(_) => delta_xy.hypot() < SHAPE_RADIUS
-        }
+        let delta_xy = if self.paint.is_series() {
+            self.xy - xy
+        } else {
+            (self.xy - xy).rotate_45_deg()
+        };
+        delta_xy.x().abs() < SHAPE_RADIUS && delta_xy.y().abs() < SHAPE_RADIUS
     }
 
     fn distance_to(&self, xy: Point) -> f64 {
@@ -79,20 +74,19 @@ impl<C> ShapeInterface for PaintShape<C>
         let fill_rgb = self.paint.colour().rgb();
         let outline_rgb = fill_rgb.best_foreground_rgb();
         let point = canvas.transform(self.xy);
+        let side = canvas.scaled(SHAPE_SIDE);
         match self.paint {
             Paint::Series(_) => {
-                let side = canvas.scaled(SHAPE_SIDE);
                 cairo_context.set_source_colour_rgb(&fill_rgb);
                 cairo_context.draw_square(point, side, true);
                 cairo_context.set_source_colour_rgb(&outline_rgb);
                 cairo_context.draw_square(point, side, false);
             },
             Paint::Mixed(_) => {
-                let radius = canvas.scaled(SHAPE_RADIUS);
                 cairo_context.set_source_colour_rgb(&fill_rgb);
-                cairo_context.draw_circle(point, radius, true);
+                cairo_context.draw_diamond(point, side, true);
                 cairo_context.set_source_colour_rgb(&outline_rgb);
-                cairo_context.draw_circle(point, radius, false);
+                cairo_context.draw_diamond(point, side, false);
             }
         }
     }
@@ -160,7 +154,7 @@ impl<C> PaintShapeList<C>
         }
     }
 
-    pub fn get_paint_at(&self, xy: Point) -> Option<Paint<C>> {
+    pub fn get_paint_at(&self, xy: Point) -> Option<(Paint<C>, f64)> {
         let mut candidates: Vec<usize> = Vec::new();
         for (index, shape) in self.shapes.borrow().iter().enumerate() {
             if shape.encloses(xy) {
@@ -169,8 +163,6 @@ impl<C> PaintShapeList<C>
         }
         if candidates.len() == 0 {
             None
-        } else if candidates.len() == 0 {
-            Some(self.shapes.borrow()[candidates[0]].paint())
         } else {
             let shapes = self.shapes.borrow();
             let mut range = shapes[candidates[0]].distance_to(xy);
@@ -179,11 +171,12 @@ impl<C> PaintShapeList<C>
                 let r = shapes[*i].distance_to(xy);
                 if r < range { range = r;  index = *i; }
             }
-            Some(self.shapes.borrow()[index].paint())
+            Some((self.shapes.borrow()[index].paint(), range))
         }
     }
 }
 
+// CURRENT TARGET SHAPE
 pub struct CurrentTargetShape {
     colour: Colour,
     xy: Point
@@ -192,17 +185,10 @@ pub struct CurrentTargetShape {
 impl CurrentTargetShape {
     pub fn create(colour: &Colour, attr: ScalarAttribute) -> CurrentTargetShape {
         let radius = colour.scalar_attribute(attr);
-        let angle = colour.hue().angle().radians();
-        if angle.is_nan() {
-            CurrentTargetShape {
-                colour: colour.clone(),
-                xy: Point(0.0, radius),
-            }
-        } else {
-            CurrentTargetShape {
-                colour: colour.clone(),
-                xy: Point(radius * angle.cos(), radius * angle.sin()),
-            }
+        let angle = colour.hue().angle();
+        CurrentTargetShape {
+            colour: colour.clone(),
+            xy: Point::from((angle, radius)),
         }
     }
 
@@ -238,6 +224,130 @@ impl ShapeInterface for CurrentTargetShape {
         cairo_context.draw_line(point + rel_end, point - rel_end);
     }
 }
+
+// TARGET COLOUR SHAPES
+
+pub struct TargetColourShape {
+    target_colour: TargetColour,
+    xy: Point,
+}
+
+impl TargetColourShape {
+    pub fn create(target_colour: &TargetColour, attr: ScalarAttribute) -> TargetColourShape {
+        let radius = target_colour.colour().scalar_attribute(attr);
+        let angle = target_colour.colour().hue().angle();
+        TargetColourShape{
+            target_colour: target_colour.clone(),
+            xy: Point::from((angle, radius)),
+        }
+    }
+
+    pub fn target_colour(&self) -> TargetColour {
+        self.target_colour.clone()
+    }
+}
+
+impl ShapeInterface for TargetColourShape {
+    fn encloses(&self, xy: Point) -> bool {
+        (self.xy - xy).hypot() < SHAPE_RADIUS
+    }
+
+    fn distance_to(&self, xy: Point) -> f64 {
+        (self.xy - xy).hypot()
+    }
+
+    fn draw(&self, canvas: &Geometry, cairo_context: &cairo::Context) {
+        let fill_rgb = self.target_colour.colour().rgb();
+        let outline_rgb = fill_rgb.best_foreground_rgb();
+        let point = canvas.transform(self.xy);
+        let radius = canvas.scaled(SHAPE_RADIUS);
+        cairo_context.set_source_colour_rgb(&fill_rgb);
+        cairo_context.draw_circle(point, radius, true);
+        cairo_context.set_source_colour_rgb(&outline_rgb);
+        cairo_context.draw_circle(point, radius, false);
+    }
+}
+
+pub struct TargetColourShapeList {
+    attr: ScalarAttribute,
+    shapes: RefCell<Vec<TargetColourShape>>,
+}
+
+impl TargetColourShapeList {
+    pub fn new(attr: ScalarAttribute) -> TargetColourShapeList {
+        TargetColourShapeList {
+            attr: attr,
+            shapes: RefCell::new(Vec::new())
+        }
+    }
+
+    pub fn len(&self) -> usize {
+        self.shapes.borrow().len()
+    }
+
+    fn find_target_colour(&self, target_colour: &TargetColour) -> Result<usize, usize> {
+        self.shapes.borrow().binary_search_by_key(
+            target_colour,
+            |shape| shape.target_colour()
+        )
+    }
+
+    pub fn contains_target_colour(&self, target_colour: &TargetColour) -> bool {
+        self.find_target_colour(target_colour).is_ok()
+    }
+
+    pub fn add_target_colour(&self, target_colour: &TargetColour) {
+        match self.find_target_colour(target_colour) {
+            Ok(_) => panic!("File: {:?} Line: {:?} already includes: {:?}", file!(), line!(), target_colour.name()),
+            Err(index) => {
+                let shape = TargetColourShape::create(&target_colour, self.attr);
+                self.shapes.borrow_mut().insert(index, shape);
+            }
+        }
+    }
+
+    pub fn remove_target_colour(&self, target_colour: &TargetColour) {
+        match self.find_target_colour(target_colour) {
+            Ok(index) => {
+                self.shapes.borrow_mut().remove(index);
+            },
+            Err(_) => panic!("File: {:?} Line: {:?} not found: {:?}", file!(), line!(), target_colour.name())
+        }
+    }
+
+    pub fn replace_target_colour(&self, old_colour: &TargetColour, new_colour: &TargetColour) {
+        self.remove_target_colour(old_colour);
+        self.add_target_colour(new_colour);
+    }
+
+    pub fn draw(&self, canvas: &Geometry, cairo_context: &cairo::Context) {
+        for shape in self.shapes.borrow().iter() {
+            shape.draw(canvas, cairo_context);
+        }
+    }
+
+    pub fn get_target_colour_at(&self, xy: Point) -> Option<(TargetColour, f64)> {
+        let mut candidates: Vec<usize> = Vec::new();
+        for (index, shape) in self.shapes.borrow().iter().enumerate() {
+            if shape.encloses(xy) {
+                candidates.push(index);
+            }
+        }
+        if candidates.len() == 0 {
+            None
+        } else  {
+            let shapes = self.shapes.borrow();
+            let mut range = shapes[candidates[0]].distance_to(xy);
+            let mut index = candidates[0];
+            for i in candidates[1..].iter() {
+                let r = shapes[*i].distance_to(xy);
+                if r < range { range = r;  index = *i; }
+            }
+            Some((self.shapes.borrow()[index].target_colour(), range))
+        }
+    }
+}
+
 
 
 #[cfg(test)]

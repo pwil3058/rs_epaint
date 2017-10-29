@@ -32,6 +32,7 @@ pub mod hue_wheel;
 pub mod mixer;
 pub mod model_paint;
 pub mod shape;
+pub mod target;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, PartialOrd, Eq, Ord, Clone, Default, Hash)]
 pub struct PaintSeriesIdentityData {
@@ -47,6 +48,7 @@ pub trait BasicPaintInterface<C>: Hash + Clone + PartialEq
     fn name(&self) -> String;
     fn colour(&self) -> Colour;
     fn notes(&self) -> String;
+    fn tooltip_text(&self) -> String;
     fn characteristics(&self) -> C;
 }
 
@@ -130,6 +132,22 @@ impl<C> BasicPaintInterface<C> for SeriesPaint<C>
         self.name.clone()
     }
 
+    fn tooltip_text(&self) -> String {
+        if self.notes.len() > 0 {
+            format!(
+                "{} ({})\n{}\n{}",
+                self.series_id.series_name, self.series_id.manufacturer,
+                self.name, self.notes
+            )
+        } else {
+            format!(
+                "{}: {}\n{}",
+                self.series_id.manufacturer, self.series_id.series_name,
+                self.name
+            )
+        }
+    }
+
     fn characteristics(&self) -> C {
         self.characteristics.clone()
     }
@@ -205,6 +223,10 @@ impl<C> BasicPaintInterface<C> for MixedPaint<C>
         self.name.clone()
     }
 
+    fn tooltip_text(&self) -> String {
+        format!("{}: {}", self.name, self.notes)
+    }
+
     fn characteristics(&self) -> C {
         self.characteristics.clone()
     }
@@ -224,6 +246,22 @@ pub enum Paint<C>
 {
     Series(SeriesPaint<C>),
     Mixed(MixedPaint<C>)
+}
+
+impl<C> Paint<C>
+    where   C: Hash + Clone + PartialEq + Copy
+{
+    pub fn is_series(&self) ->bool {
+        match *self {
+            Paint::Series(_) => true,
+            Paint::Mixed(_) => false
+        }
+
+    }
+
+    pub fn is_mixed(&self) ->bool {
+        !self.is_series()
+    }
 }
 
 impl<C> PartialEq for Paint<C>
@@ -317,6 +355,13 @@ impl<C> BasicPaintInterface<C> for Paint<C>
         match *self {
             Paint::Series(ref paint) => paint.notes(),
             Paint::Mixed(ref paint) => paint.notes(),
+        }
+    }
+
+    fn tooltip_text(&self) -> String {
+        match *self {
+            Paint::Series(ref paint) => paint.tooltip_text(),
+            Paint::Mixed(ref paint) => paint.tooltip_text(),
         }
     }
 

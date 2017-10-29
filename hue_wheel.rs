@@ -24,6 +24,7 @@ use gtk::prelude::*;
 use cairox::*;
 use paint::*;
 use paint::shape::*;
+use paint::target::*;
 use pwo::*;
 use rgb_math::angle::*;
 use rgb_math::hue::*;
@@ -103,6 +104,7 @@ pub struct PaintHueAttrWheelCore<C>
 {
     drawing_area: gtk::DrawingArea,
     paints: PaintShapeList<C>,
+    target_colours: TargetColourShapeList,
     current_target: RefCell<Option<CurrentTargetShape>>,
     attr: ScalarAttribute,
     geometry: Rc<RefCell<Geometry>>,
@@ -140,6 +142,7 @@ impl<C> PaintHueAttrWheelInterface<C> for PaintHueAttrWheel<C>
             gdk::BUTTON_RELEASE_MASK;
         drawing_area.add_events(events.bits() as i32);
         let paints = PaintShapeList::<C>::new(attr);
+        let target_colours = TargetColourShapeList::new(attr);
         let current_target: RefCell<Option<CurrentTargetShape>> = RefCell::new(None);
         let geometry = Rc::new(RefCell::new(Geometry::new(&drawing_area)));
         let motion_enabled = Cell::new(false);
@@ -148,6 +151,7 @@ impl<C> PaintHueAttrWheelInterface<C> for PaintHueAttrWheel<C>
             PaintHueAttrWheelCore::<C> {
                 drawing_area: drawing_area,
                 paints: paints,
+                target_colours: target_colours,
                 current_target: current_target,
                 attr: attr,
                 geometry: geometry,
@@ -238,11 +242,27 @@ impl<C> PaintHueAttrWheelInterface<C> for PaintHueAttrWheel<C>
         let wheel_c = wheel.clone();
         wheel.drawing_area.connect_query_tooltip(
             move |_, x, y, _, tooltip| {
+                // TODO: find out why tooltip.set_tip_area() nobbles tooltips
+                //let rectangle = gtk::Rectangle{x: x, y: y, width: 10, height: -10};
+                //println!("Rectangle: {:?}", rectangle);
+                //tooltip.set_tip_area(&rectangle);
                 let geometry = wheel_c.geometry.borrow();
                 let raw_point = Point(x as f64, y as f64);
                 let point = geometry.reverse_transform(raw_point);
-                if let Some(paint) = wheel_c.paints.get_paint_at(point) {
-                    tooltip.set_text(Some(paint.name().as_str()));
+                let opr = wheel_c.paints.get_paint_at(point);
+                let ocr = wheel_c.target_colours.get_target_colour_at(point);
+                if let Some((paint, p_range)) = opr {
+                    if let Some((colour, c_range)) = ocr {
+                        if c_range < p_range {
+                            tooltip.set_text(Some(colour.tooltip_text().as_str()));
+                        } else {
+                            tooltip.set_text(Some(paint.tooltip_text().as_str()));
+                        }
+                    } else {
+                        tooltip.set_text(Some(paint.tooltip_text().as_str()));
+                    }
+                } else if let Some((colour, _)) = ocr {
+                    tooltip.set_text(Some(colour.tooltip_text().as_str()));
                 } else {
                     tooltip.set_text(None);
                 };
@@ -274,12 +294,13 @@ impl<C> PaintHueAttrWheelCore<C>
             let angle = DEG_60 * i;
             let hue = HueAngle::from(angle);
             cairo_context.set_source_colour_rgb(&hue.max_chroma_rgb());
-            let eol = geometry.transform(Point(angle.cos(), angle.sin()));
+            let eol = geometry.transform(Point::from((angle, 1.0)));
             cairo_context.draw_line(geometry.centre, eol);
             cairo_context.stroke();
         };
         cairo_context.set_line_width(2.0);
         self.paints.draw(&geometry, cairo_context);
+        self.target_colours.draw(&geometry, cairo_context);
         if let Some(ref current_target) = *self.current_target.borrow() {
             current_target.draw(&geometry, cairo_context);
         }
@@ -287,6 +308,10 @@ impl<C> PaintHueAttrWheelCore<C>
 
     pub fn add_paint(&self, paint: &Paint<C>) {
         self.paints.add_paint(paint);
+    }
+
+    pub fn add_target_colour(&self, target_colour: &TargetColour) {
+        self.target_colours.add_target_colour(target_colour);
     }
 
     pub fn set_target_colour(&self, ocolour: Option<&Colour>) {
