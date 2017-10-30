@@ -32,7 +32,7 @@ pub mod components;
 pub mod hue_wheel;
 pub mod mixer;
 pub mod model_paint;
-pub mod series;
+//pub mod series;
 pub mod shape;
 pub mod target;
 
