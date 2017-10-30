@@ -32,7 +32,7 @@ pub mod components;
 pub mod hue_wheel;
 pub mod mixer;
 pub mod model_paint;
-//pub mod series;
+pub mod series;
 pub mod shape;
 pub mod target;
 
@@ -128,7 +128,7 @@ impl<C> BasicPaintInterface<C> for SeriesPaint<C>
     }
 
     fn notes(&self) -> String {
-        self.name.clone()
+        self.notes.clone()
     }
 
     fn tooltip_text(&self) -> String {

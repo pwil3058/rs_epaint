@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use std::cell::{Cell, RefCell};
-use std::fmt::Debug;
+use std::collections::HashMap;
 use std::rc::Rc;
 
 use cairo;
@@ -23,7 +23,9 @@ use gtk;
 use gtk::prelude::*;
 
 use cairox::*;
+use colour::attributes::*;
 use paint::*;
+use paint::series::*;
 use paint::shape::*;
 use paint::target::*;
 use pwo::*;
@@ -145,7 +147,10 @@ impl<C: CharacteristicsInterface> ChosenItem<C> {
 }
 
 // WHEEL
-pub struct PaintHueAttrWheelCore<C: CharacteristicsInterface> {
+pub struct PaintHueAttrWheelCore<C, CADS>
+    where   C: CharacteristicsInterface,
+            CADS: ColourAttributeDisplayStackInterface
+{
     drawing_area: gtk::DrawingArea,
     menu: gtk::Menu,
     paint_info_item: gtk::MenuItem,
@@ -158,13 +163,15 @@ pub struct PaintHueAttrWheelCore<C: CharacteristicsInterface> {
     geometry: Rc<RefCell<Geometry>>,
     last_xy: Cell<Point>,
     motion_enabled: Cell<bool>,
-    add_paint_callbacks: RefCell<Vec<Box<Fn(&SeriesPaint<C>)>>>
+    add_paint_callbacks: RefCell<Vec<Box<Fn(&SeriesPaint<C>)>>>,
+    series_paint_dialogs: RefCell<HashMap<u32, SeriesPaintDisplayDialog<C, CADS>>>,
 }
 
-pub type PaintHueAttrWheel<C> = Rc<PaintHueAttrWheelCore<C>>;
+pub type PaintHueAttrWheel<C, CADS> = Rc<PaintHueAttrWheelCore<C, CADS>>;
 
-impl<C> PackableWidgetInterface for PaintHueAttrWheel<C>
-    where   C: CharacteristicsInterface
+impl<C, CADS> PackableWidgetInterface for PaintHueAttrWheel<C, CADS>
+    where   C: CharacteristicsInterface,
+            CADS: ColourAttributeDisplayStackInterface
 {
     type PackableWidgetType = gtk::DrawingArea;
 
@@ -173,14 +180,18 @@ impl<C> PackableWidgetInterface for PaintHueAttrWheel<C>
     }
 }
 
-pub trait PaintHueAttrWheelInterface<C: CharacteristicsInterface> {
-    fn create(attr: ScalarAttribute) -> PaintHueAttrWheel<C>;
+pub trait PaintHueAttrWheelInterface<C, CADS>
+    where   C: CharacteristicsInterface + 'static,
+            CADS: ColourAttributeDisplayStackInterface + 'static
+{
+    fn create(attr: ScalarAttribute) -> PaintHueAttrWheel<C, CADS>;
 }
 
-impl<C> PaintHueAttrWheelInterface<C> for PaintHueAttrWheel<C>
-    where   C: CharacteristicsInterface + 'static
+impl<C, CADS> PaintHueAttrWheelInterface<C, CADS> for PaintHueAttrWheel<C, CADS>
+    where   C: CharacteristicsInterface + 'static,
+            CADS: ColourAttributeDisplayStackInterface + 'static
 {
-    fn create(attr: ScalarAttribute) -> PaintHueAttrWheel<C> {
+    fn create(attr: ScalarAttribute) -> PaintHueAttrWheel<C, CADS> {
         let drawing_area = gtk::DrawingArea::new();
         drawing_area.set_size_request(300, 300);
         drawing_area.set_has_tooltip(true);
@@ -202,8 +213,9 @@ impl<C> PaintHueAttrWheelInterface<C> for PaintHueAttrWheel<C>
         let motion_enabled = Cell::new(false);
         let last_xy: Cell<Point> = Cell::new(Point(0.0, 0.0));
         let add_paint_callbacks: RefCell<Vec<Box<Fn(&SeriesPaint<C>)>>> = RefCell::new(Vec::new());
+        let series_paint_dialogs: RefCell<HashMap<u32, SeriesPaintDisplayDialog<C, CADS>>> = RefCell::new(HashMap::new());
         let wheel = Rc::new(
-            PaintHueAttrWheelCore::<C> {
+            PaintHueAttrWheelCore::<C, CADS> {
                 drawing_area: drawing_area,
                 menu: menu,
                 paint_info_item: paint_info_item.clone(),
@@ -216,7 +228,8 @@ impl<C> PaintHueAttrWheelInterface<C> for PaintHueAttrWheel<C>
                 motion_enabled: motion_enabled,
                 last_xy: last_xy,
                 chosen_item: RefCell::new(ChosenItem::None),
-                add_paint_callbacks: add_paint_callbacks
+                add_paint_callbacks: add_paint_callbacks,
+                series_paint_dialogs: series_paint_dialogs,
             }
         );
         let wheel_c = wheel.clone();
@@ -277,7 +290,46 @@ impl<C> PaintHueAttrWheelInterface<C> for PaintHueAttrWheel<C>
         paint_info_item.clone().connect_activate(
             move |_| {
                 match *wheel_c.chosen_item.borrow() {
-                    ChosenItem::Paint(ref paint) => println!("Show information for: {:?}", paint),
+                    ChosenItem::Paint(ref paint) => {
+                        match *paint {
+                            Paint::Series(ref paint) => {
+                                let target = if let Some(ref current_target) = *wheel_c.current_target.borrow() {
+                                    Some(current_target.colour())
+                                } else {
+                                    None
+                                };
+                                let have_listeners = wheel_c.add_paint_callbacks.borrow().len() > 0;
+                                let buttons = if have_listeners {
+                                    let wheel_c_c = wheel_c.clone();
+                                    let paint_c = paint.clone();
+                                    let spec = SeriesPaintDisplayButtonSpec {
+                                        label: "Add".to_string(),
+                                        tooltip_text: "Add this paint to the paint mixing area.".to_string(),
+                                        callback:  Box::new(move || wheel_c_c.inform_add_paint(&paint_c))
+                                    };
+                                    vec![spec]
+                                } else {
+                                    vec![]
+                                };
+                                let dialog = SeriesPaintDisplayDialog::<C, CADS>::create(
+                                    &paint,
+                                    target,
+                                    None,
+                                    buttons
+                                );
+                                let wheel_c_c = wheel_c.clone();
+                                dialog.connect_destroy(
+                                    move |id| { wheel_c_c.series_paint_dialogs.borrow_mut().remove(&id); }
+                                );
+                                wheel_c.series_paint_dialogs.borrow_mut().insert(dialog.id_no(), dialog.clone());
+                                dialog.show();
+                            },
+                            Paint::Mixed(ref paint) => {
+                                println!("Show information for: {:?}", paint)
+
+                            }
+                        }
+                    },
                     ChosenItem::TargetColour(ref colour) => println!("Show information for: {:?}", colour),
                     ChosenItem::None => panic!("File: {:?} Line: {:?} SHOULDN'T GET HERE", file!(), line!())
                 }
@@ -356,7 +408,10 @@ impl<C> PaintHueAttrWheelInterface<C> for PaintHueAttrWheel<C>
     }
 }
 
-impl<C: CharacteristicsInterface> PaintHueAttrWheelCore<C> {
+impl<C, CADS> PaintHueAttrWheelCore<C, CADS>
+    where   C: CharacteristicsInterface + 'static,
+            CADS: ColourAttributeDisplayStackInterface + 'static
+{
     fn draw(&self, cairo_context: &cairo::Context) {
         let geometry = self.geometry.borrow();
 
@@ -399,9 +454,17 @@ impl<C: CharacteristicsInterface> PaintHueAttrWheelCore<C> {
         match ocolour {
             Some(colour) => {
                 let current_target = CurrentTargetShape::create(colour, self.attr);
+                for dialog in self.series_paint_dialogs.borrow().values() {
+                    dialog.set_current_target(Some(colour.clone()));
+                };
                 *self.current_target.borrow_mut() = Some(current_target)
             },
-            None => *self.current_target.borrow_mut() = None,
+            None => {
+                for dialog in self.series_paint_dialogs.borrow().values() {
+                    dialog.set_current_target(None);
+                };
+                *self.current_target.borrow_mut() = None
+            },
         }
     }
 
