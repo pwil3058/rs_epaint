@@ -18,9 +18,7 @@ use std::cell::RefCell;
 use std::cmp::Ordering;
 use std::fmt::Debug;
 use std::hash::*;
-//use std::ops::Index;
 use std::rc::Rc;
-//use std::slice::Iter;
 use std::str::FromStr;
 
 use regex::Regex;
@@ -32,6 +30,7 @@ pub mod characteristics;
 pub mod colour_mix;
 pub mod components;
 pub mod hue_wheel;
+pub mod mixed;
 pub mod mixer;
 pub mod model_paint;
 pub mod series;
@@ -163,6 +162,7 @@ impl<C> SeriesPaintInterface<C> for SeriesPaint<C>
 }
 
 pub trait MixedPaintInterface<C: CharacteristicsInterface> {
+    fn target_colour(&self) -> Option<Colour>;
     fn components(&self) -> Rc<Vec<PaintComponent<C>>>;
 }
 
@@ -172,6 +172,7 @@ pub struct MixedPaintCore<C: CharacteristicsInterface> {
     name: String,
     notes: String,
     characteristics: C,
+    target_colour: Option<Colour>,
     components: Rc<Vec<PaintComponent<C>>>
 }
 
@@ -224,6 +225,13 @@ impl<C> BasicPaintInterface<C> for MixedPaint<C>
 impl<C> MixedPaintInterface<C> for MixedPaint<C>
     where   C: CharacteristicsInterface
 {
+    fn target_colour(&self) -> Option<Colour> {
+        match self.target_colour {
+            Some(ref colour) => Some(colour.clone()),
+            None => None
+        }
+    }
+
     fn components(&self) -> Rc<Vec<PaintComponent<C>>> {
         self.components.clone()
     }

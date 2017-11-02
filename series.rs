@@ -159,7 +159,7 @@ impl<C, CADS> SeriesPaintDisplayDialogInterface<C, CADS> for SeriesPaintDisplayD
                 dialog: dialog,
                 paint: paint.clone(),
                 current_target_label: current_target_label,
-                cads: CADS::create(),
+                cads: cads,
                 id_no: get_id_for_dialog(),
                 destroy_callbacks: RefCell::new(Vec::new()),
             }

@@ -25,6 +25,7 @@ use gtk::prelude::*;
 use cairox::*;
 use colour::attributes::*;
 use paint::*;
+use paint::mixed::*;
 use paint::series::*;
 use paint::shape::*;
 use paint::target::*;
@@ -326,11 +327,11 @@ impl<C, CADS> PaintHueAttrWheelInterface<C, CADS> for PaintHueAttrWheel<C, CADS>
                             },
                             Paint::Mixed(ref paint) => {
                                 println!("Show information for: {:?}", paint);
+                                MixedPaintDisplayDialog::<C, CADS>::create(&paint, None).show();
                             }
                         }
                     },
                     ChosenItem::TargetColour(ref colour) => {
-                        println!("Show information for: {:?}", colour);
                         TargetColourDisplayDialog::<CADS>::create(&colour, None).show();
                     },
                     ChosenItem::None => panic!("File: {:?} Line: {:?} SHOULDN'T GET HERE", file!(), line!())
