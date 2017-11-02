@@ -118,7 +118,6 @@ impl<C, CADS> SeriesPaintDisplayDialogInterface<C, CADS> for SeriesPaintDisplayD
         );
         dialog.set_size_from_recollections("series_paint_display", (60, 330));
         let content_area = dialog.get_content_area();
-        content_area.set_spacing(1);
         let vbox = gtk::Box::new(gtk::Orientation::Vertical, 0);
         let label = gtk::Label::new(paint.name().as_str());
         label.set_widget_colour(&paint.colour());
@@ -140,7 +139,7 @@ impl<C, CADS> SeriesPaintDisplayDialogInterface<C, CADS> for SeriesPaintDisplayD
         content_area.pack_start(&vbox, true, true, 0);
         let cads = CADS::create();
         cads.set_colour(Some(&paint.colour()));
-        content_area.pack_start(&cads.pwo(), true, true, 0);
+        content_area.pack_start(&cads.pwo(), true, true, 1);
         let characteristics_display = paint.characteristics().gui_display_widget();
         content_area.pack_start(&characteristics_display, false, false, 0);
         content_area.show_all();

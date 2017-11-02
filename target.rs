@@ -12,10 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::marker::PhantomData;
+
+use gtk;
+use gtk::prelude::*;
+
 use std::cmp::*;
 use std::rc::Rc;
 
 use colour::*;
+use colour::attributes::*;
+use gtkx::coloured::*;
+use gtkx::dialog::*;
 
 #[derive(Debug)]
 pub struct TargetColourCore {
@@ -80,6 +88,69 @@ impl TargetColourInterface for TargetColour {
     }
 }
 
+
+pub struct TargetColourDisplayDialogCore<CADS>
+    where   CADS: ColourAttributeDisplayStackInterface
+{
+    dialog: gtk::Dialog,
+    cads: PhantomData<CADS>,
+}
+
+impl<CADS> TargetColourDisplayDialogCore<CADS>
+    where   CADS: ColourAttributeDisplayStackInterface
+{
+    pub fn show(&self) {
+        self.dialog.show()
+    }
+}
+
+pub type TargetColourDisplayDialog<CADS> = Rc<TargetColourDisplayDialogCore<CADS>>;
+
+pub trait TargetColourDisplayDialogInterface<CADS>
+    where   CADS: ColourAttributeDisplayStackInterface
+{
+    fn create(
+        colour: &TargetColour,
+        parent: Option<&gtk::Window>,
+    ) -> TargetColourDisplayDialog<CADS>;
+}
+
+impl<CADS> TargetColourDisplayDialogInterface<CADS> for TargetColourDisplayDialog<CADS>
+    where   CADS: ColourAttributeDisplayStackInterface + 'static
+{
+    fn create(
+        colour: &TargetColour,
+        parent: Option<&gtk::Window>,
+    ) -> TargetColourDisplayDialog<CADS> {
+        let title = format!("mcmmtk: {}", colour.name());
+        let dialog = gtk::Dialog::new_with_buttons(
+            Some(title.as_str()),
+            parent,
+            gtk::DIALOG_USE_HEADER_BAR,
+            &[]
+        );
+        dialog.set_size_from_recollections("target_colour_display", (60, 180));
+        let content_area = dialog.get_content_area();
+        let vbox = gtk::Box::new(gtk::Orientation::Vertical, 0);
+        let label = gtk::Label::new(colour.name().as_str());
+        label.set_widget_colour(&colour.colour());
+        vbox.pack_start(&label, true, true, 0);
+        let label = gtk::Label::new(colour.notes().as_str());
+        label.set_widget_colour(&colour.colour());
+        vbox.pack_start(&label, true, true, 0);
+        content_area.pack_start(&vbox, true, true, 0);
+        let cads = CADS::create();
+        cads.set_colour(Some(&colour.colour()));
+        content_area.pack_start(&cads.pwo(), true, true, 1);
+        content_area.show_all();
+        Rc::new(
+            TargetColourDisplayDialogCore {
+                dialog: dialog,
+                cads: PhantomData,
+            }
+        )
+    }
+}
 
 #[cfg(test)]
 mod tests {

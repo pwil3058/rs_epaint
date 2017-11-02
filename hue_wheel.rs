@@ -325,12 +325,14 @@ impl<C, CADS> PaintHueAttrWheelInterface<C, CADS> for PaintHueAttrWheel<C, CADS>
                                 dialog.show();
                             },
                             Paint::Mixed(ref paint) => {
-                                println!("Show information for: {:?}", paint)
-
+                                println!("Show information for: {:?}", paint);
                             }
                         }
                     },
-                    ChosenItem::TargetColour(ref colour) => println!("Show information for: {:?}", colour),
+                    ChosenItem::TargetColour(ref colour) => {
+                        println!("Show information for: {:?}", colour);
+                        TargetColourDisplayDialog::<CADS>::create(&colour, None).show();
+                    },
                     ChosenItem::None => panic!("File: {:?} Line: {:?} SHOULDN'T GET HERE", file!(), line!())
                 }
             }
