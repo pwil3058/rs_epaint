@@ -12,73 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::io::{self, Write};
-
 use gtk;
 use gtk::prelude::*;
 
 use colour::attributes::*;
-use gdkx::*;
 use gtkx::coloured::*;
+use gtkx::dialog::*;
 use paint::*;
-use recollections;
 
 pub struct SeriesPaintDisplayButtonSpec {
     pub label: String,
     pub tooltip_text: String,
     pub callback: Box<Fn()>
 }
-
-fn get_dialog_size_corrn() -> (i32, i32) {
-    if let Some(corrn) = recollections::recall("dialog::size_correction") {
-        if let Ok((width, height)) = parse_geometry_size(corrn.as_str()) {
-            return (width, height);
-        } else {
-            io::stderr().write(b"Error parsing \"dialog::size_correction\"\n").unwrap();
-        }
-    };
-    (0, 0)
-}
-
-fn recall_dialog_last_size(key: &str, default: (i32, i32)) -> (i32, i32) {
-    if let Some(last_size) = recollections::recall(key) {
-        if let Ok((width, height)) = parse_geometry_size(last_size.as_str()) {
-            let (w_corrn, h_corrn) = get_dialog_size_corrn();
-            return (width + w_corrn, height + h_corrn);
-        } else {
-            let msg = format!("Error parsing \"{}\"\n", key);
-            io::stderr().write(msg.as_bytes()).unwrap();
-        }
-    };
-    default
-}
-
-trait RememberDialogSize: gtk::WidgetExt + gtk::WindowExt {
-    fn set_size_from_recollections(&self, dialog_name: &str, default: (i32, i32)) {
-        let key = format!("{}::dialog::last_size", dialog_name);
-        let (width, height) = recall_dialog_last_size(key.as_str(), default);
-        self.set_default_size(width, height);
-        self.connect_configure_event(
-            move |_, event| {
-                let text = format_geometry_size(event);
-                recollections::remember(key.as_str(), text.as_str());
-                false
-            }
-        );
-        self.connect_realize(
-            |widget| {
-                let (req_width, req_height) = widget.get_default_size();
-                let allocation = widget.get_allocation();
-                let width_corrn = if req_width > 0 { req_width - allocation.width } else { 0 };
-                let height_corrn = if req_height > 0 { req_height - allocation.height } else { 0 };
-                let text = format!("{}x{}", width_corrn, height_corrn);
-                recollections::remember("dialog::size_correction", text.as_str())
-            }
-        );
-    }
-}
-
-impl RememberDialogSize for gtk::Dialog {}
 
 static mut NEXT_DIALOG_ID: u32 = 0;
 
