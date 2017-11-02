@@ -22,6 +22,7 @@ use paint::*;
 use paint::characteristics::*;
 use paint::components::*;
 use paint::mixer::*;
+use paint::series::*;
 
 #[derive(Debug, PartialEq, Hash, Clone, Copy)]
 pub struct ModelPaintCharacteristics {
