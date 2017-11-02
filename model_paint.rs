@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use gtk;
+use gtk::prelude::*;
+
 use std::str::FromStr;
 
 use colour::attributes::*;
@@ -28,7 +31,21 @@ pub struct ModelPaintCharacteristics {
     pub metallic: Metallic,
 }
 
-impl CharacteristicsInterface for ModelPaintCharacteristics {}
+impl CharacteristicsInterface for ModelPaintCharacteristics {
+    fn gui_display_widget(&self) -> gtk::Box {
+        let vbox = gtk::Box::new(gtk::Orientation::Vertical, 1);
+        let label = gtk::Label::new(self.finish.description());
+        vbox.pack_start(&label, false, false, 1);
+        let label = gtk::Label::new(self.transparency.description());
+        vbox.pack_start(&label, false, false, 1);
+        let label = gtk::Label::new(self.fluorescence.description());
+        vbox.pack_start(&label, false, false, 1);
+        let label = gtk::Label::new(self.metallic.description());
+        vbox.pack_start(&label, false, false, 1);
+        vbox.show_all();
+        vbox
+    }
+}
 
 impl FromStr for ModelPaintCharacteristics {
     type Err = PaintError;

@@ -18,7 +18,7 @@ use regex::*;
 
 use paint::PaintError;
 
-trait CharacteristicInterface {
+pub trait CharacteristicInterface {
     fn name() -> &'static str;
     fn abbrev(&self) -> &'static str;
     fn description(&self) -> &'static str;

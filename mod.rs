@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use gtk;
+
 use std::cell::RefCell;
 use std::cmp::Ordering;
 use std::fmt::Debug;
@@ -40,7 +42,7 @@ pub mod target;
 pub trait CharacteristicsInterface:
     Debug + Hash + PartialEq + Clone + Copy + FromStr
 {
-
+    fn gui_display_widget(&self) -> gtk::Box;
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, PartialOrd, Eq, Ord, Clone, Default, Hash)]

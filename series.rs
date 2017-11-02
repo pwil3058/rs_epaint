@@ -141,6 +141,8 @@ impl<C, CADS> SeriesPaintDisplayDialogInterface<C, CADS> for SeriesPaintDisplayD
         let cads = CADS::create();
         cads.set_colour(Some(&paint.colour()));
         content_area.pack_start(&cads.pwo(), true, true, 0);
+        let characteristics_display = paint.characteristics().gui_display_widget();
+        content_area.pack_start(&characteristics_display, false, false, 0);
         content_area.show_all();
         for (response_id, spec) in button_specs.iter().enumerate() {
             let button = dialog.add_button(spec.label.as_str(), response_id as i32);
