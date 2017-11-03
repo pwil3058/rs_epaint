@@ -115,7 +115,9 @@ impl<C> PaintPartsSpinButtonInterface<C> for PaintPartsSpinButton<C>
         let hbox = gtk::Box::new(gtk::Orientation::Horizontal, 1);
         hbox.pack_start(&spin_button.label.clone(), true, true, 0);
         hbox.pack_start(&spin_button.entry.clone(), false, false, 0);
-        spin_button.event_box.add(&hbox);
+        let frame = gtk::Frame::new(None);
+        frame.add(&hbox);
+        spin_button.event_box.add(&frame);
         let spin_button_c = spin_button.clone();
         spin_button.entry.connect_value_changed(
             move |_| spin_button_c.inform_parts_changed()
@@ -197,6 +199,7 @@ pub trait PaintComponentsInterface<C>: PackableWidgetInterface
 
     fn create_with(n_cols: u32, sensitive:bool) -> Self::PaintComponentsType;
     fn add_paint(&self, paint: &Paint<C>);
+    fn add_series_paint(&self, paint: &SeriesPaint<C>);
 }
 
 pub struct PaintComponentsBoxCore<C: CharacteristicsInterface> {
@@ -350,6 +353,10 @@ impl<C> PaintComponentsInterface<C> for PaintComponentsBox<C>
         );
         self.pack_append(&spin_button);
         self.vbox.show_all();
+    }
+
+    fn add_series_paint(&self, paint: &SeriesPaint<C>) {
+        self.add_paint(&Paint::Series(paint.clone()));
     }
 }
 

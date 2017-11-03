@@ -18,6 +18,7 @@ use std::cell::RefCell;
 use std::cmp::Ordering;
 use std::fmt::Debug;
 use std::hash::*;
+use std::io;
 use std::rc::Rc;
 use std::str::FromStr;
 
@@ -186,6 +187,7 @@ pub enum PaintError {
     AlreadyExists(String),
     MalformedText(String),
     PaintTypeMismatch,
+    IOError(io::Error),
 }
 
 #[cfg(test)]

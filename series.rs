@@ -12,6 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::fs::File;
+use std::io::Read;
+use std::path::Path;
+
 use gtk;
 use gtk::prelude::*;
 
@@ -24,6 +28,16 @@ use paint::*;
 pub struct PaintSeriesIdentityData {
     manufacturer: String,
     series_name: String,
+}
+
+impl PaintSeriesIdentityData {
+    pub fn manufacturer(&self) -> String {
+        self.manufacturer.clone()
+    }
+
+    pub fn series_name(&self) -> String {
+        self.series_name.clone()
+    }
 }
 
 pub type PaintSeriesIdentity = Rc<PaintSeriesIdentityData>;
@@ -405,11 +419,27 @@ impl<C: CharacteristicsInterface> PaintSeriesCore<C> {
         }
     }
 
+    pub fn get_paints(&self) -> Vec<Paint<C>> {
+        let mut v: Vec<Paint<C>> = Vec::new();
+        for paint in self.paints.borrow().iter() {
+            v.push(Paint::Series(paint.clone()))
+        };
+        v
+    }
+
     pub fn get_series_paint(&self, name: &str) -> Option<SeriesPaint<C>> {
         match self.find_name(name) {
             Ok(index) => Some(self.paints.borrow()[index].clone()),
             Err(_) => None
         }
+    }
+
+    pub fn get_series_paints(&self) -> Vec<SeriesPaint<C>> {
+        let mut v: Vec<SeriesPaint<C>> = Vec::new();
+        for paint in self.paints.borrow().iter() {
+            v.push(paint.clone())
+        };
+        v
     }
 
     pub fn has_paint_named(&self, name: &str) -> bool {
@@ -444,6 +474,17 @@ pub trait PaintSeriesInterface<C: CharacteristicsInterface> {
     fn from_str(string: &str) -> Result<PaintSeries<C>, PaintError> {
         let core = PaintSeriesCore::<C>::from_str(string)?;
         Ok(Rc::new(core))
+    }
+
+    fn from_file(path: &Path) -> Result<PaintSeries<C>, PaintError> {
+        let mut file = File::open(path).map_err(
+            |err| PaintError::IOError(err)
+        )?;
+        let mut string = String::new();
+        file.read_to_string(&mut string).map_err(
+            |err| PaintError::IOError(err)
+        )?;
+        PaintSeries::<C>::from_str(string.as_str())
     }
 }
 
