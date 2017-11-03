@@ -357,7 +357,26 @@ impl<C> PaintComponentsInterface<C> for PaintComponentsBox<C>
 mod tests {
     use super::*;
 
-    use paint::model_paint::*;
+    #[derive(Debug, PartialEq, Hash, Clone, Copy)]
+    pub struct EPC { }
+
+    impl CharacteristicsInterface for EPC {
+        fn gui_display_widget(&self) -> gtk::Box {
+            gtk::Box::new(gtk::Orientation::Vertical, 1)
+        }
+    }
+
+    impl FromStr for EPC {
+        type Err = PaintError;
+
+        fn from_str(string: &str) -> Result<EPC, PaintError> {
+            if string.len() == 0 {
+                 Ok(EPC{})
+            } else {
+                 Ok(EPC{})
+            }
+        }
+    }
 
     #[test]
     fn paint_contributions_model_paint_box() {
@@ -367,8 +386,25 @@ mod tests {
             };
         }
 
-        let components_box = PaintComponentsBox::<ModelPaintCharacteristics>::create_with(6, true);
-        let series = create_ideal_model_paint_series();
+        let components_box = PaintComponentsBox::<EPC>::create_with(6, true);
+        let series = PaintSeries::<EPC>::create("empty", "empty");
+        let epc = EPC::from_str(&"").unwrap();
+        for spec in [
+            SeriesPaintSpec::<EPC>{rgb: RED, name: "Red".to_string(), notes: "".to_string(), characteristics: epc},
+            SeriesPaintSpec::<EPC>{rgb: GREEN, name: "Green".to_string(), notes: "".to_string(), characteristics: epc},
+            SeriesPaintSpec::<EPC>{rgb: BLUE, name: "Blue".to_string(), notes: "".to_string(), characteristics: epc},
+            SeriesPaintSpec::<EPC>{rgb: CYAN, name: "Cyan".to_string(), notes: "".to_string(), characteristics: epc},
+            SeriesPaintSpec::<EPC>{rgb: MAGENTA, name: "Magenta".to_string(), notes: "".to_string(), characteristics: epc},
+            SeriesPaintSpec::<EPC>{rgb: YELLOW, name: "Yellow".to_string(), notes: "".to_string(), characteristics: epc},
+            SeriesPaintSpec::<EPC>{rgb: BLACK, name: "Black".to_string(), notes: "".to_string(), characteristics: epc},
+            SeriesPaintSpec::<EPC>{rgb: WHITE, name: "White".to_string(), notes: "".to_string(), characteristics: epc},
+        ].iter()
+        {
+            if let Err(err) = series.add_paint(spec) {
+                panic!("File: {:?} Line: {:?} : {:?}", file!(), line!(), err)
+            }
+        }
+
         for pair in [
             ("Red", RED),
             ("Green", GREEN),
@@ -380,11 +416,10 @@ mod tests {
             ("White", WHITE)
         ].iter()
         {
-            assert_eq!(series.get_series_paint(pair.0).unwrap().colour().rgb(), pair.1);
-            assert_eq!(series.get_paint(pair.0).unwrap().colour().rgb(), pair.1);
-            let paint = series.get_paint(pair.0).unwrap();
-            assert_eq!(paint.colour().rgb(), pair.1);
-            components_box.add_paint(&paint);
+            match series.get_paint(pair.0) {
+                Some(paint) => components_box.add_paint(&paint),
+                None => panic!("File: {:?} Line: {:?}", file!(), line!())
+            };
         }
     }
 }

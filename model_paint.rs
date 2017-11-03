@@ -143,4 +143,33 @@ mod tests {
             assert_eq!(series.get_paint(pair.0).unwrap().colour().rgb(), pair.1);
         }
     }
+
+    #[test]
+    fn paint_model_paint_contributions_box() {
+        if !gtk::is_initialized() {
+            if let Err(err) = gtk::init() {
+                panic!("File: {:?} Line: {:?}: {:?}", file!(), line!(), err)
+            };
+        }
+
+        let components_box = ModelPaintComponentsBox::create_with(6, true);
+        let series = create_ideal_model_paint_series();
+        for pair in [
+            ("Red", RED),
+            ("Green", GREEN),
+            ("Blue", BLUE),
+            ("Cyan", CYAN),
+            ("Magenta", MAGENTA),
+            ("Yellow", YELLOW),
+            ("Black", BLACK),
+            ("White", WHITE)
+        ].iter()
+        {
+            assert_eq!(series.get_series_paint(pair.0).unwrap().colour().rgb(), pair.1);
+            assert_eq!(series.get_paint(pair.0).unwrap().colour().rgb(), pair.1);
+            let paint = series.get_paint(pair.0).unwrap();
+            assert_eq!(paint.colour().rgb(), pair.1);
+            components_box.add_paint(&paint);
+        }
+    }
 }
