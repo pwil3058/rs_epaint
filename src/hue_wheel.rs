@@ -22,16 +22,18 @@ use gdk::prelude::*;
 use gtk;
 use gtk::prelude::*;
 
-use cairox::*;
-use colour::attributes::*;
+use pw_gix::cairox::*;
+use pw_gix::colour::*;
+use pw_gix::colour::attributes::*;
+use pw_gix::rgb_math::angle::*;
+use pw_gix::rgb_math::hue::*;
+use pw_gix::rgb_math::rgb::*;
+
 use paint::*;
-use paint::mixed::*;
-use paint::series::*;
-use paint::shape::*;
-use paint::target::*;
-use pwo::*;
-use rgb_math::angle::*;
-use rgb_math::hue::*;
+use mixed::*;
+use series::*;
+use shape::*;
+use target::*;
 
 pub struct Geometry {
     raw_centre: Point,
@@ -170,21 +172,11 @@ pub struct PaintHueAttrWheelCore<C, CADS>
 
 pub type PaintHueAttrWheel<C, CADS> = Rc<PaintHueAttrWheelCore<C, CADS>>;
 
-impl<C, CADS> PackableWidgetInterface for PaintHueAttrWheel<C, CADS>
-    where   C: CharacteristicsInterface,
-            CADS: ColourAttributeDisplayStackInterface
-{
-    type PackableWidgetType = gtk::DrawingArea;
-
-    fn pwo(&self) -> gtk::DrawingArea {
-        self.drawing_area.clone()
-    }
-}
-
 pub trait PaintHueAttrWheelInterface<C, CADS>
     where   C: CharacteristicsInterface + 'static,
             CADS: ColourAttributeDisplayStackInterface + 'static
 {
+    fn pwo(&self) -> gtk::DrawingArea;
     fn create(attr: ScalarAttribute) -> PaintHueAttrWheel<C, CADS>;
 }
 
@@ -192,6 +184,10 @@ impl<C, CADS> PaintHueAttrWheelInterface<C, CADS> for PaintHueAttrWheel<C, CADS>
     where   C: CharacteristicsInterface + 'static,
             CADS: ColourAttributeDisplayStackInterface + 'static
 {
+    fn pwo(&self) -> gtk::DrawingArea {
+        self.drawing_area.clone()
+    }
+
     fn create(attr: ScalarAttribute) -> PaintHueAttrWheel<C, CADS> {
         let drawing_area = gtk::DrawingArea::new();
         drawing_area.set_size_request(300, 300);

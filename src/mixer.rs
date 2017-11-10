@@ -19,17 +19,20 @@ use cairo;
 use gtk;
 use gtk::prelude::*;
 
-use cairox::*;
+use pw_gix::cairox::*;
 
-use pwo::*;
-use colour::attributes::*;
-use gtkx::paned::*;
+use pw_gix::pwo::*;
+use pw_gix::colour::*;
+use pw_gix::colour::attributes::*;
+use pw_gix::gtkx::paned::*;
+use pw_gix::rgb_math::rgb::*;
+
 use paint::*;
-use paint::components::*;
-use paint::hue_wheel::*;
-//use rgb_math::rgb::*;
+use components::*;
+use hue_wheel::*;
+use series::*;
 
-trait ColourMatchAreaInterface: PackableWidgetInterface {
+trait ColourMatchAreaInterface {
     type ColourMatchAreaType;
 
     fn create() -> Self::ColourMatchAreaType;
@@ -74,7 +77,7 @@ impl ColourMatchAreaCore {
 
 type ColourMatchArea = Rc<ColourMatchAreaCore>;
 
-implement_pwo!(ColourMatchArea, drawing_area, gtk::DrawingArea);
+implement_pwo!(ColourMatchAreaCore, drawing_area, gtk::DrawingArea);
 
 impl ColourMatchAreaInterface for ColourMatchArea {
     type ColourMatchAreaType = ColourMatchArea;
@@ -139,12 +142,13 @@ impl ColourMatchAreaInterface for ColourMatchArea {
     }
 }
 
-pub trait PaintMixerInterface<CADS, C>: PackableWidgetInterface
+pub trait PaintMixerInterface<CADS, C>
     where   CADS: ColourAttributeDisplayStackInterface,
             C: CharacteristicsInterface
 {
     type PaintMixerType;
 
+    fn pwo(&self) -> gtk::Box;
     fn create() -> Self::PaintMixerType;
 }
 
@@ -180,22 +184,15 @@ impl<CADS, C> PaintMixerCore<CADS, C>
 
 pub type PaintMixer<CADS, C> = Rc<PaintMixerCore<CADS, C>>;
 
-impl<CADS, C> PackableWidgetInterface for PaintMixer<CADS, C>
-    where   CADS: ColourAttributeDisplayStackInterface,
-            C: CharacteristicsInterface
-{
-    type PackableWidgetType = gtk::Box;
-
-    fn pwo(&self) -> gtk::Box {
-        self.vbox.clone()
-    }
-}
-
 impl<CADS, C> PaintMixerInterface<CADS, C> for PaintMixer<CADS, C>
     where   CADS: ColourAttributeDisplayStackInterface + 'static,
             C: CharacteristicsInterface + 'static
 {
     type PaintMixerType = PaintMixer<CADS, C>;
+
+    fn pwo(&self) -> gtk::Box {
+        self.vbox.clone()
+    }
 
     fn create() -> PaintMixer<CADS, C> {
         let paint_mixer = Rc::new(

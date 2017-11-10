@@ -12,19 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::cell::RefCell;
+use std::cmp::Ordering;
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
+use std::rc::Rc;
+use std::str::FromStr;
+
+use regex::*;
 
 use gtk;
 use gtk::prelude::*;
 
-use colour::attributes::*;
-use gtkx::coloured::*;
-use gtkx::dialog::*;
+use pw_gix::colour::*;
+use pw_gix::colour::attributes::*;
+use pw_gix::gtkx::coloured::*;
+use pw_gix::gtkx::dialog::*;
+use pw_gix::rgb_math::rgb::*;
+
 use paint::*;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, PartialOrd, Eq, Ord, Clone, Default, Hash)]
+#[derive(Debug, PartialEq, PartialOrd, Eq, Ord, Clone, Default, Hash)]
 pub struct PaintSeriesIdentityData {
     manufacturer: String,
     series_name: String,

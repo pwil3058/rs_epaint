@@ -14,32 +14,16 @@
 
 use gtk;
 
-use std::cell::RefCell;
 use std::cmp::Ordering;
 use std::fmt::Debug;
 use std::hash::*;
 use std::io;
-use std::rc::Rc;
 use std::str::FromStr;
 
-use regex::Regex;
+use pw_gix::colour::*;
 
-use colour::*;
-use rgb_math::rgb::*;
-
-pub mod characteristics;
-pub mod colour_mix;
-pub mod components;
-pub mod hue_wheel;
-pub mod mixed;
-pub mod mixer;
-pub mod model_paint;
-pub mod series;
-pub mod shape;
-pub mod target;
-
-use self::mixed::*;
-use self::series::*;
+use mixed::*;
+use series::*;
 
 pub trait CharacteristicsInterface:
     Debug + Hash + PartialEq + Clone + Copy + FromStr
@@ -178,8 +162,8 @@ impl<C: CharacteristicsInterface> BasicPaintInterface<C> for Paint<C> {
 
 #[derive(Debug, PartialEq, Hash, Clone)]
 pub struct PaintComponent<C: CharacteristicsInterface> {
-    paint: Paint<C>,
-    parts: u32
+    pub paint: Paint<C>,
+    pub parts: u32
 }
 
 #[derive(Debug)]

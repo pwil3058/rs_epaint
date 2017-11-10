@@ -16,10 +16,12 @@ use std::cell::RefCell;
 
 use cairo;
 
-use cairox::*;
+use pw_gix::cairox::*;
+use pw_gix::colour::*;
+
 use paint::*;
-use paint::hue_wheel::*;
-use paint::target::*;
+use hue_wheel::*;
+use target::*;
 
 pub trait ShapeInterface {
     fn encloses(&self, xy: Point) -> bool;

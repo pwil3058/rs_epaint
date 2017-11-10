@@ -20,10 +20,10 @@ use gtk::prelude::*;
 use std::cmp::*;
 use std::rc::Rc;
 
-use colour::*;
-use colour::attributes::*;
-use gtkx::coloured::*;
-use gtkx::dialog::*;
+use pw_gix::colour::*;
+use pw_gix::colour::attributes::*;
+use pw_gix::gtkx::coloured::*;
+use pw_gix::gtkx::dialog::*;
 
 #[derive(Debug)]
 pub struct TargetColourCore {

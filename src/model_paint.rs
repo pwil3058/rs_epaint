@@ -17,12 +17,14 @@ use gtk::prelude::*;
 
 use std::str::FromStr;
 
-use colour::attributes::*;
+use pw_gix::colour::attributes::*;
+
 use paint::*;
-use paint::characteristics::*;
-use paint::components::*;
-use paint::mixer::*;
-use paint::series::*;
+use characteristics::*;
+use components::*;
+use mixed::*;
+use mixer::*;
+use series::*;
 
 #[derive(Debug, PartialEq, Hash, Clone, Copy)]
 pub struct ModelPaintCharacteristics {

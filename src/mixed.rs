@@ -12,14 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::cmp::Ordering;
 use std::marker::PhantomData;
+use std::rc::Rc;
 
 use gtk;
 use gtk::prelude::*;
 
-use colour::attributes::*;
-use gtkx::coloured::*;
-use gtkx::dialog::*;
+use pw_gix::colour::*;
+use pw_gix::colour::attributes::*;
+use pw_gix::gtkx::coloured::*;
+use pw_gix::gtkx::dialog::*;
+
 use paint::*;
 
 pub trait MixedPaintInterface<C>: BasicPaintInterface<C>

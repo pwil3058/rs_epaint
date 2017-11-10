@@ -21,16 +21,19 @@ use gtk;
 use gtk::prelude::*;
 use gtk::MenuExt;
 
-use gtkx::coloured::*;
-use paint::*;
-use paint::colour_mix::*;
-use pwo::*;
+use pw_gix::colour::*;
+use pw_gix::gtkx::coloured::*;
 
-pub trait PaintPartsSpinButtonInterface<C>: PackableWidgetInterface
+use colour_mix::*;
+use paint::*;
+use series::*;
+
+pub trait PaintPartsSpinButtonInterface<C>
     where   C: CharacteristicsInterface
 {
     type PaintPartsSpinButtonType;
 
+    fn pwo(&self) -> gtk::EventBox;
     fn create_with(paint: &Paint<C>, sensitive:bool) -> Self::PaintPartsSpinButtonType;
     fn get_parts(&self) -> u32;
     fn set_parts(&self, parts: u32);
@@ -64,20 +67,14 @@ impl<C> PartialEq for PaintPartsSpinButtonCore<C>
 
 pub type PaintPartsSpinButton<C> = Rc<PaintPartsSpinButtonCore<C>>;
 
-impl<C> PackableWidgetInterface for PaintPartsSpinButton<C>
-    where   C: CharacteristicsInterface
-{
-    type PackableWidgetType = gtk::EventBox;
-
-    fn pwo(&self) -> gtk::EventBox {
-        self.event_box.clone()
-    }
-}
-
 impl<C> PaintPartsSpinButtonInterface<C> for PaintPartsSpinButton<C>
     where   C: CharacteristicsInterface + 'static
 {
     type PaintPartsSpinButtonType = PaintPartsSpinButton<C>;
+
+    fn pwo(&self) -> gtk::EventBox {
+        self.event_box.clone()
+    }
 
     fn create_with(paint: &Paint<C>, sensitive:bool) -> PaintPartsSpinButton<C> {
         let adj = gtk::Adjustment::new(0.0, 0.0, 999.0, 1.0, 10.0, 0.0);
@@ -192,12 +189,11 @@ impl<C> PaintPartsSpinButtonInterface<C> for PaintPartsSpinButton<C>
     }
 }
 
-pub trait PaintComponentsInterface<C>: PackableWidgetInterface
+pub trait PaintComponentsBoxInterface<C>
     where   C: CharacteristicsInterface
 {
-    type PaintComponentsType;
-
-    fn create_with(n_cols: u32, sensitive:bool) -> Self::PaintComponentsType;
+    fn pwo(&self) -> gtk::Box;
+    fn create_with(n_cols: u32, sensitive:bool) -> PaintComponentsBox<C>;
     fn add_paint(&self, paint: &Paint<C>);
     fn add_series_paint(&self, paint: &SeriesPaint<C>);
 }
@@ -232,7 +228,7 @@ impl<C: CharacteristicsInterface + 'static> PaintComponentsBoxCore<C> {
         if self.supress_change_notification.get() {
             return
         }
-        let mut colour_mixer = colour_mix::ColourMixer::new();
+        let mut colour_mixer = ColourMixer::new();
         for spin_button in self.spin_buttons.borrow().iter() {
             let colour_component = spin_button.get_colour_component();
             colour_mixer.add(&colour_component)
@@ -303,20 +299,12 @@ impl<C: CharacteristicsInterface + 'static> PaintComponentsBoxCore<C> {
 
 pub type PaintComponentsBox<C> = Rc<PaintComponentsBoxCore<C>>;
 
-impl<C> PackableWidgetInterface for PaintComponentsBox<C>
-    where   C: CharacteristicsInterface
+impl<C> PaintComponentsBoxInterface<C> for PaintComponentsBox<C>
+    where   C: CharacteristicsInterface + 'static
 {
-    type PackableWidgetType = gtk::Box;
-
     fn pwo(&self) -> gtk::Box {
         self.vbox.clone()
     }
-}
-
-impl<C> PaintComponentsInterface<C> for PaintComponentsBox<C>
-    where   C: CharacteristicsInterface + 'static
-{
-    type PaintComponentsType = PaintComponentsBox<C>;
 
     fn create_with(n_cols: u32, sensitive:bool) -> PaintComponentsBox<C> {
         let pcb_core = PaintComponentsBoxCore::<C> {

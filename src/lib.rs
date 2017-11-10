@@ -12,6 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#[macro_use]
+extern crate lazy_static;
+
+#[macro_use]
+extern crate pw_gix;
+
+extern crate regex;
+
+extern crate cairo;
+extern crate gdk;
+extern crate gtk;
+
 pub mod characteristics;
 pub mod colour_mix;
 pub mod components;

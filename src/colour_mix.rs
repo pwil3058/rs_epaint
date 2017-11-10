@@ -14,8 +14,8 @@
 
 use std::convert::From;
 
-use colour::*;
-use rgb_math::rgb::*;
+use pw_gix::colour::*;
+use pw_gix::rgb_math::rgb::*;
 
 #[derive(Debug, PartialEq)]
 pub struct ColourComponent {
