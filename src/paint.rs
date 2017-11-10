@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use gdk;
 use gtk;
+use gtk::StaticType;
+use gtk::prelude::*;
 
 use std::cmp::Ordering;
 use std::fmt::Debug;
@@ -21,6 +24,8 @@ use std::io;
 use std::str::FromStr;
 
 use pw_gix::colour::*;
+use pw_gix::rgb_math::rgb::*;
+use pw_gix::rgb_math::hue::*;
 
 use mixed::*;
 use series::*;
@@ -28,6 +33,9 @@ use series::*;
 pub trait CharacteristicsInterface:
     Debug + Hash + PartialEq + Clone + Copy + FromStr
 {
+    fn tv_row_len() -> usize;
+    fn tv_columns(start_col_id: i32) -> Vec<gtk::TreeViewColumn>;
+    fn tv_rows(&self) -> Vec<gtk::Value>;
     fn gui_display_widget(&self) -> gtk::Box;
 }
 
@@ -39,6 +47,120 @@ pub trait BasicPaintInterface<C>: Hash + Clone + PartialEq
     fn notes(&self) -> String;
     fn tooltip_text(&self) -> String;
     fn characteristics(&self) -> C;
+
+    fn rgb(&self) -> RGB {
+        self.colour().rgb()
+    }
+
+    fn hue(&self) -> HueAngle {
+        self.colour().hue()
+    }
+
+    fn is_grey(&self) -> bool {
+        self.colour().is_grey()
+    }
+
+    fn chroma(&self) -> f64 {
+        self.colour().chroma()
+    }
+
+    fn greyness(&self) -> f64 {
+        self.colour().greyness()
+    }
+
+    fn value(&self) -> f64 {
+        self.colour().value()
+    }
+
+    fn warmth(&self) -> f64 {
+        self.colour().warmth()
+    }
+
+    fn monotone_rgb(&self) -> RGB {
+        self.colour().monotone_rgb()
+    }
+
+    fn best_foreground_rgb(&self) -> RGB {
+        self.colour().best_foreground_rgb()
+    }
+
+    fn max_chroma_rgb(&self) -> RGB {
+        self.colour().max_chroma_rgb()
+    }
+
+    fn warmth_rgb(&self) -> RGB {
+        self.colour().warmth_rgb()
+    }
+
+    fn scalar_attribute(&self, attr: ScalarAttribute) -> f64 {
+        self.colour().scalar_attribute(attr)
+    }
+}
+
+lazy_static! {
+    pub static ref STANDARD_PAINT_ROW_SPEC: [gtk::Type; 18] =
+        [
+            gtk::Type::String,          // 0 Name
+            gtk::Type::String,          // 1 Notes
+            gtk::Type::String,          // 2 Chroma
+            gtk::Type::String,          // 3 Greyness
+            gtk::Type::String,          // 4 Value
+            gtk::Type::String,          // 5 Warmth
+            gdk::RGBA::static_type(),   // 6 RGB
+            gdk::RGBA::static_type(),   // 7 FG for RGB
+            gdk::RGBA::static_type(),   // 8 Monochrome RGB
+            gdk::RGBA::static_type(),   // 9 FG for Monochrome RGB
+            gdk::RGBA::static_type(),   // 10 Warmth RGB
+            gdk::RGBA::static_type(),   // 11 FG for Warmth RGB
+            gdk::RGBA::static_type(),   // 12 Hue Colour
+            f64::static_type(),         // 13 Hue angle (radians)
+            gtk::Type::String,          // 14 Characteristic #1
+            gtk::Type::String,          // 15 Characteristic #2
+            gtk::Type::String,          // 16 Characteristic #3
+            gtk::Type::String,          // 17 Characteristic #4
+        ];
+}
+
+pub trait PaintTreeViewColumnData<C>: BasicPaintInterface<C>
+    where   C: CharacteristicsInterface
+{
+    fn tv_row_len() -> usize {
+        14 + C::tv_row_len()
+    }
+
+    fn tv_rows(&self) -> Vec<gtk::Value> {
+        let rgba: gdk::RGBA = self.rgb().into();
+        let frgba: gdk::RGBA = self.rgb().best_foreground_rgb().into();
+        let mrgba: gdk::RGBA = self.monotone_rgb().into();
+        let mfrgba: gdk::RGBA = self.monotone_rgb().best_foreground_rgb().into();
+        let wrgba: gdk::RGBA = self.warmth_rgb().into();
+        let wfrgba: gdk::RGBA = self.warmth_rgb().best_foreground_rgb().into();
+        let hrgba: gdk::RGBA = self.max_chroma_rgb().into();
+        let mut rows = vec![
+            self.name().to_value(),
+            self.notes().to_value(),
+            format!("{:5.4}", self.chroma()).to_value(),
+            format!("{:5.4}", self.greyness()).to_value(),
+            format!("{:5.4}", self.value()).to_value(),
+            format!("{:5.4}", self.warmth()).to_value(),
+            rgba.to_value(),
+            frgba.to_value(),
+            mrgba.to_value(),
+            mfrgba.to_value(),
+            wrgba.to_value(),
+            wfrgba.to_value(),
+            hrgba.to_value(),
+            self.hue().angle().radians().to_value(),
+        ];
+        for row in self.characteristics().tv_rows().iter() {
+            rows.push(row.clone());
+        };
+        rows
+    }
+}
+
+pub trait PaintTreeViewColumnSpec {
+    fn tv_columns() -> Vec<gtk::TreeViewColumn>;
 }
 
 #[derive(Debug, Clone, Hash)]

@@ -142,6 +142,8 @@ impl<C> BasicPaintInterface<C> for SeriesPaint<C>
     }
 }
 
+impl<C: CharacteristicsInterface> PaintTreeViewColumnData<C> for SeriesPaint<C> {}
+
 impl<C> SeriesPaintInterface<C> for SeriesPaint<C>
     where   C: CharacteristicsInterface
 {
@@ -499,6 +501,7 @@ pub trait PaintSeriesInterface<C: CharacteristicsInterface> {
         PaintSeries::<C>::from_str(string.as_str())
     }
 }
+
 
 impl<C> PaintSeriesInterface<C> for PaintSeries<C>
     where   C: CharacteristicsInterface
