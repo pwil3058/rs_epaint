@@ -27,8 +27,8 @@ use pw_gix::colour::*;
 use pw_gix::rgb_math::rgb::*;
 use pw_gix::rgb_math::hue::*;
 
-use mixed::*;
-use series::*;
+use mixed_paint::*;
+use series_paint::*;
 
 pub trait CharacteristicsInterface:
     Debug + Hash + PartialEq + Clone + Copy + FromStr

@@ -24,9 +24,9 @@ use paint::*;
 use characteristics::*;
 use components::*;
 use hue_wheel::*;
-use mixed::*;
+use mixed_paint::*;
 use mixer::*;
-use series::*;
+use series_paint::*;
 
 #[derive(Debug, PartialEq, Hash, Clone, Copy)]
 pub struct ModelPaintCharacteristics {

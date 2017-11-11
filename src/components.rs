@@ -26,7 +26,7 @@ use pw_gix::gtkx::coloured::*;
 
 use colour_mix::*;
 use paint::*;
-use series::*;
+use series_paint::*;
 
 pub trait PaintPartsSpinButtonInterface<C>
     where   C: CharacteristicsInterface

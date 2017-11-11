@@ -28,11 +28,11 @@ pub mod characteristics;
 pub mod colour_mix;
 pub mod components;
 pub mod hue_wheel;
-pub mod mixed;
+pub mod mixed_paint;
 pub mod mixer;
 pub mod model_paint;
 pub mod paint;
-pub mod series;
+pub mod series_paint;
 pub mod shape;
 pub mod target;
 

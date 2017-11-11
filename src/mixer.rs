@@ -30,7 +30,7 @@ use pw_gix::rgb_math::rgb::*;
 use paint::*;
 use components::*;
 use hue_wheel::*;
-use series::*;
+use series_paint::*;
 
 trait ColourMatchAreaInterface {
     type ColourMatchAreaType;
