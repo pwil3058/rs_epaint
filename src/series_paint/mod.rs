@@ -35,6 +35,8 @@ use pw_gix::gtkx::dialog::*;
 use pw_gix::gtkx::list_store::*;
 use pw_gix::rgb_math::rgb::*;
 
+pub mod manager;
+
 use paint::*;
 
 #[derive(Debug, PartialEq, PartialOrd, Eq, Ord, Clone, Default, Hash)]
