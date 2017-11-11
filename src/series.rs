@@ -14,14 +14,17 @@
 
 use std::cell::RefCell;
 use std::cmp::Ordering;
+use std::collections::HashMap;
 use std::fs::File;
 use std::io::Read;
+use std::marker::PhantomData;
 use std::path::Path;
 use std::rc::Rc;
 use std::str::FromStr;
 
 use regex::*;
 
+use gdk;
 use gtk;
 use gtk::prelude::*;
 
@@ -29,6 +32,7 @@ use pw_gix::colour::*;
 use pw_gix::colour::attributes::*;
 use pw_gix::gtkx::coloured::*;
 use pw_gix::gtkx::dialog::*;
+use pw_gix::gtkx::list_store::*;
 use pw_gix::rgb_math::rgb::*;
 
 use paint::*;
@@ -512,6 +516,214 @@ impl<C> PaintSeriesInterface<C> for PaintSeries<C>
         let series_id = Rc::new(PaintSeriesIdentityData{manufacturer, series_name});
         let paints: RefCell<Vec<SeriesPaint<C>>> = RefCell::new(Vec::new());
         Rc::new(PaintSeriesCore::<C>{series_id, paints})
+    }
+}
+
+pub struct PaintSeriesViewCore<C, CADS, SPEC>
+    where   C: CharacteristicsInterface + 'static,
+            CADS: ColourAttributeDisplayStackInterface + 'static,
+            SPEC: PaintTreeViewColumnSpec + 'static
+{
+    scrolled_window: gtk::ScrolledWindow,
+    list_store: gtk::ListStore,
+    view: gtk::TreeView,
+    menu: gtk::Menu,
+    paint_info_item: gtk::MenuItem,
+    add_paint_item: gtk::MenuItem,
+    series: PaintSeries<C>,
+    chosen_paint: RefCell<Option<SeriesPaint<C>>>,
+    current_target: RefCell<Option<Colour>>,
+    add_paint_callbacks: RefCell<Vec<Box<Fn(&SeriesPaint<C>)>>>,
+    series_paint_dialogs: RefCell<HashMap<u32, SeriesPaintDisplayDialog<C, CADS>>>,
+    spec: PhantomData<SPEC>
+}
+
+impl<C, CADS, SPEC> PaintSeriesViewCore<C, CADS, SPEC>
+    where   C: CharacteristicsInterface + 'static,
+            CADS: ColourAttributeDisplayStackInterface + 'static,
+            SPEC: PaintTreeViewColumnSpec + 'static
+{
+    fn get_series_paint_at(&self, posn: (f64, f64)) -> Option<SeriesPaint<C>> {
+        let x = posn.0 as i32;
+        let y = posn.1 as i32;
+        if let Some(location) = self.view.get_path_at_pos(x, y) {
+            if let Some(path) = location.0 {
+                if let Some(iter) = self.list_store.get_iter(&path) {
+                    let name: String = self.list_store.get_value(&iter, 0).get().unwrap_or_else(
+                        || panic!("File: {:?} Line: {:?}", file!(), line!())
+                    );
+                    let paint = self.series.get_series_paint(&name).unwrap_or_else(
+                        || panic!("File: {:?} Line: {:?}", file!(), line!())
+                    );
+                    return Some(paint)
+                }
+            }
+        }
+        None
+    }
+
+    fn inform_add_paint(&self, paint: &SeriesPaint<C>) {
+        for callback in self.add_paint_callbacks.borrow().iter() {
+            callback(&paint);
+        }
+    }
+
+    pub fn set_target_colour(&self, ocolour: Option<&Colour>) {
+        match ocolour {
+            Some(colour) => {
+                for dialog in self.series_paint_dialogs.borrow().values() {
+                    dialog.set_current_target(Some(colour.clone()));
+                };
+                *self.current_target.borrow_mut() = Some(colour.clone())
+            },
+            None => {
+                for dialog in self.series_paint_dialogs.borrow().values() {
+                    dialog.set_current_target(None);
+                };
+                *self.current_target.borrow_mut() = None
+            },
+        }
+    }
+}
+
+pub type PaintSeriesView<C, CADS, SPEC> = Rc<PaintSeriesViewCore<C, CADS, SPEC>>;
+
+pub trait PaintSeriesViewInterface<C, CADS, SPEC>
+    where   C: CharacteristicsInterface + 'static,
+            CADS: ColourAttributeDisplayStackInterface + 'static,
+            SPEC: PaintTreeViewColumnSpec + 'static
+{
+    fn pwo(&self) -> gtk::ScrolledWindow;
+    fn create(series: &PaintSeries<C>) -> PaintSeriesView<C, CADS, SPEC>;
+    fn connect_add_paint<F: 'static + Fn(&SeriesPaint<C>)>(&self, callback: F);
+}
+
+impl<C, CADS, SPEC> PaintSeriesViewInterface<C, CADS, SPEC> for PaintSeriesView<C, CADS, SPEC>
+    where   C: CharacteristicsInterface + 'static,
+            CADS: ColourAttributeDisplayStackInterface + 'static,
+            SPEC: PaintTreeViewColumnSpec + 'static
+{
+    fn pwo(&self) -> gtk::ScrolledWindow {
+        self.scrolled_window.clone()
+    }
+
+    fn create(series: &PaintSeries<C>) -> PaintSeriesView<C, CADS, SPEC> {
+        let len = SeriesPaint::<C>::tv_row_len();
+        let list_store = gtk::ListStore::new(&STANDARD_PAINT_ROW_SPEC[0..len]);
+        for paint in series.get_series_paints().iter() {
+            list_store.append_row(&paint.tv_rows());
+        }
+        let view = gtk::TreeView::new_with_model(&list_store.clone());
+        view.set_headers_visible(true);
+        view.get_selection().set_mode(gtk::SelectionMode::None);
+
+        let menu = gtk::Menu::new();
+        let paint_info_item = gtk::MenuItem::new_with_label("Information");
+        menu.append(&paint_info_item.clone());
+        let add_paint_item = gtk::MenuItem::new_with_label("Add to Mixer");
+        add_paint_item.set_visible(false);
+        menu.append(&add_paint_item.clone());
+        menu.show_all();
+
+        let mspl = Rc::new(
+            PaintSeriesViewCore::<C, CADS, SPEC> {
+                scrolled_window: gtk::ScrolledWindow::new(None, None),
+                list_store: list_store,
+                menu: menu,
+                paint_info_item: paint_info_item.clone(),
+                add_paint_item: add_paint_item.clone(),
+                series: series.clone(),
+                view: view,
+                chosen_paint: RefCell::new(None),
+                current_target: RefCell::new(None),
+                add_paint_callbacks: RefCell::new(Vec::new()),
+                series_paint_dialogs: RefCell::new(HashMap::new()),
+                spec: PhantomData,
+            }
+        );
+
+        for col in SPEC::tv_columns() {
+            mspl.view.append_column(&col);
+        }
+
+        mspl.view.show_all();
+
+        mspl.scrolled_window.add(&mspl.view.clone());
+        mspl.scrolled_window.show_all();
+
+        let mspl_c = mspl.clone();
+        mspl.view.connect_button_press_event(
+            move |_, event| {
+                if event.get_event_type() == gdk::EventType::ButtonPress {
+                    if event.get_button() == 3 {
+                        let o_paint = mspl_c.get_series_paint_at(event.get_position());
+                        mspl_c.paint_info_item.set_sensitive(o_paint.is_some());
+                        mspl_c.add_paint_item.set_sensitive(o_paint.is_some());
+                        let have_listeners = mspl_c.add_paint_callbacks.borrow().len() > 0;
+                        mspl_c.add_paint_item.set_visible(have_listeners);
+                        *mspl_c.chosen_paint.borrow_mut() = o_paint;
+                        mspl_c.menu.popup_at_pointer(None);
+                        return Inhibit(true)
+                    }
+                }
+                Inhibit(false)
+             }
+        );
+
+        let mspl_c = mspl.clone();
+        add_paint_item.connect_activate(
+            move |_| {
+                if let Some(ref paint) = *mspl_c.chosen_paint.borrow() {
+                    mspl_c.inform_add_paint(paint);
+                } else {
+                    panic!("File: {:?} Line: {:?} SHOULDN'T GET HERE", file!(), line!())
+                }
+            }
+        );
+
+        let mspl_c = mspl.clone();
+        paint_info_item.clone().connect_activate(
+            move |_| {
+                if let Some(ref paint) = *mspl_c.chosen_paint.borrow() {
+                    let target = if let Some(ref colour) = *mspl_c.current_target.borrow() {
+                        Some(colour.clone())
+                    } else {
+                        None
+                    };
+                    let have_listeners = mspl_c.add_paint_callbacks.borrow().len() > 0;
+                    let buttons = if have_listeners {
+                        let mspl_c_c = mspl_c.clone();
+                        let paint_c = paint.clone();
+                        let spec = SeriesPaintDisplayButtonSpec {
+                            label: "Add".to_string(),
+                            tooltip_text: "Add this paint to the paint mixing area.".to_string(),
+                            callback:  Box::new(move || mspl_c_c.inform_add_paint(&paint_c))
+                        };
+                        vec![spec]
+                    } else {
+                        vec![]
+                    };
+                    let dialog = SeriesPaintDisplayDialog::<C, CADS>::create(
+                        &paint,
+                        target,
+                        None,
+                        buttons
+                    );
+                    let mspl_c_c = mspl_c.clone();
+                    dialog.connect_destroy(
+                        move |id| { mspl_c_c.series_paint_dialogs.borrow_mut().remove(&id); }
+                    );
+                    mspl_c.series_paint_dialogs.borrow_mut().insert(dialog.id_no(), dialog.clone());
+                    dialog.show();
+                }
+            }
+        );
+
+        mspl
+    }
+
+    fn connect_add_paint<F: 'static + Fn(&SeriesPaint<C>)>(&self, callback: F) {
+        self.add_paint_callbacks.borrow_mut().push(Box::new(callback))
     }
 }
 
