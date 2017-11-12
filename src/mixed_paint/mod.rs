@@ -13,16 +13,11 @@
 // limitations under the License.
 
 use std::cmp::Ordering;
-use std::marker::PhantomData;
 use std::rc::Rc;
 
 use pw_gix::colour::*;
 
 use paint::*;
-
-pub mod display;
-
-pub use self::display::*;
 
 #[derive(Debug, PartialEq, Hash, Clone)]
 pub struct PaintComponent<C: CharacteristicsInterface> {

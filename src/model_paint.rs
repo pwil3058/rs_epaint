@@ -23,6 +23,7 @@ use pw_gix::colour::attributes::*;
 use pw_gix::gtkx::tree_view_column::*;
 use pw_gix::pwo::*;
 
+use display::*;
 use paint::*;
 use characteristics::*;
 use components::*;
@@ -158,9 +159,9 @@ impl ColourAttributesInterface for ModelPaintAttributes {
 
 pub type ModelSeriesPaint = SeriesPaint<ModelPaintCharacteristics>;
 pub type ModelSeriesPaintSpec = SeriesPaintSpec<ModelPaintCharacteristics>;
-pub type ModelSeriesPaintDisplayDialog = SeriesPaintDisplayDialog<ModelPaintAttributes, ModelPaintCharacteristics>;
 pub type ModelMixedPaint = MixedPaint<ModelPaintCharacteristics>;
 pub type ModelPaint = Paint<ModelPaintCharacteristics>;
+pub type ModelPaintDisplayDialog = PaintDisplayDialog<ModelPaintAttributes, ModelPaintCharacteristics>;
 pub type ModelPaintSeries = PaintSeries<ModelPaintCharacteristics>;
 pub type ModelPaintComponentsBox = PaintComponentsBox<ModelPaintCharacteristics>;
 pub type ModelPaintMixer = PaintMixer<ModelPaintAttributes, ModelPaintCharacteristics>;

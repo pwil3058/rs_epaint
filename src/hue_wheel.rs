@@ -28,8 +28,8 @@ use pw_gix::rgb_math::angle::*;
 use pw_gix::rgb_math::hue::*;
 use pw_gix::rgb_math::rgb::*;
 
+use display::*;
 use paint::*;
-use mixed_paint::*;
 use series_paint::*;
 use shape::*;
 use target::*;
@@ -166,7 +166,7 @@ pub struct PaintHueAttrWheelCore<A, C>
     last_xy: Cell<Point>,
     motion_enabled: Cell<bool>,
     add_paint_callbacks: RefCell<Vec<Box<Fn(&SeriesPaint<C>)>>>,
-    series_paint_dialogs: RefCell<HashMap<u32, SeriesPaintDisplayDialog<A, C>>>,
+    series_paint_dialogs: RefCell<HashMap<u32, PaintDisplayDialog<A, C>>>,
 }
 
 pub type PaintHueAttrWheel<A, C> = Rc<PaintHueAttrWheelCore<A, C>>;
@@ -209,7 +209,7 @@ impl<A, C> PaintHueAttrWheelInterface<A, C> for PaintHueAttrWheel<A, C>
         let motion_enabled = Cell::new(false);
         let last_xy: Cell<Point> = Cell::new(Point(0.0, 0.0));
         let add_paint_callbacks: RefCell<Vec<Box<Fn(&SeriesPaint<C>)>>> = RefCell::new(Vec::new());
-        let series_paint_dialogs: RefCell<HashMap<u32, SeriesPaintDisplayDialog<A, C>>> = RefCell::new(HashMap::new());
+        let series_paint_dialogs: RefCell<HashMap<u32, PaintDisplayDialog<A, C>>> = RefCell::new(HashMap::new());
         let wheel = Rc::new(
             PaintHueAttrWheelCore::<A, C> {
                 drawing_area: drawing_area,
@@ -288,7 +288,7 @@ impl<A, C> PaintHueAttrWheelInterface<A, C> for PaintHueAttrWheel<A, C>
                 match *wheel_c.chosen_item.borrow() {
                     ChosenItem::Paint(ref paint) => {
                         match *paint {
-                            Paint::Series(ref paint) => {
+                            Paint::Series(ref series_paint) => {
                                 let target = if let Some(ref current_target) = *wheel_c.current_target.borrow() {
                                     Some(current_target.colour())
                                 } else {
@@ -297,8 +297,8 @@ impl<A, C> PaintHueAttrWheelInterface<A, C> for PaintHueAttrWheel<A, C>
                                 let have_listeners = wheel_c.add_paint_callbacks.borrow().len() > 0;
                                 let buttons = if have_listeners {
                                     let wheel_c_c = wheel_c.clone();
-                                    let paint_c = paint.clone();
-                                    let spec = SeriesPaintDisplayButtonSpec {
+                                    let paint_c = series_paint.clone();
+                                    let spec = PaintDisplayButtonSpec {
                                         label: "Add".to_string(),
                                         tooltip_text: "Add this paint to the paint mixing area.".to_string(),
                                         callback:  Box::new(move || wheel_c_c.inform_add_paint(&paint_c))
@@ -307,7 +307,7 @@ impl<A, C> PaintHueAttrWheelInterface<A, C> for PaintHueAttrWheel<A, C>
                                 } else {
                                     vec![]
                                 };
-                                let dialog = SeriesPaintDisplayDialog::<A, C>::create(
+                                let dialog = PaintDisplayDialog::<A, C>::create(
                                     &paint,
                                     target,
                                     None,
@@ -320,9 +320,9 @@ impl<A, C> PaintHueAttrWheelInterface<A, C> for PaintHueAttrWheel<A, C>
                                 wheel_c.series_paint_dialogs.borrow_mut().insert(dialog.id_no(), dialog.clone());
                                 dialog.show();
                             },
-                            Paint::Mixed(ref paint) => {
-                                println!("Show information for: {:?}", paint);
-                                MixedPaintDisplayDialog::<A, C>::create(&paint, None).show();
+                            Paint::Mixed(ref mixed_paint) => {
+                                println!("Show information for: {:?}", mixed_paint);
+                                PaintDisplayDialog::<A, C>::create(&paint, None, None, vec![]).show();
                             }
                         }
                     },

@@ -16,14 +16,17 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use gtk;
+use gtk::prelude::*;
 
+use pw_gix::colour::*;
 use pw_gix::gtkx::coloured::*;
 use pw_gix::gtkx::dialog::*;
 
 use paint::*;
 use series_paint::*;
+use mixed_paint::*;
 
-pub struct SeriesPaintDisplayButtonSpec {
+pub struct PaintDisplayButtonSpec {
     pub label: String,
     pub tooltip_text: String,
     pub callback: Box<Fn()>
@@ -40,19 +43,19 @@ fn get_id_for_dialog() -> u32 {
     id
 }
 
-pub struct SeriesPaintDisplayDialogCore<A, C>
+pub struct PaintDisplayDialogCore<A, C>
     where   C: CharacteristicsInterface,
             A: ColourAttributesInterface
 {
     dialog: gtk::Dialog,
-    paint: SeriesPaint<C>,
+    paint: Paint<C>,
     current_target_label: gtk::Label,
     cads: Rc<A>,
     id_no: u32,
     destroy_callbacks: RefCell<Vec<Box<Fn(u32)>>>
 }
 
-impl<A, C> SeriesPaintDisplayDialogCore<A, C>
+impl<A, C> PaintDisplayDialogCore<A, C>
     where   C: CharacteristicsInterface,
             A: ColourAttributesInterface
 {
@@ -88,30 +91,39 @@ impl<A, C> SeriesPaintDisplayDialogCore<A, C>
 
 }
 
-pub type SeriesPaintDisplayDialog<A, C> = Rc<SeriesPaintDisplayDialogCore<A, C>>;
+pub type PaintDisplayDialog<A, C> = Rc<PaintDisplayDialogCore<A, C>>;
 
-pub trait SeriesPaintDisplayDialogInterface<A, C>
+pub trait PaintDisplayDialogInterface<A, C>
     where   C: CharacteristicsInterface,
             A: ColourAttributesInterface
 {
     fn create(
+        paint: &Paint<C>,
+        current_target: Option<Colour>,
+        parent: Option<&gtk::Window>,
+        button_specs: Vec<PaintDisplayButtonSpec>,
+    ) -> PaintDisplayDialog<A, C>;
+
+    fn series_create(
         paint: &SeriesPaint<C>,
         current_target: Option<Colour>,
         parent: Option<&gtk::Window>,
-        button_specs: Vec<SeriesPaintDisplayButtonSpec>,
-    ) -> SeriesPaintDisplayDialog<A, C>;
+        button_specs: Vec<PaintDisplayButtonSpec>,
+    ) -> PaintDisplayDialog<A, C> {
+        Self::create(&Paint::Series(paint.clone()), current_target, parent, button_specs)
+    }
 }
 
-impl<A, C> SeriesPaintDisplayDialogInterface<A, C> for SeriesPaintDisplayDialog<A, C>
+impl<A, C> PaintDisplayDialogInterface<A, C> for PaintDisplayDialog<A, C>
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static,
 {
     fn create(
-        paint: &SeriesPaint<C>,
+        paint: &Paint<C>,
         current_target: Option<Colour>,
         parent: Option<&gtk::Window>,
-        button_specs: Vec<SeriesPaintDisplayButtonSpec>,
-    ) -> SeriesPaintDisplayDialog<A, C> {
+        button_specs: Vec<PaintDisplayButtonSpec>,
+    ) -> PaintDisplayDialog<A, C> {
         let title = format!("mcmmtk: {}", paint.name());
         let dialog = gtk::Dialog::new_with_buttons(
             Some(title.as_str()),
@@ -119,7 +131,11 @@ impl<A, C> SeriesPaintDisplayDialogInterface<A, C> for SeriesPaintDisplayDialog<
             gtk::DIALOG_USE_HEADER_BAR,
             &[]
         );
-        dialog.set_size_from_recollections("series_paint_display", (60, 330));
+        if paint.is_series() {
+            dialog.set_size_from_recollections("series_paint_display", (60, 330));
+        } else {
+            dialog.set_size_from_recollections("mixed_paint_display", (60, 330));
+        };
         let content_area = dialog.get_content_area();
         let vbox = gtk::Box::new(gtk::Orientation::Vertical, 0);
         let label = gtk::Label::new(paint.name().as_str());
@@ -128,16 +144,26 @@ impl<A, C> SeriesPaintDisplayDialogInterface<A, C> for SeriesPaintDisplayDialog<
         let label = gtk::Label::new(paint.notes().as_str());
         label.set_widget_colour(&paint.colour());
         vbox.pack_start(&label, false, false, 0);
-        let label = gtk::Label::new(paint.series().series_name.as_str());
-        label.set_widget_colour(&paint.colour());
-        vbox.pack_start(&label, false, false, 0);
-        let label = gtk::Label::new(paint.series().manufacturer.as_str());
-        label.set_widget_colour(&paint.colour());
-        vbox.pack_start(&label, false, false, 0);
+        if let Paint::Series(ref series_paint) = *paint {
+            let label = gtk::Label::new(series_paint.series().series_name().as_str());
+            label.set_widget_colour(&paint.colour());
+            vbox.pack_start(&label, false, false, 0);
+            let label = gtk::Label::new(series_paint.series().manufacturer().as_str());
+            label.set_widget_colour(&paint.colour());
+            vbox.pack_start(&label, false, false, 0);
+        }
         //
         let current_target_label = gtk::Label::new("");
         current_target_label.set_widget_colour(&paint.colour());
         vbox.pack_start(&current_target_label.clone(), true, true, 0);
+        //
+        if let Paint::Mixed(ref mixed_paint) = *paint {
+            if let Some(colour) = mixed_paint.target_colour() {
+                let current_target_label = gtk::Label::new("Target Colour");
+                current_target_label.set_widget_colour(&colour.clone());
+                vbox.pack_start(&current_target_label.clone(), true, true, 0);
+            }
+        }
         //
         content_area.pack_start(&vbox, true, true, 0);
         let cads = A::create();
@@ -145,6 +171,11 @@ impl<A, C> SeriesPaintDisplayDialogInterface<A, C> for SeriesPaintDisplayDialog<
         content_area.pack_start(&cads.pwo(), true, true, 1);
         let characteristics_display = paint.characteristics().gui_display_widget();
         content_area.pack_start(&characteristics_display, false, false, 0);
+        //if let Paint::Mixed(ref mixed_paint) = *paint {
+        if paint.is_mixed() {
+            let label = gtk::Label::new("Component List Will Go Here");
+            content_area.pack_start(&label, false, false, 0);
+        }
         content_area.show_all();
         for (response_id, spec) in button_specs.iter().enumerate() {
             let button = dialog.add_button(spec.label.as_str(), response_id as i32);
@@ -158,7 +189,7 @@ impl<A, C> SeriesPaintDisplayDialogInterface<A, C> for SeriesPaintDisplayDialog<
             }
         );
         let spd_dialog = Rc::new(
-            SeriesPaintDisplayDialogCore {
+            PaintDisplayDialogCore {
                 dialog: dialog,
                 paint: paint.clone(),
                 current_target_label: current_target_label,
@@ -178,7 +209,6 @@ impl<A, C> SeriesPaintDisplayDialogInterface<A, C> for SeriesPaintDisplayDialog<
         spd_dialog
     }
 }
-
 
 #[cfg(test)]
 mod tests {

@@ -33,12 +33,10 @@ use pw_gix::gtkx::list_store::*;
 use pw_gix::gtkx::tree_view_column::*;
 use pw_gix::rgb_math::rgb::*;
 
-pub mod display;
 pub mod manager;
 
+use display::*;
 use paint::*;
-
-pub use self::display::*;
 
 #[derive(Debug, PartialEq, PartialOrd, Eq, Ord, Clone, Default, Hash)]
 pub struct PaintSeriesIdentityData {
@@ -380,7 +378,7 @@ pub struct PaintSeriesViewCore<A, C>
     chosen_paint: RefCell<Option<SeriesPaint<C>>>,
     current_target: RefCell<Option<Colour>>,
     add_paint_callbacks: RefCell<Vec<Box<Fn(&SeriesPaint<C>)>>>,
-    series_paint_dialogs: RefCell<HashMap<u32, SeriesPaintDisplayDialog<A, C>>>,
+    series_paint_dialogs: RefCell<HashMap<u32, PaintDisplayDialog<A, C>>>,
     spec: PhantomData<A>
 }
 
@@ -542,7 +540,7 @@ impl<A, C> PaintSeriesViewInterface<A, C> for PaintSeriesView<A, C>
                     let buttons = if have_listeners {
                         let mspl_c_c = mspl_c.clone();
                         let paint_c = paint.clone();
-                        let spec = SeriesPaintDisplayButtonSpec {
+                        let spec = PaintDisplayButtonSpec {
                             label: "Add".to_string(),
                             tooltip_text: "Add this paint to the paint mixing area.".to_string(),
                             callback:  Box::new(move || mspl_c_c.inform_add_paint(&paint_c))
@@ -551,7 +549,7 @@ impl<A, C> PaintSeriesViewInterface<A, C> for PaintSeriesView<A, C>
                     } else {
                         vec![]
                     };
-                    let dialog = SeriesPaintDisplayDialog::<A, C>::create(
+                    let dialog = PaintDisplayDialog::<A, C>::series_create(
                         &paint,
                         target,
                         None,

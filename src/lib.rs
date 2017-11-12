@@ -27,6 +27,7 @@ extern crate gtk;
 pub mod characteristics;
 pub mod colour_mix;
 pub mod components;
+pub mod display;
 pub mod hue_wheel;
 pub mod mixed_paint;
 pub mod mixer;
