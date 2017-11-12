@@ -32,6 +32,7 @@ use pw_gix::colour::*;
 use pw_gix::gtkx::coloured::*;
 use pw_gix::gtkx::dialog::*;
 use pw_gix::gtkx::list_store::*;
+use pw_gix::gtkx::tree_view_column::*;
 use pw_gix::rgb_math::rgb::*;
 
 pub mod manager;
@@ -639,7 +640,12 @@ impl<A, C> PaintSeriesViewInterface<A, C> for PaintSeriesView<A, C>
             }
         );
 
+        mspl.view.append_column(&simple_text_column("Name", 0, 0, 6, 7, -1, true));
+        mspl.view.append_column(&simple_text_column("Notes", 1, 1, 6, 7, -1, true));
         for col in A::tv_columns() {
+            mspl.view.append_column(&col);
+        }
+        for col in C::tv_columns(14) {
             mspl.view.append_column(&col);
         }
 
