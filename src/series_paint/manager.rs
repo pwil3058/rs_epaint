@@ -32,37 +32,31 @@ use pw_gix::pwo::*;
 use hue_wheel::*;
 use series_paint::*;
 
-pub struct PaintSelectorCore<C, CADS, SPEC>
-    where   C: CharacteristicsInterface + 'static,
-            CADS: ColourAttributeDisplayStackInterface + 'static,
-            SPEC: PaintTreeViewColumnSpec + 'static
+pub struct PaintSelectorCore<A, C>
+    where   A: ColourAttributesInterface + 'static,
+            C: CharacteristicsInterface + 'static,
 {
     vbox: gtk::Box,
-    hue_value_wheel: PaintHueAttrWheel<C, CADS>,
-    hue_greyness_wheel: PaintHueAttrWheel<C, CADS>,
-    paint_list: PaintSeriesView<C, CADS, SPEC>,
+    hue_attr_wheels: Vec<PaintHueAttrWheel<A, C>>,
+    paint_list: PaintSeriesView<A, C>,
     add_paint_callbacks: RefCell<Vec<Box<Fn(&SeriesPaint<C>)>>>,
 }
 
-//implement_pwo!(PaintSelectorCore<C, CADS>, vbox, gtk::Box);
+pub type PaintSelector<A, C> = Rc<PaintSelectorCore<A, C>>;
 
-pub type PaintSelector<C, CADS, SPEC> = Rc<PaintSelectorCore<C, CADS, SPEC>>;
-
-pub trait PaintSelectorInterface<C, CADS, SPEC>
-    where   C: CharacteristicsInterface + 'static,
-            CADS: ColourAttributeDisplayStackInterface + 'static,
-            SPEC: PaintTreeViewColumnSpec + 'static
+pub trait PaintSelectorInterface<A, C>
+    where   A: ColourAttributesInterface + 'static,
+            C: CharacteristicsInterface + 'static,
 {
     fn pwo(&self) -> gtk::Box;
-    fn create(series: &PaintSeries<C>) -> PaintSelector<C, CADS, SPEC>;
+    fn create(series: &PaintSeries<C>) -> PaintSelector<A, C>;
     fn connect_add_paint<F: 'static + Fn(&SeriesPaint<C>)>(&self, callback: F);
     fn set_target_colour(&self, ocolour: Option<&Colour>);
 }
 
-impl<C, CADS, SPEC> PaintSelectorCore<C, CADS, SPEC>
-    where   C: CharacteristicsInterface + 'static,
-            CADS: ColourAttributeDisplayStackInterface + 'static,
-            SPEC: PaintTreeViewColumnSpec + 'static
+impl<A, C> PaintSelectorCore<A, C>
+    where   A: ColourAttributesInterface + 'static,
+            C: CharacteristicsInterface + 'static,
 {
     fn inform_add_paint(&self, paint: &SeriesPaint<C>) {
         for callback in self.add_paint_callbacks.borrow().iter() {
@@ -71,22 +65,24 @@ impl<C, CADS, SPEC> PaintSelectorCore<C, CADS, SPEC>
     }
 }
 
-impl<C, CADS, SPEC> PaintSelectorInterface<C, CADS, SPEC> for PaintSelector<C, CADS, SPEC>
-    where   C: CharacteristicsInterface + 'static,
-            CADS: ColourAttributeDisplayStackInterface + 'static,
-            SPEC: PaintTreeViewColumnSpec + 'static
+impl<A, C> PaintSelectorInterface<A, C> for PaintSelector<A, C>
+    where   A: ColourAttributesInterface + 'static,
+            C: CharacteristicsInterface + 'static,
 {
     fn pwo(&self) -> gtk::Box {
         self.vbox.clone()
     }
 
-    fn create(series: &PaintSeries<C>) -> PaintSelector<C, CADS, SPEC> {
+    fn create(series: &PaintSeries<C>) -> PaintSelector<A, C> {
+        let mut view_attr_wheels:Vec<PaintHueAttrWheel<A, C>> = Vec::new();
+        for attr in A::scalar_attributes().iter() {
+            view_attr_wheels.push(PaintHueAttrWheel::<A, C>::create(*attr));
+        }
         let paint_selector = Rc::new(
-            PaintSelectorCore::<C, CADS, SPEC> {
+            PaintSelectorCore::<A, C> {
                 vbox: gtk::Box::new(gtk::Orientation::Vertical, 0),
-                hue_value_wheel: PaintHueAttrWheel::<C, CADS>::create(ScalarAttribute::Value),
-                hue_greyness_wheel: PaintHueAttrWheel::<C, CADS>::create(ScalarAttribute::Greyness),
-                paint_list: PaintSeriesView::<C, CADS, SPEC>::create(series),
+                hue_attr_wheels: view_attr_wheels,
+                paint_list: PaintSeriesView::<A, C>::create(series),
                 add_paint_callbacks: RefCell::new(Vec::new()),
             }
         );
@@ -97,8 +93,11 @@ impl<C, CADS, SPEC> PaintSelectorInterface<C, CADS, SPEC> for PaintSelector<C, C
         hbox.pack_start(&gtk::Label::new(Some(series_name.as_str())), true, true, 0);
 
         let notebook = gtk::Notebook::new();
-        notebook.append_page(&paint_selector.hue_value_wheel.pwo(), Some(&gtk::Label::new("Hue/Value Wheel")));
-        notebook.append_page(&paint_selector.hue_greyness_wheel.pwo(), Some(&gtk::Label::new("Hue/Greyness Wheel")));
+        for wheel in paint_selector.hue_attr_wheels.iter() {
+            let label_text = format!("Hue/{} Wheel", wheel.get_attr().to_string());
+            let label = gtk::Label::new(Some(label_text.as_str()));
+            notebook.append_page(&wheel.pwo(), Some(&label));
+        }
         let hpaned = gtk::Paned::new(gtk::Orientation::Horizontal);
         hpaned.pack1(&notebook, true, true);
         hpaned.pack2(&paint_selector.paint_list.pwo() , true, true);
@@ -106,18 +105,17 @@ impl<C, CADS, SPEC> PaintSelectorInterface<C, CADS, SPEC> for PaintSelector<C, C
         paint_selector.vbox.pack_start(&hpaned, true, true, 0);
 
         for paint in series.get_paints().iter() {
-            paint_selector.hue_value_wheel.add_paint(&paint);
-            paint_selector.hue_greyness_wheel.add_paint(&paint);
+            for wheel in paint_selector.hue_attr_wheels.iter() {
+                wheel.add_paint(&paint);
+            }
         }
 
-        let paint_selector_c = paint_selector.clone();
-        paint_selector.hue_value_wheel.connect_add_paint(
-            move |paint| paint_selector_c.inform_add_paint(paint)
-        );
-        let paint_selector_c = paint_selector.clone();
-        paint_selector.hue_greyness_wheel.connect_add_paint(
-            move |paint| paint_selector_c.inform_add_paint(paint)
-        );
+        for wheel in paint_selector.hue_attr_wheels.iter() {
+            let paint_selector_c = paint_selector.clone();
+            wheel.connect_add_paint(
+                move |paint| paint_selector_c.inform_add_paint(paint)
+            );
+        }
         let paint_selector_c = paint_selector.clone();
         paint_selector.paint_list.connect_add_paint(
             move |paint| paint_selector_c.inform_add_paint(paint)
@@ -131,28 +129,27 @@ impl<C, CADS, SPEC> PaintSelectorInterface<C, CADS, SPEC> for PaintSelector<C, C
     }
 
     fn set_target_colour(&self, ocolour: Option<&Colour>) {
-        self.hue_value_wheel.set_target_colour(ocolour);
-        self.hue_greyness_wheel.set_target_colour(ocolour);
+        for wheel in self.hue_attr_wheels.iter() {
+            wheel.set_target_colour(ocolour);
+        }
         self.paint_list.set_target_colour(ocolour);
     }
 }
 
-pub struct SeriesPaintManagerCore<C, CADS, SPEC>
-    where   C: CharacteristicsInterface + 'static,
-            CADS: ColourAttributeDisplayStackInterface + 'static,
-            SPEC: PaintTreeViewColumnSpec + 'static
+pub struct SeriesPaintManagerCore<A, C>
+    where   A: ColourAttributesInterface + 'static,
+            C: CharacteristicsInterface + 'static,
 {
     window: gtk::Window,
     notebook: gtk::Notebook,
     add_paint_callbacks: RefCell<Vec<Box<Fn(&SeriesPaint<C>)>>>,
-    paint_selectors: RefCell<HashMap<PaintSeriesIdentity, PaintSelector<C, CADS, SPEC>>>,
+    paint_selectors: RefCell<HashMap<PaintSeriesIdentity, PaintSelector<A, C>>>,
     paint_series_files_data_path: PathBuf,
 }
 
-impl<C, CADS, SPEC> SeriesPaintManagerCore<C, CADS, SPEC>
-    where   C: CharacteristicsInterface + 'static,
-            CADS: ColourAttributeDisplayStackInterface + 'static,
-            SPEC: PaintTreeViewColumnSpec + 'static
+impl<A, C> SeriesPaintManagerCore<A, C>
+    where   A: ColourAttributesInterface + 'static,
+            C: CharacteristicsInterface + 'static,
 {
     fn inform_add_paint(&self, paint: &SeriesPaint<C>) {
         for callback in self.add_paint_callbacks.borrow().iter() {
@@ -211,25 +208,23 @@ impl<C, CADS, SPEC> SeriesPaintManagerCore<C, CADS, SPEC>
 }
 }
 
-pub type SeriesPaintManager<C, CADS, SPEC> = Rc<SeriesPaintManagerCore<C, CADS, SPEC>>;
+pub type SeriesPaintManager<A, C> = Rc<SeriesPaintManagerCore<A, C>>;
 
-pub trait SeriesPaintManagerInterface<C, CADS, SPEC>
-    where   C: CharacteristicsInterface + 'static,
-            CADS: ColourAttributeDisplayStackInterface + 'static,
-            SPEC: PaintTreeViewColumnSpec + 'static
+pub trait SeriesPaintManagerInterface<A, C>
+    where   A: ColourAttributesInterface + 'static,
+            C: CharacteristicsInterface + 'static,
 {
-    fn create(data_path: &Path) -> SeriesPaintManager<C, CADS, SPEC>;
+    fn create(data_path: &Path) -> SeriesPaintManager<A, C>;
     fn connect_add_paint<F: 'static + Fn(&SeriesPaint<C>)>(&self, callback: F);
     fn add_paint_series(&self, series: &PaintSeries<C>);
     fn button(&self) -> gtk::Button;
 }
 
-impl<C, CADS, SPEC> SeriesPaintManagerInterface<C, CADS, SPEC> for SeriesPaintManager<C, CADS, SPEC>
-    where   C: CharacteristicsInterface + 'static,
-            CADS: ColourAttributeDisplayStackInterface + 'static,
-            SPEC: PaintTreeViewColumnSpec + 'static
+impl<A, C> SeriesPaintManagerInterface<A, C> for SeriesPaintManager<A, C>
+    where   A: ColourAttributesInterface + 'static,
+            C: CharacteristicsInterface + 'static,
 {
-    fn create(data_path: &Path) -> SeriesPaintManager<C, CADS, SPEC> {
+    fn create(data_path: &Path) -> SeriesPaintManager<A, C> {
         let window = gtk::Window::new(gtk::WindowType::Toplevel);
         window.set_geometry_from_recollections("series_paint_manager", (600, 200));
         window.set_destroy_with_parent(true);
@@ -242,10 +237,10 @@ impl<C, CADS, SPEC> SeriesPaintManagerInterface<C, CADS, SPEC> for SeriesPaintMa
         notebook.popup_enable();
         window.add(&notebook.clone());
         let add_paint_callbacks: RefCell<Vec<Box<Fn(&SeriesPaint<C>)>>> = RefCell::new(Vec::new());
-        let paint_selectors: RefCell<HashMap<PaintSeriesIdentity, PaintSelector<C, CADS, SPEC>>> = RefCell::new(HashMap::new());
+        let paint_selectors: RefCell<HashMap<PaintSeriesIdentity, PaintSelector<A, C>>> = RefCell::new(HashMap::new());
 
         let spm = Rc::new(
-            SeriesPaintManagerCore::<C, CADS, SPEC>{
+            SeriesPaintManagerCore::<A, C>{
                 window: window,
                 notebook: notebook,
                 add_paint_callbacks: add_paint_callbacks,
@@ -279,7 +274,7 @@ impl<C, CADS, SPEC> SeriesPaintManagerInterface<C, CADS, SPEC> for SeriesPaintMa
             inform_user(Some(&self.window), "Duplicate Paint Series", Some(expln.as_str()));
             return;
         }
-        let paint_selector = PaintSelector::<C, CADS, SPEC>::create(&series);
+        let paint_selector = PaintSelector::<A, C>::create(&series);
         selectors.insert(series.series_id(), paint_selector.clone());
         let spm_c = self.clone();
         paint_selector.connect_add_paint(

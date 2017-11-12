@@ -21,6 +21,7 @@ use std::cmp::Ordering;
 use std::fmt::Debug;
 use std::hash::*;
 use std::io;
+use std::rc::Rc;
 use std::str::FromStr;
 
 use pw_gix::colour::*;
@@ -37,6 +38,16 @@ pub trait CharacteristicsInterface:
     fn tv_columns(start_col_id: i32) -> Vec<gtk::TreeViewColumn>;
     fn tv_rows(&self) -> Vec<gtk::Value>;
     fn gui_display_widget(&self) -> gtk::Box;
+}
+
+pub trait ColourAttributesInterface {
+    fn create() -> Rc<Self>;
+    fn tv_columns() -> Vec<gtk::TreeViewColumn>;
+    fn scalar_attributes() -> Vec<ScalarAttribute>;
+
+    fn pwo(&self) -> gtk::Box;
+    fn set_colour(&self, colour: Option<&Colour>);
+    fn set_target_colour(&self, target_colour: Option<&Colour>);
 }
 
 pub trait BasicPaintInterface<C>: Hash + Clone + PartialEq

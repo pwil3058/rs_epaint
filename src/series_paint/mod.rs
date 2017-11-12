@@ -29,7 +29,6 @@ use gtk;
 use gtk::prelude::*;
 
 use pw_gix::colour::*;
-use pw_gix::colour::attributes::*;
 use pw_gix::gtkx::coloured::*;
 use pw_gix::gtkx::dialog::*;
 use pw_gix::gtkx::list_store::*;
@@ -175,21 +174,21 @@ fn get_id_for_dialog() -> u32 {
     id
 }
 
-pub struct SeriesPaintDisplayDialogCore<C, CADS>
+pub struct SeriesPaintDisplayDialogCore<A, C>
     where   C: CharacteristicsInterface,
-            CADS: ColourAttributeDisplayStackInterface
+            A: ColourAttributesInterface
 {
     dialog: gtk::Dialog,
     paint: SeriesPaint<C>,
     current_target_label: gtk::Label,
-    cads: CADS,
+    cads: Rc<A>,
     id_no: u32,
     destroy_callbacks: RefCell<Vec<Box<Fn(u32)>>>
 }
 
-impl<C, CADS> SeriesPaintDisplayDialogCore<C, CADS>
+impl<A, C> SeriesPaintDisplayDialogCore<A, C>
     where   C: CharacteristicsInterface,
-            CADS: ColourAttributeDisplayStackInterface
+            A: ColourAttributesInterface
 {
     pub fn show(&self) {
         self.dialog.show()
@@ -223,30 +222,30 @@ impl<C, CADS> SeriesPaintDisplayDialogCore<C, CADS>
 
 }
 
-pub type SeriesPaintDisplayDialog<C, CADS> = Rc<SeriesPaintDisplayDialogCore<C, CADS>>;
+pub type SeriesPaintDisplayDialog<A, C> = Rc<SeriesPaintDisplayDialogCore<A, C>>;
 
-pub trait SeriesPaintDisplayDialogInterface<C, CADS>
+pub trait SeriesPaintDisplayDialogInterface<A, C>
     where   C: CharacteristicsInterface,
-            CADS: ColourAttributeDisplayStackInterface
+            A: ColourAttributesInterface
 {
     fn create(
         paint: &SeriesPaint<C>,
         current_target: Option<Colour>,
         parent: Option<&gtk::Window>,
         button_specs: Vec<SeriesPaintDisplayButtonSpec>,
-    ) -> SeriesPaintDisplayDialog<C, CADS>;
+    ) -> SeriesPaintDisplayDialog<A, C>;
 }
 
-impl<C, CADS> SeriesPaintDisplayDialogInterface<C, CADS> for SeriesPaintDisplayDialog<C, CADS>
-    where   C: CharacteristicsInterface + 'static,
-            CADS: ColourAttributeDisplayStackInterface + 'static
+impl<A, C> SeriesPaintDisplayDialogInterface<A, C> for SeriesPaintDisplayDialog<A, C>
+    where   A: ColourAttributesInterface + 'static,
+            C: CharacteristicsInterface + 'static,
 {
     fn create(
         paint: &SeriesPaint<C>,
         current_target: Option<Colour>,
         parent: Option<&gtk::Window>,
         button_specs: Vec<SeriesPaintDisplayButtonSpec>,
-    ) -> SeriesPaintDisplayDialog<C, CADS> {
+    ) -> SeriesPaintDisplayDialog<A, C> {
         let title = format!("mcmmtk: {}", paint.name());
         let dialog = gtk::Dialog::new_with_buttons(
             Some(title.as_str()),
@@ -275,7 +274,7 @@ impl<C, CADS> SeriesPaintDisplayDialogInterface<C, CADS> for SeriesPaintDisplayD
         vbox.pack_start(&current_target_label.clone(), true, true, 0);
         //
         content_area.pack_start(&vbox, true, true, 0);
-        let cads = CADS::create();
+        let cads = A::create();
         cads.set_colour(Some(&paint.colour()));
         content_area.pack_start(&cads.pwo(), true, true, 1);
         let characteristics_display = paint.characteristics().gui_display_widget();
@@ -521,10 +520,9 @@ impl<C> PaintSeriesInterface<C> for PaintSeries<C>
     }
 }
 
-pub struct PaintSeriesViewCore<C, CADS, SPEC>
-    where   C: CharacteristicsInterface + 'static,
-            CADS: ColourAttributeDisplayStackInterface + 'static,
-            SPEC: PaintTreeViewColumnSpec + 'static
+pub struct PaintSeriesViewCore<A, C>
+    where   A: ColourAttributesInterface + 'static,
+            C: CharacteristicsInterface + 'static,
 {
     scrolled_window: gtk::ScrolledWindow,
     list_store: gtk::ListStore,
@@ -536,14 +534,13 @@ pub struct PaintSeriesViewCore<C, CADS, SPEC>
     chosen_paint: RefCell<Option<SeriesPaint<C>>>,
     current_target: RefCell<Option<Colour>>,
     add_paint_callbacks: RefCell<Vec<Box<Fn(&SeriesPaint<C>)>>>,
-    series_paint_dialogs: RefCell<HashMap<u32, SeriesPaintDisplayDialog<C, CADS>>>,
-    spec: PhantomData<SPEC>
+    series_paint_dialogs: RefCell<HashMap<u32, SeriesPaintDisplayDialog<A, C>>>,
+    spec: PhantomData<A>
 }
 
-impl<C, CADS, SPEC> PaintSeriesViewCore<C, CADS, SPEC>
-    where   C: CharacteristicsInterface + 'static,
-            CADS: ColourAttributeDisplayStackInterface + 'static,
-            SPEC: PaintTreeViewColumnSpec + 'static
+impl<A, C> PaintSeriesViewCore<A, C>
+    where   A: ColourAttributesInterface + 'static,
+            C: CharacteristicsInterface + 'static,
 {
     fn get_series_paint_at(&self, posn: (f64, f64)) -> Option<SeriesPaint<C>> {
         let x = posn.0 as i32;
@@ -588,28 +585,26 @@ impl<C, CADS, SPEC> PaintSeriesViewCore<C, CADS, SPEC>
     }
 }
 
-pub type PaintSeriesView<C, CADS, SPEC> = Rc<PaintSeriesViewCore<C, CADS, SPEC>>;
+pub type PaintSeriesView<A, C> = Rc<PaintSeriesViewCore<A, C>>;
 
-pub trait PaintSeriesViewInterface<C, CADS, SPEC>
-    where   C: CharacteristicsInterface + 'static,
-            CADS: ColourAttributeDisplayStackInterface + 'static,
-            SPEC: PaintTreeViewColumnSpec + 'static
+pub trait PaintSeriesViewInterface<A, C>
+    where   A: ColourAttributesInterface + 'static,
+            C: CharacteristicsInterface + 'static,
 {
     fn pwo(&self) -> gtk::ScrolledWindow;
-    fn create(series: &PaintSeries<C>) -> PaintSeriesView<C, CADS, SPEC>;
+    fn create(series: &PaintSeries<C>) -> PaintSeriesView<A, C>;
     fn connect_add_paint<F: 'static + Fn(&SeriesPaint<C>)>(&self, callback: F);
 }
 
-impl<C, CADS, SPEC> PaintSeriesViewInterface<C, CADS, SPEC> for PaintSeriesView<C, CADS, SPEC>
-    where   C: CharacteristicsInterface + 'static,
-            CADS: ColourAttributeDisplayStackInterface + 'static,
-            SPEC: PaintTreeViewColumnSpec + 'static
+impl<A, C> PaintSeriesViewInterface<A, C> for PaintSeriesView<A, C>
+    where   A: ColourAttributesInterface + 'static,
+            C: CharacteristicsInterface + 'static,
 {
     fn pwo(&self) -> gtk::ScrolledWindow {
         self.scrolled_window.clone()
     }
 
-    fn create(series: &PaintSeries<C>) -> PaintSeriesView<C, CADS, SPEC> {
+    fn create(series: &PaintSeries<C>) -> PaintSeriesView<A, C> {
         let len = SeriesPaint::<C>::tv_row_len();
         let list_store = gtk::ListStore::new(&STANDARD_PAINT_ROW_SPEC[0..len]);
         for paint in series.get_series_paints().iter() {
@@ -628,7 +623,7 @@ impl<C, CADS, SPEC> PaintSeriesViewInterface<C, CADS, SPEC> for PaintSeriesView<
         menu.show_all();
 
         let mspl = Rc::new(
-            PaintSeriesViewCore::<C, CADS, SPEC> {
+            PaintSeriesViewCore::<A, C> {
                 scrolled_window: gtk::ScrolledWindow::new(None, None),
                 list_store: list_store,
                 menu: menu,
@@ -644,7 +639,7 @@ impl<C, CADS, SPEC> PaintSeriesViewInterface<C, CADS, SPEC> for PaintSeriesView<
             }
         );
 
-        for col in SPEC::tv_columns() {
+        for col in A::tv_columns() {
             mspl.view.append_column(&col);
         }
 
@@ -705,7 +700,7 @@ impl<C, CADS, SPEC> PaintSeriesViewInterface<C, CADS, SPEC> for PaintSeriesView<
                     } else {
                         vec![]
                     };
-                    let dialog = SeriesPaintDisplayDialog::<C, CADS>::create(
+                    let dialog = SeriesPaintDisplayDialog::<A, C>::create(
                         &paint,
                         target,
                         None,

@@ -23,7 +23,6 @@ use pw_gix::cairox::*;
 
 use pw_gix::pwo::*;
 use pw_gix::colour::*;
-use pw_gix::colour::attributes::*;
 use pw_gix::gtkx::paned::*;
 use pw_gix::rgb_math::rgb::*;
 
@@ -142,8 +141,8 @@ impl ColourMatchAreaInterface for ColourMatchArea {
     }
 }
 
-pub trait PaintMixerInterface<CADS, C>
-    where   CADS: ColourAttributeDisplayStackInterface,
+pub trait PaintMixerInterface<A, C>
+    where   A: ColourAttributesInterface,
             C: CharacteristicsInterface
 {
     type PaintMixerType;
@@ -152,55 +151,59 @@ pub trait PaintMixerInterface<CADS, C>
     fn create() -> Self::PaintMixerType;
 }
 
-pub struct PaintMixerCore<CADS, C>
-    where   CADS: ColourAttributeDisplayStackInterface,
+pub struct PaintMixerCore<A, C>
+    where   A: ColourAttributesInterface,
             C: CharacteristicsInterface
 {
     vbox: gtk::Box,
-    cads: CADS,
+    cads: Rc<A>,
     colour_match_area: ColourMatchArea,
-    hue_greyness_wheel: PaintHueAttrWheel<C, CADS>,
-    hue_value_wheel: PaintHueAttrWheel<C, CADS>,
+    hue_attr_wheels: Vec<PaintHueAttrWheel<A, C>>,
     paint_components: PaintComponentsBox<C>,
 }
 
-impl<CADS, C> PaintMixerCore<CADS, C>
-    where   CADS: ColourAttributeDisplayStackInterface + 'static,
+impl<A, C> PaintMixerCore<A, C>
+    where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static
 {
     pub fn add_series_paint(&self, paint: &SeriesPaint<C>) {
         self.paint_components.add_series_paint(paint);
-        self.hue_greyness_wheel.add_paint(&Paint::Series(paint.clone()));
-        self.hue_value_wheel.add_paint(&Paint::Series(paint.clone()));
+        for wheel in self.hue_attr_wheels.iter() {
+            wheel.add_paint(&Paint::Series(paint.clone()));
+        }
     }
 
-    pub fn set_target_colour(&self, colour: Option<&Colour>) {
-        self.cads.set_target_colour(colour);
-        self.colour_match_area.set_target_colour(colour);
-        self.hue_greyness_wheel.set_target_colour(colour);
-        self.hue_value_wheel.set_target_colour(colour);
+    pub fn set_target_colour(&self, ocolour: Option<&Colour>) {
+        self.cads.set_target_colour(ocolour);
+        self.colour_match_area.set_target_colour(ocolour);
+        for wheel in self.hue_attr_wheels.iter() {
+            wheel.set_target_colour(ocolour);
+        }
     }
 }
 
-pub type PaintMixer<CADS, C> = Rc<PaintMixerCore<CADS, C>>;
+pub type PaintMixer<A, C> = Rc<PaintMixerCore<A, C>>;
 
-impl<CADS, C> PaintMixerInterface<CADS, C> for PaintMixer<CADS, C>
-    where   CADS: ColourAttributeDisplayStackInterface + 'static,
+impl<A, C> PaintMixerInterface<A, C> for PaintMixer<A, C>
+    where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static
 {
-    type PaintMixerType = PaintMixer<CADS, C>;
+    type PaintMixerType = PaintMixer<A, C>;
 
     fn pwo(&self) -> gtk::Box {
         self.vbox.clone()
     }
 
-    fn create() -> PaintMixer<CADS, C> {
+    fn create() -> PaintMixer<A, C> {
+        let mut view_attr_wheels:Vec<PaintHueAttrWheel<A, C>> = Vec::new();
+        for attr in A::scalar_attributes().iter() {
+            view_attr_wheels.push(PaintHueAttrWheel::<A, C>::create(*attr));
+        }
         let paint_mixer = Rc::new(
-            PaintMixerCore::<CADS, C> {
+            PaintMixerCore::<A, C> {
                 vbox: gtk::Box::new(gtk::Orientation::Vertical, 1),
-                cads: CADS::create(),
-                hue_value_wheel: PaintHueAttrWheel::<C, CADS>::create(ScalarAttribute::Value),
-                hue_greyness_wheel: PaintHueAttrWheel::<C, CADS>::create(ScalarAttribute::Greyness),
+                cads: A::create(),
+                hue_attr_wheels: view_attr_wheels,
                 colour_match_area: ColourMatchArea::create(),
                 paint_components: PaintComponentsBox::<C>::create_with(6, true),
             }
@@ -210,8 +213,11 @@ impl<CADS, C> PaintMixerInterface<CADS, C> for PaintMixer<CADS, C>
         vbox.pack_start(&paint_mixer.colour_match_area.pwo(), true, true, 0);
 
         let notebook = gtk::Notebook::new();
-        notebook.append_page(&paint_mixer.hue_value_wheel.pwo(), Some(&gtk::Label::new("Hue/Value")));
-        notebook.append_page(&paint_mixer.hue_greyness_wheel.pwo(), Some(&gtk::Label::new("Hue/Greyness")));
+        for wheel in paint_mixer.hue_attr_wheels.iter() {
+            let label_text = format!("Hue/{} Wheel", wheel.get_attr().to_string());
+            let label = gtk::Label::new(Some(label_text.as_str()));
+            notebook.append_page(&wheel.pwo(), Some(&label));
+        }
 
         let hpaned = gtk::Paned::new(gtk::Orientation::Horizontal);
         hpaned.pack1(&notebook, true, true);

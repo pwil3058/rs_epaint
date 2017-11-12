@@ -20,7 +20,6 @@ use gtk;
 use gtk::prelude::*;
 
 use pw_gix::colour::*;
-use pw_gix::colour::attributes::*;
 use pw_gix::gtkx::coloured::*;
 use pw_gix::gtkx::dialog::*;
 
@@ -104,44 +103,44 @@ impl<C> MixedPaintInterface<C> for MixedPaint<C>
     }
 }
 
-pub struct MixedPaintDisplayDialogCore<C, CADS>
+pub struct MixedPaintDisplayDialogCore<A, C>
     where   C: CharacteristicsInterface,
-            CADS: ColourAttributeDisplayStackInterface
+            A: ColourAttributesInterface
 {
     dialog: gtk::Dialog,
     paint: PhantomData<MixedPaint<C>>,
-    cads: PhantomData<CADS>,
+    cads: PhantomData<A>,
 }
 
-impl<C, CADS> MixedPaintDisplayDialogCore<C, CADS>
+impl<A, C> MixedPaintDisplayDialogCore<A, C>
     where   C: CharacteristicsInterface,
-            CADS: ColourAttributeDisplayStackInterface
+            A: ColourAttributesInterface
 {
     pub fn show(&self) {
         self.dialog.show()
     }
 }
 
-pub type MixedPaintDisplayDialog<C, CADS> = Rc<MixedPaintDisplayDialogCore<C, CADS>>;
+pub type MixedPaintDisplayDialog<A, C> = Rc<MixedPaintDisplayDialogCore<A, C>>;
 
-pub trait MixedPaintDisplayDialogInterface<C, CADS>
+pub trait MixedPaintDisplayDialogInterface<A, C>
     where   C: CharacteristicsInterface,
-            CADS: ColourAttributeDisplayStackInterface
+            A: ColourAttributesInterface
 {
     fn create(
         paint: &MixedPaint<C>,
         parent: Option<&gtk::Window>,
-    ) -> MixedPaintDisplayDialog<C, CADS>;
+    ) -> MixedPaintDisplayDialog<A, C>;
 }
 
-impl<C, CADS> MixedPaintDisplayDialogInterface<C, CADS> for MixedPaintDisplayDialog<C, CADS>
+impl<A, C> MixedPaintDisplayDialogInterface<A, C> for MixedPaintDisplayDialog<A, C>
     where   C: CharacteristicsInterface + 'static,
-            CADS: ColourAttributeDisplayStackInterface + 'static
+            A: ColourAttributesInterface + 'static
 {
     fn create(
         paint: &MixedPaint<C>,
         parent: Option<&gtk::Window>,
-    ) -> MixedPaintDisplayDialog<C, CADS> {
+    ) -> MixedPaintDisplayDialog<A, C> {
         let title = format!("mcmmtk: {}", paint.name());
         let dialog = gtk::Dialog::new_with_buttons(
             Some(title.as_str()),
@@ -166,7 +165,7 @@ impl<C, CADS> MixedPaintDisplayDialogInterface<C, CADS> for MixedPaintDisplayDia
         }
         //
         content_area.pack_start(&vbox, true, true, 0);
-        let cads = CADS::create();
+        let cads = A::create();
         cads.set_colour(Some(&paint.colour()));
         content_area.pack_start(&cads.pwo(), true, true, 1);
         let characteristics_display = paint.characteristics().gui_display_widget();

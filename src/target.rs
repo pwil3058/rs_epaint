@@ -21,9 +21,10 @@ use std::cmp::*;
 use std::rc::Rc;
 
 use pw_gix::colour::*;
-use pw_gix::colour::attributes::*;
 use pw_gix::gtkx::coloured::*;
 use pw_gix::gtkx::dialog::*;
+
+use paint::*;
 
 #[derive(Debug)]
 pub struct TargetColourCore {
@@ -89,39 +90,39 @@ impl TargetColourInterface for TargetColour {
 }
 
 
-pub struct TargetColourDisplayDialogCore<CADS>
-    where   CADS: ColourAttributeDisplayStackInterface
+pub struct TargetColourDisplayDialogCore<A>
+    where   A: ColourAttributesInterface
 {
     dialog: gtk::Dialog,
-    cads: PhantomData<CADS>,
+    cads: PhantomData<A>,
 }
 
-impl<CADS> TargetColourDisplayDialogCore<CADS>
-    where   CADS: ColourAttributeDisplayStackInterface
+impl<A> TargetColourDisplayDialogCore<A>
+    where   A: ColourAttributesInterface
 {
     pub fn show(&self) {
         self.dialog.show()
     }
 }
 
-pub type TargetColourDisplayDialog<CADS> = Rc<TargetColourDisplayDialogCore<CADS>>;
+pub type TargetColourDisplayDialog<A> = Rc<TargetColourDisplayDialogCore<A>>;
 
-pub trait TargetColourDisplayDialogInterface<CADS>
-    where   CADS: ColourAttributeDisplayStackInterface
+pub trait TargetColourDisplayDialogInterface<A>
+    where   A: ColourAttributesInterface
 {
     fn create(
         colour: &TargetColour,
         parent: Option<&gtk::Window>,
-    ) -> TargetColourDisplayDialog<CADS>;
+    ) -> TargetColourDisplayDialog<A>;
 }
 
-impl<CADS> TargetColourDisplayDialogInterface<CADS> for TargetColourDisplayDialog<CADS>
-    where   CADS: ColourAttributeDisplayStackInterface + 'static
+impl<A> TargetColourDisplayDialogInterface<A> for TargetColourDisplayDialog<A>
+    where   A: ColourAttributesInterface + 'static
 {
     fn create(
         colour: &TargetColour,
         parent: Option<&gtk::Window>,
-    ) -> TargetColourDisplayDialog<CADS> {
+    ) -> TargetColourDisplayDialog<A> {
         let title = format!("mcmmtk: {}", colour.name());
         let dialog = gtk::Dialog::new_with_buttons(
             Some(title.as_str()),
@@ -139,7 +140,7 @@ impl<CADS> TargetColourDisplayDialogInterface<CADS> for TargetColourDisplayDialo
         label.set_widget_colour(&colour.colour());
         vbox.pack_start(&label, true, true, 0);
         content_area.pack_start(&vbox, true, true, 0);
-        let cads = CADS::create();
+        let cads = A::create();
         cads.set_colour(Some(&colour.colour()));
         content_area.pack_start(&cads.pwo(), true, true, 1);
         content_area.show_all();

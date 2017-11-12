@@ -15,10 +15,13 @@
 use gtk;
 use gtk::prelude::*;
 
+use std::rc::Rc;
 use std::str::FromStr;
 
+use pw_gix::colour::*;
 use pw_gix::colour::attributes::*;
 use pw_gix::gtkx::tree_view_column::*;
+use pw_gix::pwo::*;
 
 use paint::*;
 use characteristics::*;
@@ -27,6 +30,7 @@ use hue_wheel::*;
 use mixed_paint::*;
 use mixer::*;
 use series_paint::*;
+pub use series_paint::manager::*;
 
 #[derive(Debug, PartialEq, Hash, Clone, Copy)]
 pub struct ModelPaintCharacteristics {
@@ -95,9 +99,36 @@ impl FromStr for ModelPaintCharacteristics {
     }
 }
 
-pub struct ModelPaintTreeViewColumnSpec {}
+pub struct ModelPaintAttributes {
+    vbox: gtk::Box,
+    hue_cad: HueCAD,
+    greyness_cad: GreynessCAD,
+    value_cad: ValueCAD,
+}
 
-impl PaintTreeViewColumnSpec for ModelPaintTreeViewColumnSpec {
+impl ColourAttributesInterface for ModelPaintAttributes {
+    fn pwo(&self) -> gtk::Box {
+        self.vbox.clone()
+    }
+
+    fn create() -> Rc<ModelPaintAttributes> {
+        let vbox = gtk::Box::new(gtk::Orientation::Vertical, 1);
+        let hue_cad = HueCAD::create();
+        let greyness_cad = GreynessCAD::create();
+        let value_cad = ValueCAD::create();
+        vbox.pack_start(&hue_cad.pwo(), true, true, 0);
+        vbox.pack_start(&greyness_cad.pwo(), true, true, 0);
+        vbox.pack_start(&value_cad.pwo(), true, true, 0);
+        Rc::new(
+            ModelPaintAttributes {
+                vbox,
+                hue_cad,
+                greyness_cad,
+                value_cad,
+            }
+        )
+    }
+
     fn tv_columns() -> Vec<gtk::TreeViewColumn> {
         let fw = 60;
         let mut cols = vec![
@@ -112,18 +143,36 @@ impl PaintTreeViewColumnSpec for ModelPaintTreeViewColumnSpec {
         }
         cols
     }
+
+    fn scalar_attributes() -> Vec<ScalarAttribute> {
+        vec![ScalarAttribute::Value, ScalarAttribute::Greyness]
+    }
+
+
+    fn set_colour(&self, colour: Option<&Colour>) {
+        self.hue_cad.set_colour(colour);
+        self.greyness_cad.set_colour(colour);
+        self.value_cad.set_colour(colour);
+    }
+
+    fn set_target_colour(&self, target_colour: Option<&Colour>) {
+        self.hue_cad.set_target_colour(target_colour);
+        self.greyness_cad.set_target_colour(target_colour);
+        self.value_cad.set_target_colour(target_colour);
+    }
 }
 
 pub type ModelSeriesPaint = SeriesPaint<ModelPaintCharacteristics>;
 pub type ModelSeriesPaintSpec = SeriesPaintSpec<ModelPaintCharacteristics>;
-pub type ModelSeriesPaintDisplayDialog = SeriesPaintDisplayDialog<ModelPaintCharacteristics, HueGreynessValueCADS>;
+pub type ModelSeriesPaintDisplayDialog = SeriesPaintDisplayDialog<ModelPaintAttributes, ModelPaintCharacteristics>;
 pub type ModelMixedPaint = MixedPaint<ModelPaintCharacteristics>;
 pub type ModelPaint = Paint<ModelPaintCharacteristics>;
 pub type ModelPaintSeries = PaintSeries<ModelPaintCharacteristics>;
 pub type ModelPaintComponentsBox = PaintComponentsBox<ModelPaintCharacteristics>;
-pub type ModelPaintMixer = PaintMixer<HueGreynessValueCADS, ModelPaintCharacteristics>;
-pub type ModelPaintHueAttrWheel = PaintHueAttrWheel<ModelPaintCharacteristics, HueGreynessValueCADS>;
-pub type ModelPaintSeriesView = PaintSeriesView<ModelPaintCharacteristics, HueGreynessValueCADS, ModelPaintTreeViewColumnSpec>;
+pub type ModelPaintMixer = PaintMixer<ModelPaintAttributes, ModelPaintCharacteristics>;
+pub type ModelPaintHueAttrWheel = PaintHueAttrWheel<ModelPaintAttributes, ModelPaintCharacteristics>;
+pub type ModelPaintSeriesView = PaintSeriesView<ModelPaintAttributes, ModelPaintCharacteristics>;
+pub type ModelPaintSeriesManager = SeriesPaintManager<ModelPaintAttributes, ModelPaintCharacteristics>;
 
 const IDEAL_PAINT_STR: &str =
 "Manufacturer: Imaginary
