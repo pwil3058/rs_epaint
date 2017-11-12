@@ -25,6 +25,7 @@ use pw_gix::colour::*;
 use pw_gix::gtkx::coloured::*;
 
 use colour_mix::*;
+use mixed_paint::*;
 use paint::*;
 use series_paint::*;
 

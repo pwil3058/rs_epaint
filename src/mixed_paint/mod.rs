@@ -16,14 +16,19 @@ use std::cmp::Ordering;
 use std::marker::PhantomData;
 use std::rc::Rc;
 
-use gtk;
-use gtk::prelude::*;
-
 use pw_gix::colour::*;
-use pw_gix::gtkx::coloured::*;
-use pw_gix::gtkx::dialog::*;
 
 use paint::*;
+
+pub mod display;
+
+pub use self::display::*;
+
+#[derive(Debug, PartialEq, Hash, Clone)]
+pub struct PaintComponent<C: CharacteristicsInterface> {
+    pub paint: Paint<C>,
+    pub parts: u32
+}
 
 pub trait MixedPaintInterface<C>: BasicPaintInterface<C>
     where   C: CharacteristicsInterface
@@ -100,86 +105,6 @@ impl<C> MixedPaintInterface<C> for MixedPaint<C>
 
     fn components(&self) -> Rc<Vec<PaintComponent<C>>> {
         self.components.clone()
-    }
-}
-
-pub struct MixedPaintDisplayDialogCore<A, C>
-    where   C: CharacteristicsInterface,
-            A: ColourAttributesInterface
-{
-    dialog: gtk::Dialog,
-    paint: PhantomData<MixedPaint<C>>,
-    cads: PhantomData<A>,
-}
-
-impl<A, C> MixedPaintDisplayDialogCore<A, C>
-    where   C: CharacteristicsInterface,
-            A: ColourAttributesInterface
-{
-    pub fn show(&self) {
-        self.dialog.show()
-    }
-}
-
-pub type MixedPaintDisplayDialog<A, C> = Rc<MixedPaintDisplayDialogCore<A, C>>;
-
-pub trait MixedPaintDisplayDialogInterface<A, C>
-    where   C: CharacteristicsInterface,
-            A: ColourAttributesInterface
-{
-    fn create(
-        paint: &MixedPaint<C>,
-        parent: Option<&gtk::Window>,
-    ) -> MixedPaintDisplayDialog<A, C>;
-}
-
-impl<A, C> MixedPaintDisplayDialogInterface<A, C> for MixedPaintDisplayDialog<A, C>
-    where   C: CharacteristicsInterface + 'static,
-            A: ColourAttributesInterface + 'static
-{
-    fn create(
-        paint: &MixedPaint<C>,
-        parent: Option<&gtk::Window>,
-    ) -> MixedPaintDisplayDialog<A, C> {
-        let title = format!("mcmmtk: {}", paint.name());
-        let dialog = gtk::Dialog::new_with_buttons(
-            Some(title.as_str()),
-            parent,
-            gtk::DIALOG_USE_HEADER_BAR,
-            &[]
-        );
-        dialog.set_size_from_recollections("mixed_paint_display", (60, 330));
-        let content_area = dialog.get_content_area();
-        let vbox = gtk::Box::new(gtk::Orientation::Vertical, 0);
-        let label = gtk::Label::new(paint.name().as_str());
-        label.set_widget_colour(&paint.colour());
-        vbox.pack_start(&label, false, false, 0);
-        let label = gtk::Label::new(paint.notes().as_str());
-        label.set_widget_colour(&paint.colour());
-        vbox.pack_start(&label, false, false, 0);
-        //
-        if let Some(colour) = paint.target_colour() {
-            let current_target_label = gtk::Label::new("Target Colour");
-            current_target_label.set_widget_colour(&colour.clone());
-            vbox.pack_start(&current_target_label.clone(), true, true, 0);
-        }
-        //
-        content_area.pack_start(&vbox, true, true, 0);
-        let cads = A::create();
-        cads.set_colour(Some(&paint.colour()));
-        content_area.pack_start(&cads.pwo(), true, true, 1);
-        let characteristics_display = paint.characteristics().gui_display_widget();
-        content_area.pack_start(&characteristics_display, false, false, 0);
-        let label = gtk::Label::new("Component List Will Go Here");
-        content_area.pack_start(&label, false, false, 0);
-        content_area.show_all();
-        Rc::new(
-            MixedPaintDisplayDialogCore {
-                dialog: dialog,
-                paint: PhantomData,
-                cads: PhantomData,
-            }
-        )
     }
 }
 

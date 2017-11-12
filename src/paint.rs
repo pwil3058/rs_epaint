@@ -36,6 +36,7 @@ pub trait CharacteristicsInterface:
 {
     fn tv_row_len() -> usize;
     fn tv_columns(start_col_id: i32) -> Vec<gtk::TreeViewColumn>;
+
     fn tv_rows(&self) -> Vec<gtk::Value>;
     fn gui_display_widget(&self) -> gtk::Box;
 }
@@ -180,6 +181,8 @@ pub enum Paint<C: CharacteristicsInterface> {
     Mixed(MixedPaint<C>)
 }
 
+impl<C: CharacteristicsInterface> PaintTreeViewColumnData<C> for Paint<C> {}
+
 impl<C: CharacteristicsInterface> Paint<C> {
     pub fn is_series(&self) ->bool {
         match *self {
@@ -291,12 +294,6 @@ impl<C: CharacteristicsInterface> BasicPaintInterface<C> for Paint<C> {
             Paint::Mixed(ref paint) => paint.characteristics(),
         }
     }
-}
-
-#[derive(Debug, PartialEq, Hash, Clone)]
-pub struct PaintComponent<C: CharacteristicsInterface> {
-    pub paint: Paint<C>,
-    pub parts: u32
 }
 
 #[derive(Debug)]
