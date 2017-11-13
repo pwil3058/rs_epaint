@@ -352,13 +352,34 @@ impl<C> PaintComponentsBoxInterface<C> for PaintComponentsBox<C>
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::str::FromStr;
+
+    use pw_gix::rgb_math::rgb::*;
 
     #[derive(Debug, PartialEq, Hash, Clone, Copy)]
     pub struct EPC { }
 
     impl CharacteristicsInterface for EPC {
+        fn tv_row_len() -> usize {0}
+
+        fn tv_columns(start_col_id: i32) -> Vec<gtk::TreeViewColumn> {
+            vec![]
+        }
+
         fn gui_display_widget(&self) -> gtk::Box {
             gtk::Box::new(gtk::Orientation::Vertical, 1)
+        }
+
+        fn from_floats(floats: &Vec<f64>) -> EPC {
+            EPC{}
+        }
+
+        fn to_floats(&self) -> Vec<f64> {
+            vec![]
+        }
+
+        fn tv_rows(&self) -> Vec<gtk::Value> {
+            vec![]
         }
     }
 

@@ -18,6 +18,7 @@ extern crate lazy_static;
 #[macro_use]
 extern crate pw_gix;
 
+extern crate num;
 extern crate regex;
 
 extern crate cairo;

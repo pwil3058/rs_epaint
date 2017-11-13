@@ -167,7 +167,7 @@ impl<A, C> PaintDisplayDialogInterface<A, C> for PaintDisplayDialog<A, C>
         vbox.pack_start(&current_target_label.clone(), true, true, 0);
         //
         if let Paint::Mixed(ref mixed_paint) = *paint {
-            if let Some(colour) = mixed_paint.target_colour() {
+            if let Some(colour) = mixed_paint.matched_colour() {
                 let current_target_label = gtk::Label::new("Target Colour");
                 current_target_label.set_widget_colour(&colour.clone());
                 vbox.pack_start(&current_target_label.clone(), true, true, 0);

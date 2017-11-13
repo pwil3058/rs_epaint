@@ -36,9 +36,11 @@ pub trait CharacteristicsInterface:
 {
     fn tv_row_len() -> usize;
     fn tv_columns(start_col_id: i32) -> Vec<gtk::TreeViewColumn>;
+    fn from_floats(floats: &Vec<f64>) -> Self;
 
     fn tv_rows(&self) -> Vec<gtk::Value>;
     fn gui_display_widget(&self) -> gtk::Box;
+    fn to_floats(&self) -> Vec<f64>;
 }
 
 pub trait ColourAttributesInterface {
@@ -302,6 +304,7 @@ pub enum PaintError {
     MalformedText(String),
     PaintTypeMismatch,
     IOError(io::Error),
+    NoSubstantiveComponents
 }
 
 #[cfg(test)]

@@ -56,6 +56,15 @@ impl CharacteristicsInterface for ModelPaintCharacteristics {
         cols
     }
 
+    fn from_floats(floats: &Vec<f64>) -> Self {
+        ModelPaintCharacteristics {
+            finish: Finish::from(floats[0]),
+            transparency: Transparency::from(floats[1]),
+            fluorescence: Fluorescence::from(floats[2]),
+            metallic: Metallic::from(floats[3])
+        }
+    }
+
     fn tv_rows(&self) -> Vec<gtk::Value> {
         let mut rows: Vec<gtk::Value> = Vec::new();
         rows.push(self.finish.abbrev().to_value());
@@ -77,6 +86,15 @@ impl CharacteristicsInterface for ModelPaintCharacteristics {
         vbox.pack_start(&label, false, false, 1);
         vbox.show_all();
         vbox
+    }
+
+    fn to_floats(&self) -> Vec<f64> {
+        vec![
+            self.finish.into(),
+            self.transparency.into(),
+            self.fluorescence.into(),
+            self.metallic.into(),
+        ]
     }
 }
 
