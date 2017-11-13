@@ -112,6 +112,15 @@ pub trait PaintDisplayDialogInterface<A, C>
     ) -> PaintDisplayDialog<A, C> {
         Self::create(&Paint::Series(paint.clone()), current_target, parent, button_specs)
     }
+
+    fn mixed_create(
+        paint: &MixedPaint<C>,
+        current_target: Option<Colour>,
+        parent: Option<&gtk::Window>,
+        button_specs: Vec<PaintDisplayButtonSpec>,
+    ) -> PaintDisplayDialog<A, C> {
+        Self::create(&Paint::Mixed(paint.clone()), current_target, parent, button_specs)
+    }
 }
 
 impl<A, C> PaintDisplayDialogInterface<A, C> for PaintDisplayDialog<A, C>
