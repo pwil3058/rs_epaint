@@ -150,8 +150,8 @@ impl<C: CharacteristicsInterface> ChosenItem<C> {
 
 // WHEEL
 pub struct PaintHueAttrWheelCore<A, C>
-    where   C: CharacteristicsInterface,
-            A: ColourAttributesInterface
+    where   C: CharacteristicsInterface + 'static,
+            A: ColourAttributesInterface + 'static
 {
     drawing_area: gtk::DrawingArea,
     menu: gtk::Menu,

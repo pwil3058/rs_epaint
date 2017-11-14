@@ -13,7 +13,6 @@
 // limitations under the License.
 
 use std::cell::{Cell, RefCell};
-//use std::convert::From;
 use std::rc::Rc;
 
 use gdk;

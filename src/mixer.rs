@@ -142,8 +142,8 @@ impl ColourMatchAreaInterface for ColourMatchArea {
 }
 
 pub trait PaintMixerInterface<A, C>
-    where   A: ColourAttributesInterface,
-            C: CharacteristicsInterface
+    where   A: ColourAttributesInterface + 'static,
+            C: CharacteristicsInterface + 'static
 {
     type PaintMixerType;
 
@@ -152,8 +152,8 @@ pub trait PaintMixerInterface<A, C>
 }
 
 pub struct PaintMixerCore<A, C>
-    where   A: ColourAttributesInterface,
-            C: CharacteristicsInterface
+    where   A: ColourAttributesInterface + 'static,
+            C: CharacteristicsInterface + 'static
 {
     vbox: gtk::Box,
     cads: Rc<A>,
