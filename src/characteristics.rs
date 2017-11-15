@@ -12,16 +12,77 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::rc::Rc;
 use std::str::FromStr;
+
+use gtk;
+use gtk::{ComboBoxExt, ComboBoxTextExt};
 
 use regex::*;
 
 use paint::PaintError;
 
-pub trait CharacteristicInterface {
+pub trait CharacteristicInterface: FromStr + PartialEq {
     fn name() -> &'static str;
     fn abbrev(&self) -> &'static str;
     fn description(&self) -> &'static str;
+    fn values() -> &'static [Self];
+}
+
+pub trait CharacteristicEntryInterface {
+    type Characteristic: CharacteristicInterface +'static;
+
+    fn combo_box_text(&self) -> gtk::ComboBoxText;
+    fn create() -> Self;
+
+    fn get_value(&self) -> Option<Self::Characteristic> {
+        if let Some(text) = self.combo_box_text().get_active_text() {
+            match Self::Characteristic::from_str(&text) {
+                Ok(value) => Some(value),
+                Err(_) => panic!("File: {:?} Line: {:?} illegal value: {:?}", file!(), line!(), text)
+            }
+        } else {
+            None
+        }
+    }
+
+    fn set_value(&self, o_value: Option<Self::Characteristic>) {
+        if let Some(value) = o_value {
+            for (i, f_value) in Self::Characteristic::values().iter().enumerate() {
+                if value == *f_value {
+                    self.combo_box_text().set_active(i as i32);
+                    break;
+                }
+            }
+        } else {
+            self.combo_box_text().set_active(-1);
+        }
+    }
+}
+
+macro_rules! implement_entry_core {
+    ( $characteristic:ident, $entry_core:ident ) => {
+        pub struct $entry_core {
+            combo_box_text: gtk::ComboBoxText,
+        }
+
+        impl CharacteristicEntryInterface for Rc<$entry_core> {
+            type Characteristic = $characteristic;
+
+            fn combo_box_text(&self) -> gtk::ComboBoxText {
+                self.combo_box_text.clone()
+            }
+
+            fn create() -> Rc<$entry_core> {
+                let combo_box_text = gtk::ComboBoxText::new();
+                for value in $characteristic::values().iter() {
+                    combo_box_text.append_text(value.description());
+                }
+                combo_box_text.set_active(0);
+                Rc::new($entry_core{combo_box_text})
+            }
+        }
+    }
 }
 
 // FINISH
@@ -31,6 +92,17 @@ pub enum Finish {
     SemiGloss,
     SemiFlat,
     Flat
+}
+
+static FINISH_VALUES: &[Finish] =
+    &[
+        Finish::Gloss,
+        Finish::SemiGloss,
+        Finish::SemiFlat,
+        Finish::Flat
+    ];
+
+impl Finish {
 }
 
 impl CharacteristicInterface for Finish {
@@ -54,6 +126,10 @@ impl CharacteristicInterface for Finish {
             Finish::SemiFlat => "Semi-flat",
             Finish::Flat => "Flat",
         }
+    }
+
+    fn values() -> &'static [Finish] {
+        FINISH_VALUES
     }
 }
 
@@ -106,6 +182,9 @@ impl From<Finish> for f64 {
     }
 }
 
+implement_entry_core!(Finish, FinishEntryCore);
+
+pub type FinishEntry = Rc<FinishEntryCore>;
 
 // TRANSPARENCY
 #[derive(Debug, PartialEq, Hash, Clone, Copy)]
@@ -116,6 +195,15 @@ pub enum Transparency {
     Transparent,
     Clear
 }
+
+static TRANSPARENCY_VALUES: &[Transparency] =
+    &[
+        Transparency::Opaque,
+        Transparency::SemiOpaque,
+        Transparency::SemiTransparent,
+        Transparency::Transparent,
+        Transparency::Clear
+    ];
 
 impl CharacteristicInterface for Transparency {
     fn name() -> &'static str {
@@ -140,6 +228,10 @@ impl CharacteristicInterface for Transparency {
             Transparency::Transparent => "Transparent",
             Transparency::Clear => "Clear",
         }
+    }
+
+    fn values() -> &'static [Transparency] {
+        TRANSPARENCY_VALUES
     }
 }
 
@@ -195,6 +287,9 @@ impl From<Transparency> for f64 {
     }
 }
 
+implement_entry_core!(Transparency, TransparencyEntryCore);
+
+pub type TransparencyEntry = Rc<TransparencyEntryCore>;
 
 // FLUORESCENCE
 #[derive(Debug, PartialEq, Hash, Clone, Copy)]
@@ -204,6 +299,14 @@ pub enum Fluorescence {
     SemiNonfluorescent,
     Nonfluorescent
 }
+
+static FLUORENCE_VALUES: &[Fluorescence] =
+    &[
+        Fluorescence::Fluorescent,
+        Fluorescence::SemiFluorescent,
+        Fluorescence::SemiNonfluorescent,
+        Fluorescence::Nonfluorescent,
+    ];
 
 impl CharacteristicInterface for Fluorescence {
     fn name() -> &'static str {
@@ -226,6 +329,10 @@ impl CharacteristicInterface for Fluorescence {
             Fluorescence::SemiNonfluorescent => "Semi-nonfluorescent",
             Fluorescence::Nonfluorescent => "Nonfluorescent",
         }
+    }
+
+    fn values() -> &'static [Fluorescence] {
+        FLUORENCE_VALUES
     }
 }
 
@@ -278,6 +385,9 @@ impl From<Fluorescence> for f64 {
     }
 }
 
+implement_entry_core!(Fluorescence, FluorescenceEntryCore);
+
+pub type FluorescenceEntry = Rc<FluorescenceEntryCore>;
 
 // METALLIC
 #[derive(Debug, PartialEq, Hash, Clone, Copy)]
@@ -287,6 +397,14 @@ pub enum Metallic {
     SemiMetallic,
     Nonmetallic
 }
+
+static METALLIC_VALUES: &[Metallic] =
+    &[
+        Metallic::Metal,
+        Metallic::Metallic,
+        Metallic::SemiMetallic,
+        Metallic::Nonmetallic,
+    ];
 
 impl CharacteristicInterface for Metallic {
     fn name() -> &'static str {
@@ -309,6 +427,10 @@ impl CharacteristicInterface for Metallic {
             Metallic::SemiMetallic => "Semi-nonmetallic",
             Metallic::Nonmetallic => "Nonmetallic",
         }
+    }
+
+    fn values() -> &'static [Metallic] {
+        METALLIC_VALUES
     }
 }
 
@@ -361,6 +483,9 @@ impl From<Metallic> for f64 {
     }
 }
 
+implement_entry_core!(Metallic, MetallicEntryCore);
+
+pub type MetallicEntry = Rc<MetallicEntryCore>;
 
 #[cfg(test)]
 mod tests {
