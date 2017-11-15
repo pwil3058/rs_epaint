@@ -34,6 +34,8 @@ use series_paint::*;
 pub trait CharacteristicsInterface:
     Debug + Hash + PartialEq + Clone + Copy + FromStr
 {
+    type Entry: CharacteristicsEntryInterface<Self>;
+
     fn tv_row_len() -> usize;
     fn tv_columns(start_col_id: i32) -> Vec<gtk::TreeViewColumn>;
     fn from_floats(floats: &Vec<f64>) -> Self;
@@ -41,6 +43,14 @@ pub trait CharacteristicsInterface:
     fn tv_rows(&self) -> Vec<gtk::Value>;
     fn gui_display_widget(&self) -> gtk::Box;
     fn to_floats(&self) -> Vec<f64>;
+}
+
+pub trait CharacteristicsEntryInterface<C: CharacteristicsInterface> {
+    fn create() -> Self;
+    fn pwo(&self) -> gtk::Box;
+    fn get_characteristics(&self) -> Option<C>;
+    fn set_characteristics(&self, o_characteristics: Option<&C>);
+    fn connect_changed<F: 'static + Fn()>(&self, callback: F);
 }
 
 pub trait ColourAttributesInterface {
