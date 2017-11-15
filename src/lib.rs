@@ -24,8 +24,10 @@ extern crate regex;
 extern crate cairo;
 extern crate gdk;
 extern crate gtk;
+extern crate gdk_pixbuf;
 
 pub mod characteristics;
+pub mod colour_edit;
 pub mod colour_mix;
 pub mod components;
 pub mod display;

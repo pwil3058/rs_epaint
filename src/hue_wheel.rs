@@ -413,10 +413,10 @@ impl<A, C> PaintHueAttrWheelCore<A, C>
     fn draw(&self, cairo_context: &cairo::Context) {
         let geometry = self.geometry.borrow();
 
-        cairo_context.set_source_colour_rgb(&(WHITE * 0.5));
+        cairo_context.set_source_colour_rgb((WHITE * 0.5));
         cairo_context.paint();
 
-        cairo_context.set_source_colour_rgb(&(WHITE * 0.75));
+        cairo_context.set_source_colour_rgb((WHITE * 0.75));
         let n_rings: u8 = 10;
         for i in 0..n_rings {
             let radius = geometry.radius * (i as f64 + 1.0) / n_rings as f64;
@@ -427,7 +427,7 @@ impl<A, C> PaintHueAttrWheelCore<A, C>
         for i in 0..6 {
             let angle = DEG_60 * i;
             let hue = HueAngle::from(angle);
-            cairo_context.set_source_colour_rgb(&hue.max_chroma_rgb());
+            cairo_context.set_source_colour_rgb(hue.max_chroma_rgb());
             let eol = geometry.transform(Point::from((angle, 1.0)));
             cairo_context.draw_line(geometry.centre, eol);
             cairo_context.stroke();

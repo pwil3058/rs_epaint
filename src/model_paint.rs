@@ -32,6 +32,7 @@ use hue_wheel::*;
 use mixed_paint::*;
 use mixer::*;
 use series_paint::*;
+pub use series_paint::entry::*;
 pub use series_paint::manager::*;
 
 #[derive(Debug, PartialEq, Hash, Clone, Copy)]
@@ -122,7 +123,7 @@ impl FromStr for ModelPaintCharacteristics {
 }
 
 pub struct ModelPaintCharacteristicsEntryCore {
-    vbox: gtk::Box,
+    grid: gtk::Grid,
     finish_entry: FinishEntry,
     transparency_entry: TransparencyEntry,
     fluorescence_entry: FluorescenceEntry,
@@ -142,7 +143,7 @@ impl CharacteristicsEntryInterface<ModelPaintCharacteristics> for Rc<ModelPaintC
     fn create() -> Self {
         let cei = Rc::new(
             ModelPaintCharacteristicsEntryCore {
-                vbox: gtk::Box::new(gtk::Orientation::Vertical, 0),
+                grid: gtk::Grid::new(),
                 finish_entry: FinishEntry::create(),
                 transparency_entry: TransparencyEntry::create(),
                 fluorescence_entry: FluorescenceEntry::create(),
@@ -166,16 +167,33 @@ impl CharacteristicsEntryInterface<ModelPaintCharacteristics> for Rc<ModelPaintC
         cei.metallic_entry.combo_box_text().connect_changed(
             move |_| cei_c.inform_changed()
         );
-        cei.vbox.pack_start(&cei.finish_entry.combo_box_text(), false, false, 0);
-        cei.vbox.pack_start(&cei.transparency_entry.combo_box_text(), false, false, 0);
-        cei.vbox.pack_start(&cei.fluorescence_entry.combo_box_text(), false, false, 0);
-        cei.vbox.pack_start(&cei.metallic_entry.combo_box_text(), false, false, 0);
-        cei.vbox.show_all();
+        cei.finish_entry.combo_box_text().set_hexpand(true);
+        cei.transparency_entry.combo_box_text().set_hexpand(true);
+        cei.fluorescence_entry.combo_box_text().set_hexpand(true);
+        cei.metallic_entry.combo_box_text().set_hexpand(true);
+        let label = gtk::Label::new(Some(Finish::prompt().as_str()));
+        label.set_halign(gtk::Align::End);
+        cei.grid.attach(&label, 0, 0, 1, 1);
+        cei.grid.attach_next_to(&cei.finish_entry.combo_box_text(), Some(&label), gtk::PositionType::Right, 1, 1);
+        let label = gtk::Label::new(Some(Transparency::prompt().as_str()));
+        label.set_halign(gtk::Align::End);
+        cei.grid.attach(&label, 0, 1, 1, 1);
+        cei.grid.attach_next_to(&cei.transparency_entry.combo_box_text(), Some(&label), gtk::PositionType::Right, 1, 1);
+        let label = gtk::Label::new(Some(Fluorescence::prompt().as_str()));
+        label.set_halign(gtk::Align::End);
+        cei.grid.attach(&label, 0, 2, 1, 1);
+        cei.grid.attach_next_to(&cei.fluorescence_entry.combo_box_text(), Some(&label), gtk::PositionType::Right, 1, 1);
+        let label = gtk::Label::new(Some(Metallic::prompt().as_str()));
+        label.set_halign(gtk::Align::End);
+        cei.grid.attach(&label, 0, 3, 1, 1);
+        cei.grid.attach_next_to(&cei.metallic_entry.combo_box_text(), Some(&label), gtk::PositionType::Right, 1, 1);
+
+        cei.grid.show_all();
         cei
     }
 
-    fn pwo(&self) -> gtk::Box {
-        self.vbox.clone()
+    fn pwo(&self) -> gtk::Grid {
+        self.grid.clone()
     }
 
     fn get_characteristics(&self) -> Option<ModelPaintCharacteristics> {
@@ -290,6 +308,7 @@ pub type ModelPaintMixer = PaintMixer<ModelPaintAttributes, ModelPaintCharacteri
 pub type ModelPaintHueAttrWheel = PaintHueAttrWheel<ModelPaintAttributes, ModelPaintCharacteristics>;
 pub type ModelPaintSeriesView = PaintSeriesView<ModelPaintAttributes, ModelPaintCharacteristics>;
 pub type ModelPaintSeriesManager = SeriesPaintManager<ModelPaintAttributes, ModelPaintCharacteristics>;
+pub type ModelSeriesPaintEntry = SeriesPaintEntry<ModelPaintAttributes, ModelPaintCharacteristics>;
 
 const IDEAL_PAINT_STR: &str =
 "Manufacturer: Imaginary

@@ -27,6 +27,10 @@ pub trait CharacteristicInterface: FromStr + PartialEq {
     fn abbrev(&self) -> &'static str;
     fn description(&self) -> &'static str;
     fn values() -> &'static [Self];
+
+    fn prompt() -> String {
+        Self::name().to_string() + ":"
+    }
 }
 
 pub trait CharacteristicEntryInterface {

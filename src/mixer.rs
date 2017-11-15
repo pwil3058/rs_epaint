@@ -59,7 +59,7 @@ impl ColourMatchAreaCore {
         if let Some(ref colour) = *self.mixed_colour.borrow() {
             cairo_context.set_source_colour(&colour);
         } else {
-            cairo_context.set_source_colour_rgb(&BLACK);
+            cairo_context.set_source_colour_rgb(BLACK);
         };
         cairo_context.paint();
         if let Some(ref colour) = *self.target_colour.borrow() {

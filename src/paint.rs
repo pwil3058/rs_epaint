@@ -47,7 +47,7 @@ pub trait CharacteristicsInterface:
 
 pub trait CharacteristicsEntryInterface<C: CharacteristicsInterface> {
     fn create() -> Self;
-    fn pwo(&self) -> gtk::Box;
+    fn pwo(&self) -> gtk::Grid;
     fn get_characteristics(&self) -> Option<C>;
     fn set_characteristics(&self, o_characteristics: Option<&C>);
     fn connect_changed<F: 'static + Fn()>(&self, callback: F);

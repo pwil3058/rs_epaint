@@ -73,15 +73,15 @@ impl<C: CharacteristicsInterface> ShapeInterface for PaintShape<C> {
         let side = canvas.scaled(SHAPE_SIDE);
         match self.paint {
             Paint::Series(_) => {
-                cairo_context.set_source_colour_rgb(&fill_rgb);
+                cairo_context.set_source_colour_rgb(fill_rgb);
                 cairo_context.draw_square(point, side, true);
-                cairo_context.set_source_colour_rgb(&outline_rgb);
+                cairo_context.set_source_colour_rgb(outline_rgb);
                 cairo_context.draw_square(point, side, false);
             },
             Paint::Mixed(_) => {
-                cairo_context.set_source_colour_rgb(&fill_rgb);
+                cairo_context.set_source_colour_rgb(fill_rgb);
                 cairo_context.draw_diamond(point, side, true);
-                cairo_context.set_source_colour_rgb(&outline_rgb);
+                cairo_context.set_source_colour_rgb(outline_rgb);
                 cairo_context.draw_diamond(point, side, false);
             }
         }
@@ -204,9 +204,9 @@ impl ShapeInterface for CurrentTargetShape {
         let outline_rgb = fill_rgb.best_foreground_rgb();
         let point = canvas.transform(self.xy);
         let radius = canvas.scaled(SHAPE_RADIUS);
-        cairo_context.set_source_colour_rgb(&fill_rgb);
+        cairo_context.set_source_colour_rgb(fill_rgb);
         cairo_context.draw_circle(point, radius, true);
-        cairo_context.set_source_colour_rgb(&outline_rgb);
+        cairo_context.set_source_colour_rgb(outline_rgb);
         cairo_context.draw_circle(point, radius, false);
 
         let half_len = canvas.scaled(SHAPE_SIDE);
@@ -253,9 +253,9 @@ impl ShapeInterface for TargetColourShape {
         let outline_rgb = fill_rgb.best_foreground_rgb();
         let point = canvas.transform(self.xy);
         let radius = canvas.scaled(SHAPE_RADIUS);
-        cairo_context.set_source_colour_rgb(&fill_rgb);
+        cairo_context.set_source_colour_rgb(fill_rgb);
         cairo_context.draw_circle(point, radius, true);
-        cairo_context.set_source_colour_rgb(&outline_rgb);
+        cairo_context.set_source_colour_rgb(outline_rgb);
         cairo_context.draw_circle(point, radius, false);
     }
 }
