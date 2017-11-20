@@ -45,10 +45,6 @@ impl TargetColourCore {
     pub fn tooltip_text(&self) -> String {
         format!("{}: {}", self.name, self.notes)
     }
-
-    pub fn colour(&self) -> Colour {
-        self.colour.clone()
-    }
 }
 
 impl PartialEq for TargetColourCore {
@@ -72,6 +68,12 @@ impl Ord for TargetColourCore {
 }
 
 pub type TargetColour = Rc<TargetColourCore>;
+
+impl ColouredItemInterface for TargetColour {
+    fn colour(&self) -> Colour {
+        self.colour.clone()
+    }
+}
 
 pub trait TargetColourInterface {
     fn create(colour: &Colour, name: &str, notes: &str) -> TargetColour;

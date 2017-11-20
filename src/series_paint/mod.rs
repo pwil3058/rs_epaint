@@ -97,6 +97,12 @@ impl<C: CharacteristicsInterface> Ord for SeriesPaintCore<C> {
     }
 }
 
+impl<C: CharacteristicsInterface> ColouredItemInterface for SeriesPaint<C> {
+    fn colour(&self) -> Colour {
+        self.colour.clone()
+    }
+}
+
 pub type SeriesPaint<C> = Rc<SeriesPaintCore<C>>;
 
 impl<C> BasicPaintInterface<C> for SeriesPaint<C>
@@ -104,10 +110,6 @@ impl<C> BasicPaintInterface<C> for SeriesPaint<C>
 {
     fn name(&self) -> String {
         self.name.clone()
-    }
-
-    fn colour(&self) -> Colour {
-        self.colour.clone()
     }
 
     fn notes(&self) -> String {

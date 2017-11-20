@@ -105,6 +105,7 @@ pub trait MixedPaintInterface<C>: BasicPaintInterface<C>
         };
         rows
     }
+
     fn matched_colour(&self) -> Option<Colour>;
     fn components(&self) -> Rc<Vec<PaintComponent<C>>>;
 }
@@ -141,15 +142,17 @@ impl<C: CharacteristicsInterface> Ord for MixedPaintCore<C> {
 
 pub type MixedPaint<C> = Rc<MixedPaintCore<C>>;
 
+impl<C: CharacteristicsInterface> ColouredItemInterface for MixedPaint<C> {
+    fn colour(&self) -> Colour {
+        self.colour.clone()
+    }
+}
+
 impl<C> BasicPaintInterface<C> for MixedPaint<C>
     where   C: CharacteristicsInterface
 {
     fn name(&self) -> String {
         self.name.clone()
-    }
-
-    fn colour(&self) -> Colour {
-        self.colour.clone()
     }
 
     fn notes(&self) -> String {

@@ -63,14 +63,8 @@ pub trait ColourAttributesInterface {
     fn set_target_colour(&self, target_colour: Option<&Colour>);
 }
 
-pub trait BasicPaintInterface<C>: Hash + Clone + PartialEq
-    where   C: CharacteristicsInterface
-{
-    fn name(&self) -> String;
+pub trait ColouredItemInterface {
     fn colour(&self) -> Colour;
-    fn notes(&self) -> String;
-    fn tooltip_text(&self) -> String;
-    fn characteristics(&self) -> C;
 
     fn rgb(&self) -> RGB {
         self.colour().rgb()
@@ -119,6 +113,15 @@ pub trait BasicPaintInterface<C>: Hash + Clone + PartialEq
     fn scalar_attribute(&self, attr: ScalarAttribute) -> f64 {
         self.colour().scalar_attribute(attr)
     }
+}
+
+pub trait BasicPaintInterface<C>: Hash + Clone + PartialEq + ColouredItemInterface
+    where   C: CharacteristicsInterface
+{
+    fn name(&self) -> String;
+    fn notes(&self) -> String;
+    fn tooltip_text(&self) -> String;
+    fn characteristics(&self) -> C;
 }
 
 lazy_static! {
@@ -271,18 +274,20 @@ impl<C: CharacteristicsInterface> Ord for Paint<C> {
     }
 }
 
+impl<C: CharacteristicsInterface> ColouredItemInterface for Paint<C> {
+    fn colour(&self) -> Colour {
+        match *self {
+            Paint::Series(ref paint) => paint.colour(),
+            Paint::Mixed(ref paint) => paint.colour(),
+        }
+    }
+}
+
 impl<C: CharacteristicsInterface> BasicPaintInterface<C> for Paint<C> {
     fn name(&self) -> String {
         match *self {
             Paint::Series(ref paint) => paint.name(),
             Paint::Mixed(ref paint) => paint.name(),
-        }
-    }
-
-    fn colour(&self) -> Colour {
-        match *self {
-            Paint::Series(ref paint) => paint.colour(),
-            Paint::Mixed(ref paint) => paint.colour(),
         }
     }
 

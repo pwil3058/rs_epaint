@@ -441,11 +441,11 @@ impl<A, C> PaintHueAttrWheelCore<A, C>
     }
 
     pub fn add_paint(&self, paint: &Paint<C>) {
-        self.paints.add_paint(paint);
+        self.paints.add_coloured_item(paint);
     }
 
     pub fn add_target_colour(&self, target_colour: &TargetColour) {
-        self.target_colours.add_target_colour(target_colour);
+        self.target_colours.add_coloured_item(target_colour);
     }
 
     pub fn set_target_colour(&self, ocolour: Option<&Colour>) {
@@ -473,8 +473,8 @@ impl<A, C> PaintHueAttrWheelCore<A, C>
     pub fn get_item_at(&self, raw_point: Point) -> ChosenItem<C> {
         let geometry = self.geometry.borrow();
         let point = geometry.reverse_transform(raw_point);
-        let opr = self.paints.get_paint_at(point);
-        let ocr = self.target_colours.get_target_colour_at(point);
+        let opr = self.paints.get_coloured_item_at(point);
+        let ocr = self.target_colours.get_coloured_item_at(point);
         if let Some((paint, p_range)) = opr {
             if let Some((colour, c_range)) = ocr {
                 if c_range < p_range {
