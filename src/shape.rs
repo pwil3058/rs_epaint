@@ -23,7 +23,6 @@ use pw_gix::colour::*;
 use pw_gix::rgb_math::rgb::*;
 
 use paint::*;
-use hue_wheel::*;
 use mixed_paint::*;
 use series_paint::*;
 use target::*;
@@ -34,6 +33,12 @@ pub enum ShapeType {
     Diamond,
     Square,
     BackSight,
+}
+
+pub trait GeometryInterface {
+    fn transform(&self, point: Point) -> Point;
+    fn reverse_transform(&self, point: Point) -> Point;
+    fn scaled(&self, value: f64) -> f64 ;
 }
 
 const SHAPE_SIDE: f64 = 0.06;
@@ -64,7 +69,7 @@ pub trait ColourShapeInterface {
         (self.xy() - xy).hypot()
     }
 
-    fn draw(&self, canvas: &Geometry, cairo_context: &cairo::Context) {
+    fn draw<G: GeometryInterface>(&self, canvas: &G, cairo_context: &cairo::Context) {
         let fill_rgb = self.fill_rgb();
         let outline_rgb = fill_rgb.best_foreground_rgb();
         let point = canvas.transform(self.xy());
@@ -173,7 +178,7 @@ impl<CI, PS> ColouredItemSpapeList<CI, PS>
         self.add_coloured_item(new_coloured_item);
     }
 
-    pub fn draw(&self, canvas: &Geometry, cairo_context: &cairo::Context) {
+    pub fn draw<G: GeometryInterface>(&self, canvas: &G, cairo_context: &cairo::Context) {
         for shape in self.shapes.borrow().iter() {
             shape.draw(canvas, cairo_context);
         }

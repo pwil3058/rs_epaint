@@ -200,20 +200,14 @@ impl<A, C> MixedPaintCollectionViewCore<A, C>
         }
     }
 
-    pub fn set_target_colour(&self, ocolour: Option<&Colour>) {
-        match ocolour {
-            Some(colour) => {
-                for dialog in self.mixed_paint_dialogs.borrow().values() {
-                    dialog.set_current_target(Some(colour.clone()));
-                };
-                *self.current_target.borrow_mut() = Some(colour.clone())
-            },
-            None => {
-                for dialog in self.mixed_paint_dialogs.borrow().values() {
-                    dialog.set_current_target(None);
-                };
-                *self.current_target.borrow_mut() = None
-            },
+    pub fn set_target_colour(&self, o_colour: Option<&Colour>) {
+        for dialog in self.mixed_paint_dialogs.borrow().values() {
+            dialog.set_current_target(o_colour);
+        };
+        if let Some(colour) = o_colour {
+            *self.current_target.borrow_mut() = Some(colour.clone())
+        } else {
+            *self.current_target.borrow_mut() = None
         }
     }
 
@@ -336,8 +330,9 @@ impl<A, C> MixedPaintCollectionViewInterface<A, C> for MixedPaintCollectionView<
         paint_info_item.clone().connect_activate(
             move |_| {
                 if let Some(ref paint) = *mspl_c.chosen_paint.borrow() {
-                    let target = if let Some(ref colour) = *mspl_c.current_target.borrow() {
-                        Some(colour.clone())
+                    let target_colour = mspl_c.current_target.borrow().clone();
+                    let target = if let Some(ref colour) = target_colour {
+                        Some(colour)
                     } else {
                         None
                     };

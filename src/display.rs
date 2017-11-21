@@ -73,8 +73,8 @@ impl<A, C> PaintDisplayDialogCore<A, C>
         self.id_no
     }
 
-    pub fn set_current_target(&self, new_current_target: Option<Colour>) {
-        if let Some(colour) = new_current_target {
+    pub fn set_current_target(&self, new_current_target: Option<&Colour>) {
+        if let Some(ref colour) = new_current_target {
             self.current_target_label.set_label("Current Target");
             self.current_target_label.set_widget_colour(&colour);
             self.cads.set_target_colour(Some(&colour));
@@ -111,14 +111,14 @@ pub trait PaintDisplayDialogInterface<A, C>
 {
     fn create(
         paint: &Paint<C>,
-        current_target: Option<Colour>,
+        current_target: Option<&Colour>,
         parent: Option<&gtk::Window>,
         button_specs: Vec<PaintDisplayButtonSpec>,
     ) -> PaintDisplayDialog<A, C>;
 
     fn series_create(
         paint: &SeriesPaint<C>,
-        current_target: Option<Colour>,
+        current_target: Option<&Colour>,
         parent: Option<&gtk::Window>,
         button_specs: Vec<PaintDisplayButtonSpec>,
     ) -> PaintDisplayDialog<A, C> {
@@ -127,7 +127,7 @@ pub trait PaintDisplayDialogInterface<A, C>
 
     fn mixed_create(
         paint: &MixedPaint<C>,
-        current_target: Option<Colour>,
+        current_target: Option<&Colour>,
         parent: Option<&gtk::Window>,
         button_specs: Vec<PaintDisplayButtonSpec>,
     ) -> PaintDisplayDialog<A, C> {
@@ -141,7 +141,7 @@ impl<A, C> PaintDisplayDialogInterface<A, C> for PaintDisplayDialog<A, C>
 {
     fn create(
         paint: &Paint<C>,
-        current_target: Option<Colour>,
+        current_target: Option<&Colour>,
         parent: Option<&gtk::Window>,
         button_specs: Vec<PaintDisplayButtonSpec>,
     ) -> PaintDisplayDialog<A, C> {
@@ -193,7 +193,7 @@ impl<A, C> PaintDisplayDialogInterface<A, C> for PaintDisplayDialog<A, C>
         let characteristics_display = paint.characteristics().gui_display_widget();
         content_area.pack_start(&characteristics_display, false, false, 0);
         let components_view = if let Paint::Mixed(ref mixed_paint) = *paint {
-            let cv = PaintComponentListView::<A, C>::create(&mixed_paint.components(), current_target.clone());
+            let cv = PaintComponentListView::<A, C>::create(&mixed_paint.components(), current_target);
             content_area.pack_start(&cv.pwo(), false, false, 0);
             Some(cv)
         } else {
@@ -341,7 +341,7 @@ impl<A, C> PaintComponentListViewCore<A, C>
         match ocolour {
             Some(colour) => {
                 for dialog in self.paint_dialogs.borrow().values() {
-                    dialog.set_current_target(Some(colour.clone()));
+                    dialog.set_current_target(Some(colour));
                 };
                 *self.current_target.borrow_mut() = Some(colour.clone())
             },
@@ -364,7 +364,7 @@ pub trait PaintComponentListViewInterface<A, C>
     fn pwo(&self) -> gtk::ScrolledWindow;
     fn create(
         components: &Rc<Vec<PaintComponent<C>>>,
-        current_target: Option<Colour>
+        current_target: Option<&Colour>
     ) -> PaintComponentListView<A, C>;
 }
 
@@ -378,7 +378,7 @@ impl<A, C> PaintComponentListViewInterface<A, C> for PaintComponentListView<A, C
 
     fn create(
         components: &Rc<Vec<PaintComponent<C>>>,
-        current_target: Option<Colour>
+        current_target: Option<&Colour>
     ) -> PaintComponentListView<A, C> {
         let len = 16 + C::tv_row_len();
         let list_store = gtk::ListStore::new(&PAINT_COMPONENTS_ROW_SPEC[0..len]);
@@ -394,6 +394,12 @@ impl<A, C> PaintComponentListViewInterface<A, C> for PaintComponentListView<A, C
         menu.append(&paint_info_item.clone());
         menu.show_all();
 
+        let my_current_target = if let Some(colour) = current_target {
+            Some(colour.clone())
+        } else {
+            None
+        };
+
         let pclv = Rc::new(
             PaintComponentListViewCore::<A, C> {
                 scrolled_window: gtk::ScrolledWindow::new(None, None),
@@ -403,7 +409,7 @@ impl<A, C> PaintComponentListViewInterface<A, C> for PaintComponentListView<A, C
                 components: components.clone(),
                 view: view,
                 chosen_paint: RefCell::new(None),
-                current_target: RefCell::new(current_target),
+                current_target: RefCell::new(my_current_target),
                 paint_dialogs: RefCell::new(HashMap::new()),
                 spec: PhantomData,
             }
@@ -444,8 +450,9 @@ impl<A, C> PaintComponentListViewInterface<A, C> for PaintComponentListView<A, C
         paint_info_item.clone().connect_activate(
             move |_| {
                 if let Some(ref paint) = *pclv_c.chosen_paint.borrow() {
-                    let target = if let Some(ref colour) = *pclv_c.current_target.borrow() {
-                        Some(colour.clone())
+                    let current_target = pclv_c.current_target.borrow().clone();
+                    let target = if let Some(ref colour) = current_target {
+                        Some(colour)
                     } else {
                         None
                     };

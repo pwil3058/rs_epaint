@@ -29,7 +29,7 @@ use pw_gix::gtkx::paned::*;
 use pw_gix::gtkx::window::*;
 use pw_gix::pwo::*;
 
-use hue_wheel::*;
+use graticule::*;
 use series_paint::*;
 
 pub struct PaintSelectorCore<A, C>
@@ -94,7 +94,7 @@ impl<A, C> PaintSelectorInterface<A, C> for PaintSelector<A, C>
 
         let notebook = gtk::Notebook::new();
         for wheel in paint_selector.hue_attr_wheels.iter() {
-            let label_text = format!("Hue/{} Wheel", wheel.get_attr().to_string());
+            let label_text = format!("Hue/{} Wheel", wheel.attr().to_string());
             let label = gtk::Label::new(Some(label_text.as_str()));
             notebook.append_page(&wheel.pwo(), Some(&label));
         }

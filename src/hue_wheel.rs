@@ -43,6 +43,20 @@ pub struct Geometry {
     zoom: f64,
 }
 
+impl GeometryInterface for Geometry {
+    fn transform(&self, point: Point) -> Point {
+        self.centre + point * self.radius
+    }
+
+    fn reverse_transform(&self, point: Point) -> Point {
+        (point - self.centre) / self.radius
+    }
+
+    fn scaled(&self, value: f64) -> f64 {
+        value * self.scaled_one
+    }
+}
+
 impl Geometry {
     pub fn new(drawing_area: &gtk::DrawingArea) -> Geometry {
         let mut geometry = Geometry{
@@ -55,18 +69,6 @@ impl Geometry {
         };
         geometry.update_drawing_area(drawing_area);
         geometry
-    }
-
-    pub fn transform(&self, point: Point) -> Point {
-        self.centre + point * self.radius
-    }
-
-    pub fn reverse_transform(&self, point: Point) -> Point {
-        (point - self.centre) / self.radius
-    }
-
-    pub fn scaled(&self, value: f64) -> f64 {
-        value * self.scaled_one
     }
 
     fn update_drawing_area(&mut self, drawing_area: &gtk::DrawingArea) {
@@ -289,8 +291,9 @@ impl<A, C> PaintHueAttrWheelInterface<A, C> for PaintHueAttrWheel<A, C>
                     ChosenItem::Paint(ref paint) => {
                         match *paint {
                             Paint::Series(ref series_paint) => {
-                                let target = if let Some(ref current_target) = *wheel_c.current_target.borrow() {
-                                    Some(current_target.colour())
+                                let target_colour = wheel_c.current_target_colour();
+                                let target = if let Some(ref colour) = target_colour {
+                                    Some(colour)
                                 } else {
                                     None
                                 };
@@ -411,7 +414,7 @@ impl<A, C> PaintHueAttrWheelCore<A, C>
             A: ColourAttributesInterface + 'static
 {
     fn draw(&self, cairo_context: &cairo::Context) {
-        let geometry = self.geometry.borrow();
+        let geometry = &*self.geometry.borrow();
 
         cairo_context.set_source_colour_rgb((WHITE * 0.5));
         cairo_context.paint();
@@ -433,10 +436,10 @@ impl<A, C> PaintHueAttrWheelCore<A, C>
             cairo_context.stroke();
         };
         cairo_context.set_line_width(2.0);
-        self.paints.draw(&geometry, cairo_context);
-        self.target_colours.draw(&geometry, cairo_context);
+        self.paints.draw(geometry, cairo_context);
+        self.target_colours.draw(geometry, cairo_context);
         if let Some(ref current_target) = *self.current_target.borrow() {
-            current_target.draw(&geometry, cairo_context);
+            current_target.draw(geometry, cairo_context);
         }
     }
 
@@ -453,7 +456,7 @@ impl<A, C> PaintHueAttrWheelCore<A, C>
             Some(colour) => {
                 let current_target = CurrentTargetShape::create(colour, self.attr);
                 for dialog in self.series_paint_dialogs.borrow().values() {
-                    dialog.set_current_target(Some(colour.clone()));
+                    dialog.set_current_target(Some(colour));
                 };
                 *self.current_target.borrow_mut() = Some(current_target)
             },
@@ -463,6 +466,14 @@ impl<A, C> PaintHueAttrWheelCore<A, C>
                 };
                 *self.current_target.borrow_mut() = None
             },
+        }
+    }
+
+    pub fn current_target_colour(&self) -> Option<Colour> {
+        if let Some(ref shape) = *self.current_target.borrow() {
+            Some(shape.colour())
+        } else {
+            None
         }
     }
 

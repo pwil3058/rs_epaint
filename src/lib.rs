@@ -32,6 +32,7 @@ pub mod colour_mix;
 pub mod components;
 pub mod display;
 pub mod hue_wheel;
+pub mod graticule;
 pub mod mixed_paint;
 pub mod mixer;
 pub mod model_paint;
