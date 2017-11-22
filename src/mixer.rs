@@ -214,7 +214,7 @@ impl<A, C> PaintMixerInterface<A, C> for PaintMixer<A, C>
 
         let notebook = gtk::Notebook::new();
         for wheel in paint_mixer.hue_attr_wheels.iter() {
-            let label_text = format!("Hue/{} Wheel", wheel.get_attr().to_string());
+            let label_text = format!("Hue/{} Wheel", wheel.attr().to_string());
             let label = gtk::Label::new(Some(label_text.as_str()));
             notebook.append_page(&wheel.pwo(), Some(&label));
         }

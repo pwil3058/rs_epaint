@@ -29,8 +29,6 @@ use paint::*;
 use series_paint::*;
 use shape::*;
 
-type Graticule = Rc<GraticuleCore>;
-
 // WHEEL
 pub struct SeriesPaintHueAttrWheelCore<A, C>
     where   C: CharacteristicsInterface + 'static,
