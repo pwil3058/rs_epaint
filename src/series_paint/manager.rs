@@ -29,15 +29,15 @@ use pw_gix::gtkx::paned::*;
 use pw_gix::gtkx::window::*;
 use pw_gix::pwo::*;
 
-use graticule::*;
 use series_paint::*;
+use series_paint::hue_wheel::*;
 
 pub struct PaintSelectorCore<A, C>
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static,
 {
     vbox: gtk::Box,
-    hue_attr_wheels: Vec<PaintHueAttrWheel<A, C>>,
+    hue_attr_wheels: Vec<SeriesPaintHueAttrWheel<A, C>>,
     paint_list: PaintSeriesView<A, C>,
     add_paint_callbacks: RefCell<Vec<Box<Fn(&SeriesPaint<C>)>>>,
 }
@@ -74,9 +74,9 @@ impl<A, C> PaintSelectorInterface<A, C> for PaintSelector<A, C>
     }
 
     fn create(series: &PaintSeries<C>) -> PaintSelector<A, C> {
-        let mut view_attr_wheels:Vec<PaintHueAttrWheel<A, C>> = Vec::new();
+        let mut view_attr_wheels:Vec<SeriesPaintHueAttrWheel<A, C>> = Vec::new();
         for attr in A::scalar_attributes().iter() {
-            view_attr_wheels.push(PaintHueAttrWheel::<A, C>::create(*attr));
+            view_attr_wheels.push(SeriesPaintHueAttrWheel::<A, C>::create(*attr));
         }
         let paint_selector = Rc::new(
             PaintSelectorCore::<A, C> {
@@ -104,7 +104,7 @@ impl<A, C> PaintSelectorInterface<A, C> for PaintSelector<A, C>
         hpaned.set_position_from_recollections("model_paint_selector", 200);
         paint_selector.vbox.pack_start(&hpaned, true, true, 0);
 
-        for paint in series.get_paints().iter() {
+        for paint in series.get_series_paints().iter() {
             for wheel in paint_selector.hue_attr_wheels.iter() {
                 wheel.add_paint(&paint);
             }
