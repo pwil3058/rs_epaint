@@ -28,7 +28,7 @@ use pw_gix::rgb_math::rgb::*;
 
 use paint::*;
 use components::*;
-use hue_wheel::*;
+use mixer::hue_wheel::*;
 use series_paint::*;
 
 trait ColourMatchAreaInterface {
@@ -158,7 +158,7 @@ pub struct PaintMixerCore<A, C>
     vbox: gtk::Box,
     cads: Rc<A>,
     colour_match_area: ColourMatchArea,
-    hue_attr_wheels: Vec<PaintHueAttrWheel<A, C>>,
+    hue_attr_wheels: Vec<MixerHueAttrWheel<A, C>>,
     paint_components: PaintComponentsBox<C>,
 }
 
@@ -169,7 +169,7 @@ impl<A, C> PaintMixerCore<A, C>
     pub fn add_series_paint(&self, paint: &SeriesPaint<C>) {
         self.paint_components.add_series_paint(paint);
         for wheel in self.hue_attr_wheels.iter() {
-            wheel.add_paint(&Paint::Series(paint.clone()));
+            wheel.add_series_paint(paint);
         }
     }
 
@@ -195,9 +195,9 @@ impl<A, C> PaintMixerInterface<A, C> for PaintMixer<A, C>
     }
 
     fn create() -> PaintMixer<A, C> {
-        let mut view_attr_wheels:Vec<PaintHueAttrWheel<A, C>> = Vec::new();
+        let mut view_attr_wheels:Vec<MixerHueAttrWheel<A, C>> = Vec::new();
         for attr in A::scalar_attributes().iter() {
-            view_attr_wheels.push(PaintHueAttrWheel::<A, C>::create(*attr));
+            view_attr_wheels.push(MixerHueAttrWheel::<A, C>::create(*attr));
         }
         let paint_mixer = Rc::new(
             PaintMixerCore::<A, C> {

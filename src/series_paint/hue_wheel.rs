@@ -39,7 +39,6 @@ pub struct SeriesPaintHueAttrWheelCore<A, C>
     add_paint_item: gtk::MenuItem,
     paints: SeriesPaintShapeList<C>,
     chosen_item: RefCell<Option<SeriesPaint<C>>>,
-    attr: ScalarAttribute,
     graticule: Graticule,
     add_paint_callbacks: RefCell<Vec<Box<Fn(&SeriesPaint<C>)>>>,
     series_paint_dialogs: RefCell<HashMap<u32, PaintDisplayDialog<A, C>>>,
@@ -71,21 +70,16 @@ impl<A, C> SeriesPaintHueAttrWheelInterface<A, C> for SeriesPaintHueAttrWheel<A,
         add_paint_item.set_visible(false);
         menu.append(&add_paint_item.clone());
         menu.show_all();
-        let paints = SeriesPaintShapeList::<C>::new(attr);
-        let graticule = Graticule::create(attr);
-        let add_paint_callbacks: RefCell<Vec<Box<Fn(&SeriesPaint<C>)>>> = RefCell::new(Vec::new());
-        let series_paint_dialogs: RefCell<HashMap<u32, PaintDisplayDialog<A, C>>> = RefCell::new(HashMap::new());
         let wheel = Rc::new(
             SeriesPaintHueAttrWheelCore::<A, C> {
                 menu: menu,
-                paint_info_item: paint_info_item.clone(),
-                add_paint_item: add_paint_item.clone(),
-                paints: paints,
-                attr: attr,
-                graticule: graticule,
+                paint_info_item: paint_info_item,
+                add_paint_item: add_paint_item,
+                paints: SeriesPaintShapeList::<C>::new(attr),
+                graticule: Graticule::create(attr),
                 chosen_item: RefCell::new(None),
-                add_paint_callbacks: add_paint_callbacks,
-                series_paint_dialogs: series_paint_dialogs,
+                add_paint_callbacks: RefCell::new(Vec::new()),
+                series_paint_dialogs: RefCell::new(HashMap::new()),
             }
         );
         let wheel_c = wheel.clone();
@@ -107,17 +101,17 @@ impl<A, C> SeriesPaintHueAttrWheelInterface<A, C> for SeriesPaintHueAttrWheel<A,
              }
         );
         let wheel_c = wheel.clone();
-        paint_info_item.clone().connect_activate(
+        wheel.paint_info_item.connect_activate(
             move |_| {
                 if let Some(ref paint) = *wheel_c.chosen_item.borrow() {
-                    let target_colour = wheel_c.graticule.current_target_colour().clone();
-                    let target = if let Some(ref colour) = target_colour {
-                        Some(colour)
-                    } else {
-                        None
-                    };
                     let have_listeners = wheel_c.add_paint_callbacks.borrow().len() > 0;
-                    let buttons = if have_listeners {
+                    if have_listeners {
+                        let target_colour = wheel_c.graticule.current_target_colour().clone();
+                        let target = if let Some(ref colour) = target_colour {
+                            Some(colour)
+                        } else {
+                            None
+                        };
                         let wheel_c_c = wheel_c.clone();
                         let paint_c = paint.clone();
                         let spec = PaintDisplayButtonSpec {
@@ -125,27 +119,21 @@ impl<A, C> SeriesPaintHueAttrWheelInterface<A, C> for SeriesPaintHueAttrWheel<A,
                             tooltip_text: "Add this paint to the paint mixing area.".to_string(),
                             callback:  Box::new(move || wheel_c_c.inform_add_paint(&paint_c))
                         };
-                        vec![spec]
+                        let dialog = PaintDisplayDialog::<A, C>::series_create(&paint, target, None, vec![spec]);
+                        let wheel_c_c = wheel_c.clone();
+                        dialog.connect_destroy(
+                            move |id| { wheel_c_c.series_paint_dialogs.borrow_mut().remove(&id); }
+                        );
+                        wheel_c.series_paint_dialogs.borrow_mut().insert(dialog.id_no(), dialog.clone());
+                        dialog.show();
                     } else {
-                        vec![]
-                    };
-                    let dialog = PaintDisplayDialog::<A, C>::series_create(
-                        &paint,
-                        target,
-                        None,
-                        buttons
-                    );
-                    let wheel_c_c = wheel_c.clone();
-                    dialog.connect_destroy(
-                        move |id| { wheel_c_c.series_paint_dialogs.borrow_mut().remove(&id); }
-                    );
-                    wheel_c.series_paint_dialogs.borrow_mut().insert(dialog.id_no(), dialog.clone());
-                    dialog.show();
+                        PaintDisplayDialog::<A, C>::series_create(&paint, None, None, vec![]).show();
+                    }
                 }
             }
         );
         let wheel_c = wheel.clone();
-        add_paint_item.clone().connect_activate(
+        wheel.add_paint_item.connect_activate(
             move |_| {
                 if let Some(ref paint) = *wheel_c.chosen_item.borrow() {
                     wheel_c.inform_add_paint(paint);
@@ -197,7 +185,7 @@ impl<A, C> SeriesPaintHueAttrWheelCore<A, C>
     }
 
     pub fn attr(&self) -> ScalarAttribute {
-        self.attr
+        self.graticule.attr()
     }
 
     pub fn get_item_at(&self, raw_point: Point) -> Option<SeriesPaint<C>> {

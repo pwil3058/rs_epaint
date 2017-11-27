@@ -30,7 +30,7 @@ use characteristics::*;
 use components::*;
 use hue_wheel::*;
 use mixed_paint::*;
-use mixer::*;
+use mixer::match_area::*;
 use series_paint::*;
 pub use series_paint::entry::*;
 pub use series_paint::manager::*;
