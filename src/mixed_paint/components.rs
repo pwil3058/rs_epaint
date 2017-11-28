@@ -15,6 +15,8 @@
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 
+use num::Integer;
+
 use gdk;
 use gtk;
 use gtk::prelude::*;
@@ -103,7 +105,7 @@ impl<C> PaintPartsSpinButtonInterface<C> for PaintPartsSpinButton<C>
         let remove_me_item = gtk::MenuItem::new_with_label("Remove Me");
         let spin_button_c = spin_button.clone();
         remove_me_item.connect_activate(
-            move |_| {println!("Remove: {:?}", spin_button_c.paint.name())}
+            move |_| { spin_button_c.inform_remove_me(); }
         );
         spin_button.menu.append(&remove_me_item.clone());
         spin_button.menu.show_all();
@@ -259,11 +261,11 @@ impl<C: CharacteristicsInterface + 'static> PaintComponentsBoxCore<C> {
         if self.count.get() % self.n_cols.get() == 0 {
             let hbox = gtk::Box::new(gtk::Orientation::Horizontal, 1);
             self.h_boxes.borrow_mut().push(hbox.clone());
-            self.vbox.pack_start(&hbox.clone(), true, true, 0);
+            self.vbox.pack_start(&hbox.clone(), false, false, 0);
         };
         let last_index = self.h_boxes.borrow().len() - 1;
         self.h_boxes.borrow()[last_index].pack_start(&spin_button.pwo(), true, true, 0);
-        self.count.set(self.count.get() + 1)
+        self.count.set(self.count.get() + 1);
     }
 
     fn unpack_all(&self) {
@@ -279,20 +281,69 @@ impl<C: CharacteristicsInterface + 'static> PaintComponentsBoxCore<C> {
 
     fn remove_spin_button(&self, spin_button: &PaintPartsSpinButton<C>) {
         self.unpack_all();
-        let mut index: usize = 0;
-        let mut spin_buttons = self.spin_buttons.borrow_mut();
-        for (i, sb) in spin_buttons.iter().enumerate() {
-            if sb == spin_button {
-                index = i;
-            } else {
-                self.pack_append(sb);
-            }
-        };
-        spin_buttons.remove(index);
+        let colour_will_change = spin_button.get_parts() > 0;
+        { // NB: needed to avoid mutable borrow conflict
+            let mut index: usize = 0;
+            let mut spin_buttons = self.spin_buttons.borrow_mut();
+            for (i, sb) in spin_buttons.iter().enumerate() {
+                if sb == spin_button {
+                    index = i;
+                } else {
+                    self.pack_append(sb);
+                }
+            };
+            spin_buttons.remove(index);
+            self.vbox.show_all();
+        }
         self.inform_paint_removed(&spin_button.paint);
-        if spin_button.get_parts() > 0 {
+        if colour_will_change {
             self.inform_colour_changed()
         }
+    }
+
+    pub fn remove_unused_spin_buttons(&self) {
+        let mut unused: Vec<PaintPartsSpinButton<C>> = vec![];
+        for spin_button in self.spin_buttons.borrow().iter() {
+            if spin_button.get_parts() == 0 {
+                unused.push(spin_button.clone())
+            }
+        }
+        for spin_button in unused.iter() {
+            self.remove_spin_button(spin_button)
+        }
+    }
+
+    pub fn reset_all_parts_to_zero(&self) {
+        self.supress_change_notification.set(true);
+        for spin_button in self.spin_buttons.borrow().iter() {
+            spin_button.set_parts(0);
+        }
+        self.supress_change_notification.set(false);
+        self.inform_colour_changed();
+    }
+
+    pub fn simplify_parts(&self) {
+        let mut gcd: u32 = 0;
+        for spin_button in self.spin_buttons.borrow().iter() {
+            gcd = gcd.gcd(&spin_button.get_parts());
+        }
+        if gcd > 1 {
+            self.supress_change_notification.set(true);
+            for spin_button in self.spin_buttons.borrow().iter() {
+                spin_button.divide_parts(gcd);
+            }
+            self.supress_change_notification.set(false);
+        }
+    }
+
+    pub fn get_paint_components(&self) -> Vec<PaintComponent<C>> {
+        let mut components = vec![];
+        for spin_button in self.spin_buttons.borrow().iter() {
+            if spin_button.get_parts() > 0 {
+                components.push(spin_button.get_paint_component())
+            }
+        }
+        components
     }
 }
 
@@ -336,7 +387,7 @@ impl<C> PaintComponentsBoxInterface<C> for PaintComponentsBox<C>
         );
         let self_c = self.clone();
         spin_button.connect_remove_me(
-            move |sb| {self_c.remove_spin_button(sb)}
+            move |sb| { self_c.remove_spin_button(sb) }
         );
         self.pack_append(&spin_button);
         self.vbox.show_all();

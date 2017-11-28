@@ -12,37 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#[macro_use]
-extern crate lazy_static;
-
-#[macro_use]
-extern crate pw_gix;
-
-extern crate num;
-extern crate regex;
-
-extern crate cairo;
-extern crate gdk;
-extern crate gtk;
-extern crate gdk_pixbuf;
-
-pub mod characteristics;
-pub mod colour_edit;
-pub mod colour_mix;
-pub mod display;
-pub mod hue_wheel;
-pub mod icons;
-pub mod graticule;
-pub mod mixed_paint;
-pub mod model_paint;
-pub mod paint;
-pub mod series_paint;
-pub mod shape;
+pub mod series_paint_xpm;
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+
     #[test]
     fn it_works() {
-        assert_eq!(2 + 2, 4);
+
     }
 }

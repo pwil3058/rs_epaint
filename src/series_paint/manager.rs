@@ -29,6 +29,8 @@ use pw_gix::gtkx::paned::*;
 use pw_gix::gtkx::window::*;
 use pw_gix::pwo::*;
 
+use icons::series_paint_xpm::*;
+
 use super::*;
 use super::hue_wheel::*;
 
@@ -218,7 +220,12 @@ pub trait SeriesPaintManagerInterface<A, C>
     fn connect_add_paint<F: 'static + Fn(&SeriesPaint<C>)>(&self, callback: F);
     fn add_paint_series(&self, series: &PaintSeries<C>);
     fn button(&self) -> gtk::Button;
+    fn tool_button(&self) -> gtk::ToolButton;
 }
+
+const TOOLTIP_TEXT: &str =
+"Open the Series Paint Manager.
+This enables paint to be added to the mixer.";
 
 impl<A, C> SeriesPaintManagerInterface<A, C> for SeriesPaintManager<A, C>
     where   A: ColourAttributesInterface + 'static,
@@ -295,11 +302,22 @@ impl<A, C> SeriesPaintManagerInterface<A, C> for SeriesPaintManager<A, C>
 
     fn button(&self) -> gtk::Button {
         let button = gtk::Button::new_with_label("Series Paint Manager");
+        button.set_tooltip_text(Some(TOOLTIP_TEXT));
         let spm_c = self.clone();
         button.connect_clicked(
             move |_| spm_c.window.present()
         );
         button
+    }
+
+    fn tool_button(&self) -> gtk::ToolButton {
+        let tool_button = gtk::ToolButton::new(Some(&series_paint_image(24)), Some("Series Paint Manager"));
+        tool_button.set_tooltip_text(Some(TOOLTIP_TEXT));
+        let spm_c = self.clone();
+        tool_button.connect_clicked(
+            move |_| spm_c.window.present()
+        );
+        tool_button
     }
 }
 

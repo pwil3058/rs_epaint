@@ -22,6 +22,7 @@ use gtk::{StaticType, ToValue};
 use pw_gix::colour::*;
 
 use paint::*;
+use series_paint::*;
 
 pub mod collection;
 pub mod components;
@@ -34,6 +35,27 @@ pub struct PaintComponent<C: CharacteristicsInterface> {
     pub paint: Paint<C>,
     pub parts: u32
 }
+
+pub const MP_NAME: i32 = SP_NAME;
+pub const MP_NOTES: i32 = SP_NOTES;
+pub const MP_CHROMA: i32 = SP_CHROMA;
+pub const MP_GREYNESS: i32 = SP_GREYNESS;
+pub const MP_VALUE: i32 = SP_VALUE;
+pub const MP_WARMTH: i32 = SP_WARMTH;
+pub const MP_RGB: i32 = SP_RGB;
+pub const MP_RGB_FG: i32 = SP_RGB_FG;
+pub const MP_MONO_RGB: i32 = SP_MONO_RGB;
+pub const MP_MONO_RGB_FG: i32 = SP_MONO_RGB_FG;
+pub const MP_WARMTH_RGB: i32 = SP_WARMTH_RGB;
+pub const MP_WARMTH_RGB_FG: i32 = SP_WARMTH_RGB_FG;
+pub const MP_HUE_RGB: i32 = SP_HUE_RGB;
+pub const MP_HUE_ANGLE: i32 = SP_HUE_ANGLE;
+pub const MP_MATCHED_RGB: i32 = 14;
+pub const MP_MATCHED_ANGLE: i32 = 15;
+pub const MP_CHARS_0: i32 = 16;
+pub const MP_CHARS_1: i32 = 17;
+pub const MP_CHARS_2: i32 = 18;
+pub const MP_CHARS_3: i32 = 19;
 
 lazy_static! {
     pub static ref MIXED_PAINT_ROW_SPEC: [gtk::Type; 20] =
@@ -53,7 +75,7 @@ lazy_static! {
             gdk::RGBA::static_type(),   // 12 Hue Colour
             f64::static_type(),         // 13 Hue angle (radians)
             gdk::RGBA::static_type(),   // 14 Matched Colour
-            f64::static_type(),         // 15 Hue angle (radians)
+            f64::static_type(),         // 15 Matched Colour angle (radians)
             gtk::Type::String,          // 16 Characteristic #1
             gtk::Type::String,          // 17 Characteristic #2
             gtk::Type::String,          // 18 Characteristic #3
@@ -144,6 +166,53 @@ impl<C: CharacteristicsInterface> Ord for MixedPaintCore<C> {
     }
 }
 
+impl<C: CharacteristicsInterface> MixedPaintCore<C> {
+    pub fn uses_paint(&self, paint: &Paint<C>) -> bool {
+        for component in self.components.iter() {
+            if *paint == component.paint {
+                return true;
+            } else if let Paint::Mixed(ref mixed_paint) = component.paint {
+                if mixed_paint.uses_paint(paint) {
+                    return true
+                }
+            }
+        };
+        false
+    }
+
+    pub fn uses_series_paint(&self, paint: &SeriesPaint<C>) -> bool {
+        self.uses_paint(&Paint::Series(paint.clone()))
+    }
+
+    pub fn uses_mixed_paint(&self, paint: &MixedPaint<C>) -> bool {
+        self.uses_paint(&Paint::Mixed(paint.clone()))
+    }
+
+    pub fn series_paints_used(&self) -> Vec<SeriesPaint<C>> {
+        let mut spu: Vec<SeriesPaint<C>> = Vec::new();
+        for component in self.components.iter() {
+            match component.paint {
+                Paint::Series(ref series_paint) => {
+                    if let Err(index) = spu.binary_search(series_paint) {
+                        // NB: Ok case means paint already in the list
+                        spu.insert(index, series_paint.clone())
+                    }
+                },
+                Paint::Mixed(ref mixed_paint) => {
+                    for series_paint in mixed_paint.series_paints_used().iter() {
+                        if let Err(index) = spu.binary_search(series_paint) {
+                            // NB: Ok case means paint already in the list
+                            spu.insert(index, series_paint.clone())
+                        }
+                    }
+                },
+            }
+        }
+
+        spu
+    }
+}
+
 pub type MixedPaint<C> = Rc<MixedPaintCore<C>>;
 
 impl<C: CharacteristicsInterface> ColouredItemInterface for MixedPaint<C> {
@@ -160,7 +229,7 @@ impl<C> BasicPaintInterface<C> for MixedPaint<C>
     }
 
     fn notes(&self) -> String {
-        self.name.clone()
+        self.notes.clone()
     }
 
     fn tooltip_text(&self) -> String {

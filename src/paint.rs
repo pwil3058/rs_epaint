@@ -124,6 +124,25 @@ pub trait BasicPaintInterface<C>: Hash + Clone + PartialEq + ColouredItemInterfa
     fn characteristics(&self) -> C;
 }
 
+pub const SP_NAME: i32 = 0;
+pub const SP_NOTES: i32 = 1;
+pub const SP_CHROMA: i32 = 2;
+pub const SP_GREYNESS: i32 = 3;
+pub const SP_VALUE: i32 = 4;
+pub const SP_WARMTH: i32 = 5;
+pub const SP_RGB: i32 = 6;
+pub const SP_RGB_FG: i32 = 7;
+pub const SP_MONO_RGB: i32 = 8;
+pub const SP_MONO_RGB_FG: i32 = 9;
+pub const SP_WARMTH_RGB: i32 = 10;
+pub const SP_WARMTH_RGB_FG: i32 = 11;
+pub const SP_HUE_RGB: i32 = 12;
+pub const SP_HUE_ANGLE: i32 = 13;
+pub const SP_CHARS_0: i32 = 14;
+pub const SP_CHARS_1: i32 = 15;
+pub const SP_CHARS_2: i32 = 16;
+pub const SP_CHARS_3: i32 = 17;
+
 lazy_static! {
     pub static ref STANDARD_PAINT_ROW_SPEC: [gtk::Type; 18] =
         [

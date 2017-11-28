@@ -357,12 +357,12 @@ impl<A, C> PaintSeriesViewInterface<A, C> for PaintSeriesView<A, C>
             }
         );
 
-        mspl.view.append_column(&simple_text_column("Name", 0, 0, 6, 7, -1, true));
-        mspl.view.append_column(&simple_text_column("Notes", 1, 1, 6, 7, -1, true));
+        mspl.view.append_column(&simple_text_column("Name", SP_NAME, SP_NAME, SP_RGB, SP_RGB_FG, -1, true));
+        mspl.view.append_column(&simple_text_column("Notes", SP_NOTES, SP_NOTES, SP_RGB, SP_RGB_FG, -1, true));
         for col in A::tv_columns() {
             mspl.view.append_column(&col);
         }
-        for col in C::tv_columns(14) {
+        for col in C::tv_columns(SP_CHARS_0) {
             mspl.view.append_column(&col);
         }
 

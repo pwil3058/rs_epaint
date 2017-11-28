@@ -39,10 +39,11 @@ pub struct MixedPaintCollectionCore<C: CharacteristicsInterface> {
 
 impl<C: CharacteristicsInterface> MixedPaintCollectionCore<C> {
     fn find_name(&self, name: &str) -> Result<usize, usize> {
-        self.paints.borrow().binary_search_by_key(
+        let result = self.paints.borrow().binary_search_by_key(
             &name.to_string(),
             |paint| paint.name()
-        )
+        );
+        result
     }
 
     pub fn next_mixture_id(&self) -> u32 {
@@ -102,11 +103,12 @@ impl<C: CharacteristicsInterface> MixedPaintCollectionCore<C> {
         if gcd == 0 {
             return Err(PaintError::NoSubstantiveComponents)
         }
+        let rtp = total_parts;
         total_parts /= gcd;
         let mut new_rgb: RGB = BLACK;
         let mut subst_components: Vec<PaintComponent<C>> = Vec::new();
         let mut new_c_floats: Vec<f64> = Vec::new();
-        for _ in [0..C::tv_row_len()].iter() {
+        for i in 0..C::tv_row_len() {
             new_c_floats.push(0.0);
         }
         for component in components.iter() {
@@ -114,7 +116,7 @@ impl<C: CharacteristicsInterface> MixedPaintCollectionCore<C> {
                 let subst_parts = component.parts / gcd;
                 let subst_component = PaintComponent::<C>{parts:subst_parts, paint:component.paint.clone()};
                 subst_components.push(subst_component);
-                let weight: f64 = total_parts as f64 / subst_parts as f64;
+                let weight: f64 = subst_parts as f64 / total_parts as f64;
                 new_rgb += component.paint.rgb() * weight;
                 let floats = component.paint.characteristics().to_floats();
                 for (i, val) in new_c_floats.iter_mut().enumerate() {
@@ -124,7 +126,7 @@ impl<C: CharacteristicsInterface> MixedPaintCollectionCore<C> {
         }
         let name_num = self.last_mixture_id.get() + 1;
         self.last_mixture_id.set(name_num);
-        Ok(Rc::new(
+        let mixed_paint = Rc::new(
             MixedPaintCore::<C> {
                 colour: Colour::from(new_rgb),
                 name: format!("Mix #{:03}", name_num),
@@ -133,7 +135,23 @@ impl<C: CharacteristicsInterface> MixedPaintCollectionCore<C> {
                 matched_colour: matched_colour.clone(),
                 components: Rc::new(subst_components)
             }
-        ))
+        );
+        self.paints.borrow_mut().push(mixed_paint.clone());
+        Ok(mixed_paint)
+    }
+
+    pub fn series_paints_used(&self) -> Vec<SeriesPaint<C>> {
+        let mut spu: Vec<SeriesPaint<C>> = Vec::new();
+        for mixed_paint in self.paints.borrow().iter() {
+            for series_paint in mixed_paint.series_paints_used().iter() {
+                if let Err(index) = spu.binary_search(series_paint) {
+                    // NB: Ok case means paint already in the list
+                    spu.insert(index, series_paint.clone())
+                }
+            }
+        }
+
+        spu
     }
 }
 
@@ -175,13 +193,17 @@ impl<A, C> MixedPaintCollectionViewCore<A, C>
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static,
 {
+    pub fn next_mixture_id(&self) -> u32 {
+        self.collection.next_mixture_id()
+    }
+
     fn get_mixed_paint_at(&self, posn: (f64, f64)) -> Option<MixedPaint<C>> {
         let x = posn.0 as i32;
         let y = posn.1 as i32;
         if let Some(location) = self.view.get_path_at_pos(x, y) {
             if let Some(path) = location.0 {
                 if let Some(iter) = self.list_store.get_iter(&path) {
-                    let name: String = self.list_store.get_value(&iter, 0).get().unwrap_or_else(
+                    let name: String = self.list_store.get_value(&iter, MP_NAME).get().unwrap_or_else(
                         || panic!("File: {:?} Line: {:?}", file!(), line!())
                     );
                     let paint = self.collection.get_mixed_paint(&name).unwrap_or_else(
@@ -281,13 +303,13 @@ impl<A, C> MixedPaintCollectionViewInterface<A, C> for MixedPaintCollectionView<
             }
         );
 
-        mspl.view.append_column(&simple_text_column("Name", 0, 0, 6, 7, -1, true));
-        mspl.view.append_column(&simple_text_column("Match?", -1, 14, 15, -1, 50, true));
-        mspl.view.append_column(&simple_text_column("Notes", 1, 1, 6, 7, -1, true));
+        mspl.view.append_column(&simple_text_column("Name", MP_NAME, MP_NAME, MP_RGB, MP_RGB_FG, -1, true));
+        mspl.view.append_column(&simple_text_column("Match?", -1, MP_MATCHED_ANGLE, MP_MATCHED_RGB, -1, 50, true));
+        mspl.view.append_column(&simple_text_column("Notes", MP_NOTES, MP_NOTES, MP_RGB, MP_RGB_FG, -1, true));
         for col in A::tv_columns() {
             mspl.view.append_column(&col);
         }
-        for col in C::tv_columns(14) {
+        for col in C::tv_columns(MP_CHARS_0) {
             mspl.view.append_column(&col);
         }
 

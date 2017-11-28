@@ -273,9 +273,9 @@ impl ColourAttributesInterface for ModelPaintAttributes {
     fn tv_columns() -> Vec<gtk::TreeViewColumn> {
         let fw = 60;
         vec![
-            simple_text_column("Hue", -1, 13, 10, -1, 50, true),
-            simple_text_column("Grey", 3, 3, 6, 7, fw, false),
-            simple_text_column("Value", 4, 4, 8, 9, fw, false),
+            simple_text_column("Hue", -1, SP_HUE_ANGLE, SP_HUE_RGB, -1, 50, false),
+            simple_text_column("Grey", SP_GREYNESS, SP_GREYNESS, SP_RGB, SP_RGB_FG, fw, false),
+            simple_text_column("Value", SP_VALUE, SP_VALUE, SP_MONO_RGB, SP_MONO_RGB, fw, false),
         ]
     }
 

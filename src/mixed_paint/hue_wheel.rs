@@ -269,12 +269,24 @@ impl<A, C> MixerHueAttrWheelCore<A, C>
         self.series_paints.add_coloured_item(paint);
     }
 
+    pub fn remove_series_paint(&self, paint: &SeriesPaint<C>) {
+        self.series_paints.remove_coloured_item(paint);
+    }
+
     pub fn add_mixed_paint(&self, paint: &MixedPaint<C>) {
         self.mixed_paints.add_coloured_item(paint);
     }
 
+    pub fn remove_mixed_paint(&self, paint: &MixedPaint<C>) {
+        self.mixed_paints.remove_coloured_item(paint);
+    }
+
     pub fn add_target_colour(&self, target_colour: &TargetColour) {
         self.target_colours.add_coloured_item(target_colour);
+    }
+
+    pub fn remove_target_colour(&self, target_colour: &TargetColour) {
+        self.target_colours.remove_coloured_item(target_colour);
     }
 
     pub fn set_target_colour(&self, o_colour: Option<&Colour>) {
