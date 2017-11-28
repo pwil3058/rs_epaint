@@ -19,7 +19,7 @@ use gtk;
 use gtk::prelude::*;
 
 use colour_edit::*;
-use series_paint::*;
+use super::*;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum SeriesPaintEntryStatus {

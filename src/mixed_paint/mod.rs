@@ -24,6 +24,10 @@ use pw_gix::colour::*;
 use paint::*;
 
 pub mod collection;
+pub mod components;
+pub mod hue_wheel;
+pub mod mixer;
+pub mod target;
 
 #[derive(Debug, PartialEq, Hash, Clone)]
 pub struct PaintComponent<C: CharacteristicsInterface> {

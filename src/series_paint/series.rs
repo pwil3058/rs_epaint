@@ -35,7 +35,7 @@ use pw_gix::rgb_math::rgb::*;
 
 use display::*;
 use paint::*;
-use series_paint::*;
+use super::*;
 
 lazy_static! {
     pub static ref MANUFACTURER_RE: Regex = Regex::new(

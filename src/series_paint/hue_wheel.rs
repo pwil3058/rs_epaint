@@ -26,8 +26,8 @@ use pw_gix::colour::*;
 use display::*;
 use graticule::*;
 use paint::*;
-use series_paint::*;
 use shape::*;
+use super::*;
 
 // WHEEL
 pub struct SeriesPaintHueAttrWheelCore<A, C>

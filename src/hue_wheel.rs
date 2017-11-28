@@ -28,7 +28,7 @@ use graticule::*;
 use paint::*;
 use series_paint::*;
 use shape::*;
-use target::*;
+use mixed_paint::target::*;
 
 // CHOSEN_ITEM
 #[derive(Debug)]

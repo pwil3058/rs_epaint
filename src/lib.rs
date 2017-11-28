@@ -29,17 +29,14 @@ extern crate gdk_pixbuf;
 pub mod characteristics;
 pub mod colour_edit;
 pub mod colour_mix;
-pub mod components;
 pub mod display;
 pub mod hue_wheel;
 pub mod graticule;
 pub mod mixed_paint;
-pub mod mixer;
 pub mod model_paint;
 pub mod paint;
 pub mod series_paint;
 pub mod shape;
-pub mod target;
 
 #[cfg(test)]
 mod tests {

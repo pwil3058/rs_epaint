@@ -27,10 +27,10 @@ use pw_gix::colour::*;
 use display::*;
 use graticule::*;
 use paint::*;
-use mixed_paint::*;
 use series_paint::*;
 use shape::*;
-use target::*;
+use super::*;
+use super::target::*;
 
 // CHOSEN_ITEM
 #[derive(Debug)]

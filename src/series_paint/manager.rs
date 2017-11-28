@@ -29,8 +29,8 @@ use pw_gix::gtkx::paned::*;
 use pw_gix::gtkx::window::*;
 use pw_gix::pwo::*;
 
-use series_paint::*;
-use series_paint::hue_wheel::*;
+use super::*;
+use super::hue_wheel::*;
 
 pub struct PaintSelectorCore<A, C>
     where   A: ColourAttributesInterface + 'static,

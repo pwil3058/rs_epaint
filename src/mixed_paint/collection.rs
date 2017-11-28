@@ -30,7 +30,7 @@ use pw_gix::rgb_math::rgb::*;
 
 use display::*;
 use paint::*;
-use mixed_paint::*;
+use super::*;
 
 pub struct MixedPaintCollectionCore<C: CharacteristicsInterface> {
     last_mixture_id: Cell<u32>,

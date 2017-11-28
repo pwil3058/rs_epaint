@@ -27,9 +27,9 @@ use pw_gix::gtkx::paned::*;
 use pw_gix::rgb_math::rgb::*;
 
 use paint::*;
-use components::*;
-use mixer::hue_wheel::*;
 use series_paint::*;
+use super::components::*;
+use super::hue_wheel::*;
 
 trait ColourMatchAreaInterface {
     type ColourMatchAreaType;
