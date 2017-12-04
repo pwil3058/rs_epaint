@@ -125,7 +125,8 @@ impl<C> PaintPartsSpinButtonInterface<C> for PaintPartsSpinButton<C>
             move |_, event| {
                 if event.get_event_type() == gdk::EventType::ButtonPress {
                     if event.get_button() == 3 {
-                        spin_button_c.menu.popup_at_pointer(None);
+                        // TODO: needs v3_22: spin_button_c.menu.popup_at_pointer(None);
+                        spin_button_c.menu.popup_easy(event.get_button(), event.get_time());
                         return Inhibit(true)
                     }
                 }

@@ -145,7 +145,8 @@ impl<A, C> PaintHueAttrWheelInterface<A, C> for PaintHueAttrWheel<A, C>
                         let have_listeners = wheel_c.add_paint_callbacks.borrow().len() > 0;
                         wheel_c.add_paint_item.set_visible(have_listeners);
                         *wheel_c.chosen_item.borrow_mut() = chosen_item;
-                        wheel_c.menu.popup_at_pointer(None);
+                        // TODO: needs v3_22: wheel_c.menu.popup_at_pointer(None);
+                        wheel_c.menu.popup_easy(event.get_button(), event.get_time());
                         return Inhibit(true)
                     }
                 }

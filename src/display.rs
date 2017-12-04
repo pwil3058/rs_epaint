@@ -438,7 +438,8 @@ impl<A, C> PaintComponentListViewInterface<A, C> for PaintComponentListView<A, C
                         let o_paint = pclv_c.get_paint_at(event.get_position());
                         pclv_c.paint_info_item.set_sensitive(o_paint.is_some());
                         *pclv_c.chosen_paint.borrow_mut() = o_paint;
-                        pclv_c.menu.popup_at_pointer(None);
+                        // TODO: needs v3_22: pclv_c.menu.popup_at_pointer(None);
+                        pclv_c.menu.popup_easy(event.get_button(), event.get_time());
                         return Inhibit(true)
                     }
                 }

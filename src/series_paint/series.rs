@@ -382,7 +382,8 @@ impl<A, C> PaintSeriesViewInterface<A, C> for PaintSeriesView<A, C>
                         let have_listeners = mspl_c.add_paint_callbacks.borrow().len() > 0;
                         mspl_c.add_paint_item.set_visible(have_listeners);
                         *mspl_c.chosen_paint.borrow_mut() = o_paint;
-                        mspl_c.menu.popup_at_pointer(None);
+                        // TODO: needs v3_22: mspl_c.menu.popup_at_pointer(None);
+                        mspl_c.menu.popup_easy(event.get_button(), event.get_time());
                         return Inhibit(true)
                     }
                 }

@@ -103,12 +103,11 @@ impl<C: CharacteristicsInterface> MixedPaintCollectionCore<C> {
         if gcd == 0 {
             return Err(PaintError::NoSubstantiveComponents)
         }
-        let rtp = total_parts;
         total_parts /= gcd;
         let mut new_rgb: RGB = BLACK;
         let mut subst_components: Vec<PaintComponent<C>> = Vec::new();
         let mut new_c_floats: Vec<f64> = Vec::new();
-        for i in 0..C::tv_row_len() {
+        for _ in 0..C::tv_row_len() {
             new_c_floats.push(0.0);
         }
         for component in components.iter() {
@@ -329,7 +328,8 @@ impl<A, C> MixedPaintCollectionViewInterface<A, C> for MixedPaintCollectionView<
                         let have_listeners = mspl_c.add_paint_callbacks.borrow().len() > 0;
                         mspl_c.add_paint_item.set_visible(have_listeners);
                         *mspl_c.chosen_paint.borrow_mut() = o_paint;
-                        mspl_c.menu.popup_at_pointer(None);
+                        // TODO: needs v3_22: mspl_c.menu.popup_at_pointer(None);
+                        mspl_c.menu.popup_easy(event.get_button(), event.get_time());
                         return Inhibit(true)
                     }
                 }

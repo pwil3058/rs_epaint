@@ -401,7 +401,8 @@ impl<A> ColourEditorInterface for  Rc<ColourEditorCore<A>>
                         ced_c.paste_sample_item.set_sensitive(cbd.wait_is_image_available());
                         ced_c.remove_samples_item.set_sensitive(n_samples > 0);
                         ced_c.menu_position.set(position);
-                        ced_c.menu.popup_at_pointer(None);
+                        // TODO: needs v3_22: ced_c.menu.popup_at_pointer(None);
+                        ced_c.menu.popup_easy(event.get_button(), event.get_time());
                         return Inhibit(true)
                     }
                 }
