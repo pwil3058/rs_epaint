@@ -301,8 +301,9 @@ impl<A, C> SeriesPaintManagerInterface<A, C> for SeriesPaintManager<A, C>
     }
 
     fn button(&self) -> gtk::Button {
-        let button = gtk::Button::new_with_label("Series Paint Manager");
+        let button = gtk::Button::new(); //_with_label("Series Paint Manager");
         button.set_tooltip_text(Some(TOOLTIP_TEXT));
+        button.set_image(&series_paint_image(24));
         let spm_c = self.clone();
         button.connect_clicked(
             move |_| spm_c.window.present()

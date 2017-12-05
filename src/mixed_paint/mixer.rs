@@ -168,6 +168,7 @@ pub struct PaintMixerCore<A, C>
     next_name_label: gtk::Label,
     mixed_paint_notes: gtk::Entry,
     // Buttons
+    print_report_btn: gtk::Button,
     accept_mixture_btn: gtk::Button,
     reset_parts_btn: gtk::Button,
     remove_unused_btn: gtk::Button,
@@ -277,6 +278,7 @@ impl<A, C> PaintMixerInterface<A, C> for PaintMixer<A, C>
                 next_name_label: gtk::Label::new(Some("#???:")),
                 mixed_paint_notes: gtk::Entry::new(),
                 // Buttons
+                print_report_btn: gtk::Button::new_from_icon_name("gtk-print", gtk::IconSize::LargeToolbar.into()),
                 accept_mixture_btn: gtk::Button::new_with_label("Accept"),
                 cancel_btn: gtk::Button::new_with_label("Cancel"),
                 reset_parts_btn: gtk::Button::new_with_label("Reset"),
@@ -287,13 +289,19 @@ impl<A, C> PaintMixerInterface<A, C> for PaintMixer<A, C>
             }
         );
 
-        let toolbar = gtk::Toolbar::new();
-        //let print_button = gtk::ToolButton::new_from_stock("gtk-print");
-        //print_button.set_tooltip_text("Print a report of the mixtures and paints used");
-        //toolbar.insert(&print_button.clone(), 1);
-        toolbar.insert(&paint_mixer.series_paint_manager.tool_button(), 2);
-        toolbar.show_all();
-        paint_mixer.vbox.pack_start(&toolbar, false, false, 0);
+        // TODO: Consider redoing this when Toolbar bug fixed.
+        //let toolbar = gtk::Toolbar::new();
+        //let paint_mixer.print_report_btn = gtk::ToolButton::new_from_stock("gtk-print");
+        //paint_mixer.print_report_btn.set_tooltip_text("Print a report of the mixtures and paints used");
+        //toolbar.insert(&paint_mixer.print_report_btn.clone(), 1);
+        //toolbar.insert(&paint_mixer.series_paint_manager.tool_button(), 2);
+        //toolbar.show_all();
+        //paint_mixer.vbox.pack_start(&toolbar, false, false, 0);
+        let hbox = gtk::Box::new(gtk::Orientation::Horizontal, 0);
+        paint_mixer.print_report_btn.set_tooltip_text("Print a report of the mixtures and paints used");
+        hbox.pack_start(&paint_mixer.print_report_btn.clone(), false, true, 2);
+        hbox.pack_start(&paint_mixer.series_paint_manager.button(), false, true, 2);
+        paint_mixer.vbox.pack_start(&hbox, false, false, 2);
 
         let hbox = gtk::Box::new(gtk::Orientation::Horizontal, 0);
         hbox.pack_start(&gtk::Label::new(Some("Notes:")), false, false, 0);
