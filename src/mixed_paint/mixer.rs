@@ -288,9 +288,9 @@ impl<A, C> PaintMixerInterface<A, C> for PaintMixer<A, C>
         );
 
         let toolbar = gtk::Toolbar::new();
-        let print_button = gtk::ToolButton::new_from_stock("gtk-print");
-        print_button.set_tooltip_text("Print a report of the mixtures and paints used");
-        toolbar.insert(&print_button.clone(), 1);
+        //let print_button = gtk::ToolButton::new_from_stock("gtk-print");
+        //print_button.set_tooltip_text("Print a report of the mixtures and paints used");
+        //toolbar.insert(&print_button.clone(), 1);
         toolbar.insert(&paint_mixer.series_paint_manager.tool_button(), 2);
         toolbar.show_all();
         paint_mixer.vbox.pack_start(&toolbar, false, false, 0);
