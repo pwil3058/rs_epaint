@@ -29,6 +29,7 @@ use pw_gix::gtkx::entry::*;
 use pw_gix::rgb_math::angle::*;
 use pw_gix::rgb_math::rgb::*;
 use pw_gix::rgb_math::rgb_manipulator::RGBManipulator;
+use pw_gix::sample;
 
 use paint::*;
 
@@ -257,9 +258,16 @@ impl<A> ColourEditorInterface for  Rc<ColourEditorCore<A>>
         };
         ced.vbox.pack_start(&hbox, false, false, 0);
 
-        let bbox = gtk::ButtonBox::new(gtk::Orientation::Horizontal);
+        let bbox = gtk::Box::new(gtk::Orientation::Horizontal, 2);
         for button in extra_buttons.iter() {
             bbox.pack_start(&button.clone(), true, true, 0);
+        }
+        if sample::screen_sampling_available() {
+            let btn = sample::new_screen_sample_button(
+                "Take Sample",
+                "Take a sample of a portion of the screen"
+            );
+            bbox.pack_start(&btn, true, true, 0);
         }
         bbox.pack_start(&ced.auto_match_btn.clone(), true, true, 0);
         bbox.pack_start(&ced.auto_match_on_paste_btn.clone(), false, false, 0);
