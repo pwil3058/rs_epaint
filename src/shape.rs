@@ -155,12 +155,11 @@ impl<CI, PS> ColouredItemSpapeList<CI, PS>
     }
 
     pub fn add_coloured_item(&self, coloured_item: &CI) {
-        match self.find_coloured_item(coloured_item) {
-            Ok(_) => panic!("File: {:?} Line: {:?} already includes: {:?}", file!(), line!(), coloured_item),
-            Err(index) => {
-                let shape = PS::new(coloured_item, self.attr);
-                self.shapes.borrow_mut().insert(index, shape);
-            }
+        if let Err(index) = self.find_coloured_item(coloured_item) {
+            let shape = PS::new(coloured_item, self.attr);
+            self.shapes.borrow_mut().insert(index, shape);
+        } else {
+            // we already contain this paint so quietly ignore
         }
     }
 

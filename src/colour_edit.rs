@@ -135,6 +135,10 @@ impl<A> ColourEditorCore<A>
         colour
     }
 
+    pub fn get_colour(&self) -> Colour {
+        self.rgb_manipulator.get_rgb().into()
+    }
+
     fn set_rgb_and_inform(&self, rgb:RGB) {
         let colour = self.set_rgb(rgb);
         for callback in self.colour_changed_callbacks.borrow().iter() {

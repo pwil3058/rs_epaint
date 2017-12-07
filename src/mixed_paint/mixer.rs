@@ -33,6 +33,7 @@ use series_paint::manager::*;
 use super::collection::*;
 use super::components::*;
 use super::hue_wheel::*;
+use super::target::*;
 
 trait ColourMatchAreaInterface {
     type ColourMatchAreaType;
@@ -168,6 +169,7 @@ pub struct PaintMixerCore<A, C>
     next_name_label: gtk::Label,
     mixed_paint_notes: gtk::Entry,
     // Buttons
+    new_mixture_btn: gtk::Button,
     print_report_btn: gtk::Button,
     accept_mixture_btn: gtk::Button,
     reset_parts_btn: gtk::Button,
@@ -279,6 +281,7 @@ impl<A, C> PaintMixerInterface<A, C> for PaintMixer<A, C>
                 mixed_paint_notes: gtk::Entry::new(),
                 // Buttons
                 print_report_btn: gtk::Button::new_from_icon_name("gtk-print", gtk::IconSize::LargeToolbar.into()),
+                new_mixture_btn: gtk::Button::new_with_label("New"),
                 accept_mixture_btn: gtk::Button::new_with_label("Accept"),
                 cancel_btn: gtk::Button::new_with_label("Cancel"),
                 reset_parts_btn: gtk::Button::new_with_label("Reset"),
@@ -335,6 +338,7 @@ impl<A, C> PaintMixerInterface<A, C> for PaintMixer<A, C>
 
         let button_box = gtk::Box::new(gtk::Orientation::Horizontal, 2);
         paint_mixer.vbox.pack_start(&button_box.clone(), false, false, 0);
+        button_box.pack_start(&paint_mixer.new_mixture_btn.clone(), true, true, 0);
         button_box.pack_start(&paint_mixer.accept_mixture_btn.clone(), true, true, 0);
         button_box.pack_start(&paint_mixer.cancel_btn.clone(), true, true, 0);
         button_box.pack_start(&paint_mixer.simplify_parts_btn.clone(), true, true, 0);
@@ -342,6 +346,16 @@ impl<A, C> PaintMixerInterface<A, C> for PaintMixer<A, C>
         button_box.pack_start(&paint_mixer.remove_unused_btn.clone(), true, true, 0);
 
         paint_mixer.vbox.pack_start(&paint_mixer.mixed_paints_view.pwo(), true, true, 0);
+
+        paint_mixer.new_mixture_btn.set_tooltip_text("Start mixing a new colour.");
+        let paint_mixer_c = paint_mixer.clone();
+        paint_mixer.new_mixture_btn.connect_clicked(
+            move |_| {
+                if let Some((ref notes, ref colour)) = NewTargetColourDialog::<A>::create(None).get_new_target() {
+                    paint_mixer_c.start_new_mixture(Some(&notes), Some(&colour))
+                }
+            }
+        );
 
         paint_mixer.accept_mixture_btn.set_tooltip_text("Accept the current mixture and add it to the list of mixed colours.");
         let paint_mixer_c = paint_mixer.clone();

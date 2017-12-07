@@ -24,6 +24,7 @@ use pw_gix::colour::*;
 use pw_gix::gtkx::coloured::*;
 use pw_gix::gtkx::dialog::*;
 
+use colour_edit::*;
 use paint::*;
 
 #[derive(Debug)]
@@ -152,6 +153,80 @@ impl<A> TargetColourDisplayDialogInterface<A> for TargetColourDisplayDialog<A>
                 cads: PhantomData,
             }
         )
+    }
+}
+
+// Entry for setting a new target colour
+pub struct NewTargetColourDialogCore<A>
+    where   A: ColourAttributesInterface + 'static
+{
+    dialog: gtk::Dialog,
+    colour_editor: ColourEditor<A>,
+    notes: gtk::Entry,
+}
+
+pub type NewTargetColourDialog<A> = Rc<NewTargetColourDialogCore<A>>;
+
+pub trait NewTargetColourDialogInterface<A>
+    where   A: ColourAttributesInterface
+{
+    fn create(parent: Option<&gtk::Window>) -> NewTargetColourDialog<A>;
+}
+
+impl<A> NewTargetColourDialogInterface<A> for NewTargetColourDialog<A>
+    where   A: ColourAttributesInterface
+{
+    fn create(parent: Option<&gtk::Window>) -> NewTargetColourDialog<A> {
+        let dialog = gtk::Dialog::new_with_buttons(
+            Some("mcmmtk: New Mixed Paint Target Colour"),
+            parent,
+            gtk::DIALOG_DESTROY_WITH_PARENT,
+            &[("gtk-cancel", gtk::ResponseType::Reject.into()), ("gtk-ok", gtk::ResponseType::Accept.into())]
+        );
+        dialog.set_response_sensitive(gtk::ResponseType::Accept.into(), false);
+        let colour_editor = ColourEditor::<A>::create(&vec![]);
+        let notes = gtk::Entry::new();
+
+        let content_area = dialog.get_content_area();
+        let hbox = gtk::Box::new(gtk::Orientation::Horizontal, 2);
+        hbox.pack_start(&gtk::Label::new(Some("Notes:")), false, false, 0);
+        hbox.pack_start(&notes.clone(), true, true, 0);
+        content_area.pack_start(&hbox, false, false, 0);
+        content_area.pack_start(&colour_editor.pwo(), true, true, 0);
+        content_area.show_all();
+
+        let ntcd = Rc::new(
+            NewTargetColourDialogCore::<A>{dialog, colour_editor, notes}
+        );
+        let ntcd_c = ntcd.clone();
+        ntcd.notes.connect_changed(
+            move |entry| {
+                if let Some(text) = entry.get_text() {
+                    ntcd_c.dialog.set_response_sensitive(gtk::ResponseType::Accept.into(), text.len() > 0)
+                } else {
+                    ntcd_c.dialog.set_response_sensitive(gtk::ResponseType::Accept.into(), false)
+                }
+            }
+        );
+
+        ntcd
+    }
+}
+
+impl <A> NewTargetColourDialogCore<A>
+    where   A: ColourAttributesInterface
+{
+    pub fn get_new_target(&self) -> Option<(String, Colour)> {
+        let OK: i32 = gtk::ResponseType::Accept.into();
+        if self.dialog.run() == OK {
+            if let Some(notes) = self.notes.get_text() {
+                let colour = self.colour_editor.get_colour();
+                self.dialog.destroy();
+                return Some((notes, colour));
+            }
+        };
+        self.dialog.destroy();
+        None
     }
 }
 
