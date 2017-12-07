@@ -44,6 +44,8 @@ trait ColourMatchAreaInterface {
     fn get_mixed_colour(&self) -> Option<Colour>;
     fn get_target_colour(&self) -> Option<Colour>;
 
+    fn has_target_colour(&self) -> bool;
+
     fn set_mixed_colour(&self, colour: Option<&Colour>);
     fn set_target_colour(&self, colour: Option<&Colour>);
 }
@@ -126,6 +128,10 @@ impl ColourMatchAreaInterface for ColourMatchArea {
         }
     }
 
+    fn has_target_colour(&self) -> bool {
+        self.target_colour.borrow().is_some()
+    }
+
     fn set_mixed_colour(&self, colour: Option<&Colour>) {
         if let Some(colour) = colour {
             *self.mixed_colour.borrow_mut() = Some(colour.clone())
@@ -184,6 +190,14 @@ impl<A, C> PaintMixerCore<A, C>
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static
 {
+    fn has_notes(&self) -> bool {
+        if let Some(text) = self.mixed_paint_notes.get_text() {
+            text.len() > 0
+        } else {
+            false
+        }
+    }
+
     pub fn add_series_paint(&self, paint: &SeriesPaint<C>) {
         self.paint_components.add_series_paint(paint);
         for wheel in self.hue_attr_wheels.iter() {
@@ -194,6 +208,21 @@ impl<A, C> PaintMixerCore<A, C>
     fn remove_series_paint(&self, paint: &SeriesPaint<C>) {
         for wheel in self.hue_attr_wheels.iter() {
             wheel.remove_series_paint(paint);
+        }
+    }
+
+    fn set_button_sensitivities(&self) {
+        let has_colour = self.paint_components.has_colour();
+        self.simplify_parts_btn.set_sensitive(has_colour);
+        self.reset_parts_btn.set_sensitive(has_colour);
+        if self.colour_match_area.has_target_colour() {
+            self.new_mixture_btn.set_sensitive(false);
+            self.cancel_btn.set_sensitive(true);
+            self.accept_mixture_btn.set_sensitive(has_colour && self.has_notes());
+        } else {
+            self.new_mixture_btn.set_sensitive(true);
+            self.accept_mixture_btn.set_sensitive(false);
+            self.cancel_btn.set_sensitive(false);
         }
     }
 
@@ -218,7 +247,7 @@ impl<A, C> PaintMixerCore<A, C>
         //    self.standards_manager.set_target_setable(False);
         let name_text = format!("#{:03}:", self.mixed_paints_view.next_mixture_id());
         self.next_name_label.set_text(name_text.as_str());
-        // TODO: set button states
+        self.set_button_sensitivities();
     }
 
     fn accept_new_mixture(&self) {
@@ -236,7 +265,7 @@ impl<A, C> PaintMixerCore<A, C>
         } else {
             panic!("File: {:?} Line: {:?}", file!(), line!())
         }
-        // TODO: set button states
+        self.cancel_current_mixture();
     }
 
     fn cancel_current_mixture(&self) {
@@ -246,7 +275,7 @@ impl<A, C> PaintMixerCore<A, C>
         //    self.standards_manager.set_target_setable(False);
         self.next_name_label.set_text("#00?:");
         self.paint_components.reset_all_parts_to_zero();
-        // TODO: set button states
+        self.set_button_sensitivities();
     }
 }
 
@@ -378,7 +407,10 @@ impl<A, C> PaintMixerInterface<A, C> for PaintMixer<A, C>
         paint_mixer.reset_parts_btn.set_tooltip_text("Reset parts of all paints in mixing part to zero.");
         let paint_mixer_c = paint_mixer.clone();
         paint_mixer.reset_parts_btn.connect_clicked(
-            move |_| paint_mixer_c.paint_components.reset_all_parts_to_zero()
+            move |_| {
+                paint_mixer_c.paint_components.reset_all_parts_to_zero();
+                paint_mixer_c.set_button_sensitivities();
+            }
         );
 
         paint_mixer.remove_unused_btn.set_tooltip_text("Remove paints with zero parts from the mixing area.");
@@ -389,9 +421,10 @@ impl<A, C> PaintMixerInterface<A, C> for PaintMixer<A, C>
 
         let paint_mixer_c = paint_mixer.clone();
         paint_mixer.paint_components.connect_colour_changed(
-            move |colour| {
-                paint_mixer_c.colour_match_area.set_mixed_colour(colour);
-                paint_mixer_c.cads.set_colour(colour);
+            move |o_colour| {
+                paint_mixer_c.colour_match_area.set_mixed_colour(o_colour);
+                paint_mixer_c.cads.set_colour(o_colour);
+                paint_mixer_c.set_button_sensitivities();
             }
         );
 
@@ -408,6 +441,8 @@ impl<A, C> PaintMixerInterface<A, C> for PaintMixer<A, C>
         paint_mixer.series_paint_manager.connect_add_paint(
             move |paint| paint_mixer_c.add_series_paint(paint)
         );
+
+        paint_mixer.set_button_sensitivities();
 
         paint_mixer
     }

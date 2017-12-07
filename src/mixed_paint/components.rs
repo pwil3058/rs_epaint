@@ -20,7 +20,6 @@ use num::Integer;
 use gdk;
 use gtk;
 use gtk::prelude::*;
-use gtk::MenuExt;
 
 use pw_gix::colour::*;
 use pw_gix::gtkx::coloured::*;
@@ -97,7 +96,7 @@ impl<C> PaintPartsSpinButtonInterface<C> for PaintPartsSpinButton<C>
         spin_button.event_box.set_tooltip_text(Some(paint.tooltip_text().as_str()));
         spin_button.event_box.add_events(events.bits() as i32);
         spin_button.label.set_widget_colour(&paint.colour());
-        spin_button.entry.set_widget_colour(&paint.colour());
+        //spin_button.entry.set_widget_colour(&paint.colour());
         spin_button.entry.set_numeric(true);
         spin_button.entry.set_adjustment(&adj);
         spin_button.entry.set_sensitive(sensitive);
@@ -244,6 +243,15 @@ impl<C: CharacteristicsInterface + 'static> PaintComponentsBoxCore<C> {
                 callback(None);
             }
         }
+    }
+
+    pub fn has_colour(&self) -> bool {
+        for spin_button in self.spin_buttons.borrow().iter() {
+            if spin_button.get_parts() > 0 {
+                return true
+            }
+        };
+        false
     }
 
     pub fn connect_paint_removed<F: 'static>(&self, callback: F)

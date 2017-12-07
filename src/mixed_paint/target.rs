@@ -217,8 +217,8 @@ impl <A> NewTargetColourDialogCore<A>
     where   A: ColourAttributesInterface
 {
     pub fn get_new_target(&self) -> Option<(String, Colour)> {
-        let OK: i32 = gtk::ResponseType::Accept.into();
-        if self.dialog.run() == OK {
+        let ok: i32 = gtk::ResponseType::Accept.into();
+        if self.dialog.run() == ok {
             if let Some(notes) = self.notes.get_text() {
                 let colour = self.colour_editor.get_colour();
                 self.dialog.destroy();
