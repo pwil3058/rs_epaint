@@ -16,6 +16,9 @@ use std::cell::RefCell;
 use std::path::Path;
 use std::rc::Rc;
 
+use chrono::prelude::*;
+use xml::escape::*;
+
 use cairo;
 use gtk;
 use gtk::prelude::*;
@@ -277,6 +280,98 @@ impl<A, C> PaintMixerCore<A, C>
         self.paint_components.reset_all_parts_to_zero();
         self.set_button_sensitivities();
     }
+
+    fn pango_markup_chunks(&self) -> Vec<String> {
+        let series_paints_used = self.mixed_paints_view.series_paints_used();
+
+        if series_paints_used.len() == 0 {
+            return vec![escape_str_attribute("Empty Mix/Match Description").to_string()]
+        }
+
+        let mut text = format!("<b>{}</b> ", escape_str_attribute("Mix/Match Description:"));
+        text += &format!("{}\n", Local::now().format("%X: %A %x"));
+        if let Some(notes) = self.notes.get_text() {
+            if text.len() > 0 {
+                text += &format!("\n{}\n", notes);
+            }
+        };
+        let mut chunks = vec![text];
+
+        let mut text = format!("<b>{}</b>\n\n", escape_str_attribute("Paint Colours:"));
+        for series_paint in series_paints_used.iter() {
+            text += &format!("<span background=\"{}\">\t</span> ", series_paint.rgb().pango_string());
+            text += &format!("{}", escape_str_attribute(&series_paint.name()));
+            if series_paint.notes().len() > 0 {
+                text += &format!(" {}\n", escape_str_attribute(&series_paint.notes()));
+            } else {
+                text += "\n";
+            }
+        }
+        chunks.push(text);
+
+        let mut text = format!("<b>{}</b>\n\n", escape_str_attribute("Mixed Colours:"));
+        for mixed_paint in self.mixed_paints_view.get_mixed_paints().iter() {
+            text += &format!("<span background=\"{}\">\t</span> ", mixed_paint.rgb().pango_string());
+            text += &format!("<span background=\"{}\">\t</span> ", mixed_paint.monotone_rgb().pango_string());
+            text += &format!("<span background=\"{}\">\t</span> ", mixed_paint.max_chroma_rgb().pango_string());
+            text += &format!("{}", escape_str_attribute(&mixed_paint.name()));
+            if mixed_paint.notes().len() > 0 {
+                text += &format!(" {}\n", escape_str_attribute(&mixed_paint.notes()));
+            } else {
+                text += "\n";
+            };
+            if let Some(matched_colour) = mixed_paint.matched_colour() {
+                text += &format!("<span background=\"{}\">\t</span> ", matched_colour.rgb().pango_string());
+                text += &format!("<span background=\"{}\">\t</span> ", matched_colour.monotone_rgb().pango_string());
+                text += &format!("<span background=\"{}\">\t</span> Matched Colour\n", matched_colour.max_chroma_rgb().pango_string());
+            };
+            for component in mixed_paint.components().iter() {
+                text += &format!("{:7}: ", component.parts);
+                text += &format!("<span background=\"{}\">\t</span> ", component.paint.rgb().pango_string());
+                text += &format!("{}\n", escape_str_attribute(&component.paint.name()));
+            }
+            chunks.push(text);
+            text = "".to_string();
+        }
+
+        chunks
+    }
+    //def pango_markup_chunks(self):
+        //"""
+        //Format the palette description as a list of Pango markup chunks
+        //"""
+        //paint_colours = self.paint_colours.get_paints()
+        //if len(paint_colours) == 0:
+            //return [cgi.escape(_("Empty Mix/Match Description"))]
+        //# TODO: add paint series data in here
+        //string = "<b>" + cgi.escape(_("Mix/Match Description:")) + "</b> "
+        //string += cgi.escape(time.strftime("%X: %A %x")) + "\n"
+        //if self.notes.get_text_length() > 0:
+            //string += "\n{0}\n".format(cgi.escape(self.notes.get_text()))
+        //chunks = [string]
+        //string = "<b>" + cgi.escape(_("Paint Colours:")) + "</b>\n\n"
+        //for pcol in paint_colours:
+            //string += "<span background=\"{0}\">\t</span> ".format(pango_rgb_str(pcol.rgb16))
+            //string += "{0}\n".format(cgi.escape(pcol.name))
+        //chunks.append(string)
+        //string = "<b>" + cgi.escape(_("Mixed Colours:")) + "</b>\n\n"
+        //for tmc in self.mixed_colours:
+            //mc = tmc[0]
+            //tc = tmc[1]
+            //string += "<span background=\"{0}\">\t</span>".format(pango_rgb_str(mc.rgb16))
+            //string += "<span background=\"{0}\">\t</span>".format(pango_rgb_str(mc.value_rgb.rgb16))
+            //string += "<span background=\"{0}\">\t</span>".format(pango_rgb_str(mc.hue_rgb.rgb16))
+            //string += " {0}: {1}\n".format(cgi.escape(mc.name), cgi.escape(mc.notes))
+            //string += "<span background=\"{0}\">\t</span>".format(pango_rgb_str(tc.rgb16))
+            //string += "<span background=\"{0}\">\t</span>".format(pango_rgb_str(tc.value_rgb.rgb16))
+            //string += "<span background=\"{0}\">\t</span> Target Colour\n".format(pango_rgb_str(tc.hue.rgb.rgb16))
+            //for blob in mc.blobs:
+                //string += "{0: 7d}:".format(blob.parts)
+                //string += "<span background=\"{0}\">\t</span>".format(pango_rgb_str(blob.paint.rgb16))
+                //string += " {0}\n".format(cgi.escape(blob.paint.name))
+            //chunks.append(string)
+            //string = "" # Necessary because we put header in the first chunk
+        //return chunks
 }
 
 pub type PaintMixer<A, C> = Rc<PaintMixerCore<A, C>>;
@@ -330,7 +425,6 @@ impl<A, C> PaintMixerInterface<A, C> for PaintMixer<A, C>
         //toolbar.show_all();
         //paint_mixer.vbox.pack_start(&toolbar, false, false, 0);
         let hbox = gtk::Box::new(gtk::Orientation::Horizontal, 0);
-        paint_mixer.print_report_btn.set_tooltip_text("Print a report of the mixtures and paints used");
         hbox.pack_start(&paint_mixer.print_report_btn.clone(), false, true, 2);
         hbox.pack_start(&paint_mixer.series_paint_manager.button(), false, true, 2);
         paint_mixer.vbox.pack_start(&hbox, false, false, 2);
@@ -375,6 +469,14 @@ impl<A, C> PaintMixerInterface<A, C> for PaintMixer<A, C>
         button_box.pack_start(&paint_mixer.remove_unused_btn.clone(), true, true, 0);
 
         paint_mixer.vbox.pack_start(&paint_mixer.mixed_paints_view.pwo(), true, true, 0);
+
+        paint_mixer.print_report_btn.set_tooltip_text("Print a report of the mixtures and paints used");
+        let paint_mixer_c = paint_mixer.clone();
+        paint_mixer.print_report_btn.connect_clicked(
+            move |_| {
+                println!("Report:\n {:?}", paint_mixer_c.pango_markup_chunks())
+            }
+        );
 
         paint_mixer.new_mixture_btn.set_tooltip_text("Start mixing a new colour.");
         let paint_mixer_c = paint_mixer.clone();

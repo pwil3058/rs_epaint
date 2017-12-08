@@ -18,8 +18,10 @@ extern crate lazy_static;
 #[macro_use]
 extern crate pw_gix;
 
+extern crate chrono;
 extern crate num;
 extern crate regex;
+extern crate xml;
 
 extern crate cairo;
 extern crate gdk;

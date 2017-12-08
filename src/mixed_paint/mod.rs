@@ -211,6 +211,18 @@ impl<C: CharacteristicsInterface> MixedPaintCore<C> {
 
         spu
     }
+
+    pub fn matched_colour(&self) -> Option<Colour> {
+        if let Some(ref matched_colour) = self.matched_colour {
+            Some(matched_colour.clone())
+        } else {
+            None
+        }
+    }
+
+    pub fn components(&self) -> Rc<Vec<PaintComponent<C>>> {
+        self.components.clone()
+    }
 }
 
 pub type MixedPaint<C> = Rc<MixedPaintCore<C>>;

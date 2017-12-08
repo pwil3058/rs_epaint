@@ -246,6 +246,14 @@ impl<A, C> MixedPaintCollectionViewCore<A, C>
             Err(err) => Err(err)
         }
     }
+
+    pub fn series_paints_used(&self) -> Vec<SeriesPaint<C>> {
+        self.collection.series_paints_used()
+    }
+
+    pub fn get_mixed_paints(&self) -> Vec<MixedPaint<C>> {
+        self.collection.get_mixed_paints()
+    }
 }
 
 pub type MixedPaintCollectionView<A, C> = Rc<MixedPaintCollectionViewCore<A, C>>;

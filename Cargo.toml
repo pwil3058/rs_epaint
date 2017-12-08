@@ -7,9 +7,11 @@ authors = ["Peter Williams <pwil3058@gmail.com>"]
 # TODO: change pw_gix dependency when it goes public
 #pw_gix = { git = "https://github.com/pwil3058/rs_pw_gix.git" }
 pw_gix = { git = "file:/home/peter/SRC/GITHUB/rs_pw_gix.git" }
+chrono = "0.4"
 lazy_static = "0.2.8"
 num = "0.1"
 regex = "0.2"
+xml-rs = "0.7.0"
 
 cairo-rs = "0.2.0"
 gdk = "0.6.0"
