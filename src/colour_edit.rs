@@ -235,7 +235,7 @@ impl<A> ColourEditorInterface for  Rc<ColourEditorCore<A>>
             }
         );
 
-        let events = gdk::BUTTON_PRESS_MASK;
+        let events = gdk::EventMask::BUTTON_PRESS_MASK;
         ced.drawing_area.add_events(events.bits() as i32);
         ced.drawing_area.set_size_request(200, 200);
 
@@ -279,7 +279,7 @@ impl<A> ColourEditorInterface for  Rc<ColourEditorCore<A>>
 
         ced.vbox.show_all();
 
-        let events = gdk::KEY_PRESS_MASK | gdk::KEY_RELEASE_MASK | gdk::ENTER_NOTIFY_MASK;
+        let events = gdk::EventMask::KEY_PRESS_MASK | gdk::EventMask::KEY_RELEASE_MASK | gdk::EventMask::ENTER_NOTIFY_MASK;
         ced.vbox.add_events(events.bits() as i32);
         ced.vbox.set_receives_default(true);
         let ced_c = ced.clone();

@@ -15,6 +15,8 @@
 use gdk_pixbuf;
 use gtk;
 
+use pw_gix::gdk_pixbufx::PIXOPS_INTERP_BILINEAR;
+
 /* XPM */
 static SERIES_PAINT_XPM: &[&str] = &[
 "128 128 256 2",
@@ -409,7 +411,7 @@ pub fn series_paint_pixbuf() -> gdk_pixbuf::Pixbuf {
 }
 
 pub fn series_paint_image(size: i32) -> gtk::Image {
-    if let Ok(pixbuf) = series_paint_pixbuf().scale_simple(size, size, gdk_pixbuf::InterpType::Bilinear) {
+    if let Ok(pixbuf) = series_paint_pixbuf().scale_simple(size, size, PIXOPS_INTERP_BILINEAR) {
         gtk::Image::new_from_pixbuf(Some(&pixbuf))
     } else {
         panic!("File: {:?} Line: {:?}", file!(), line!())

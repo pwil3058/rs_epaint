@@ -130,7 +130,7 @@ impl<A> TargetColourDisplayDialogInterface<A> for TargetColourDisplayDialog<A>
         let dialog = gtk::Dialog::new_with_buttons(
             Some(title.as_str()),
             parent,
-            gtk::DIALOG_USE_HEADER_BAR,
+            gtk::DialogFlags::USE_HEADER_BAR,
             &[]
         );
         dialog.set_size_from_recollections("target_colour_display", (60, 180));
@@ -180,7 +180,7 @@ impl<A> NewTargetColourDialogInterface<A> for NewTargetColourDialog<A>
         let dialog = gtk::Dialog::new_with_buttons(
             Some("mcmmtk: New Mixed Paint Target Colour"),
             parent,
-            gtk::DIALOG_DESTROY_WITH_PARENT,
+            gtk::DialogFlags::DESTROY_WITH_PARENT,
             &[("gtk-cancel", gtk::ResponseType::Reject.into()), ("gtk-ok", gtk::ResponseType::Accept.into())]
         );
         dialog.set_response_sensitive(gtk::ResponseType::Accept.into(), false);

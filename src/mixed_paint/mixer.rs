@@ -336,42 +336,6 @@ impl<A, C> PaintMixerCore<A, C>
 
         chunks
     }
-    //def pango_markup_chunks(self):
-        //"""
-        //Format the palette description as a list of Pango markup chunks
-        //"""
-        //paint_colours = self.paint_colours.get_paints()
-        //if len(paint_colours) == 0:
-            //return [cgi.escape(_("Empty Mix/Match Description"))]
-        //# TODO: add paint series data in here
-        //string = "<b>" + cgi.escape(_("Mix/Match Description:")) + "</b> "
-        //string += cgi.escape(time.strftime("%X: %A %x")) + "\n"
-        //if self.notes.get_text_length() > 0:
-            //string += "\n{0}\n".format(cgi.escape(self.notes.get_text()))
-        //chunks = [string]
-        //string = "<b>" + cgi.escape(_("Paint Colours:")) + "</b>\n\n"
-        //for pcol in paint_colours:
-            //string += "<span background=\"{0}\">\t</span> ".format(pango_rgb_str(pcol.rgb16))
-            //string += "{0}\n".format(cgi.escape(pcol.name))
-        //chunks.append(string)
-        //string = "<b>" + cgi.escape(_("Mixed Colours:")) + "</b>\n\n"
-        //for tmc in self.mixed_colours:
-            //mc = tmc[0]
-            //tc = tmc[1]
-            //string += "<span background=\"{0}\">\t</span>".format(pango_rgb_str(mc.rgb16))
-            //string += "<span background=\"{0}\">\t</span>".format(pango_rgb_str(mc.value_rgb.rgb16))
-            //string += "<span background=\"{0}\">\t</span>".format(pango_rgb_str(mc.hue_rgb.rgb16))
-            //string += " {0}: {1}\n".format(cgi.escape(mc.name), cgi.escape(mc.notes))
-            //string += "<span background=\"{0}\">\t</span>".format(pango_rgb_str(tc.rgb16))
-            //string += "<span background=\"{0}\">\t</span>".format(pango_rgb_str(tc.value_rgb.rgb16))
-            //string += "<span background=\"{0}\">\t</span> Target Colour\n".format(pango_rgb_str(tc.hue.rgb.rgb16))
-            //for blob in mc.blobs:
-                //string += "{0: 7d}:".format(blob.parts)
-                //string += "<span background=\"{0}\">\t</span>".format(pango_rgb_str(blob.paint.rgb16))
-                //string += " {0}\n".format(cgi.escape(blob.paint.name))
-            //chunks.append(string)
-            //string = "" # Necessary because we put header in the first chunk
-        //return chunks
 }
 
 pub type PaintMixer<A, C> = Rc<PaintMixerCore<A, C>>;

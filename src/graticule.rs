@@ -160,9 +160,9 @@ impl GraticuleInterface for Rc<GraticuleCore> {
         let drawing_area = gtk::DrawingArea::new();
         drawing_area.set_size_request(300, 300);
         drawing_area.set_has_tooltip(true);
-        let events = gdk::SCROLL_MASK | gdk::BUTTON_PRESS_MASK |
-            gdk::BUTTON_MOTION_MASK | gdk::LEAVE_NOTIFY_MASK |
-            gdk::BUTTON_RELEASE_MASK;
+        let events = gdk::EventMask::SCROLL_MASK | gdk::EventMask::BUTTON_PRESS_MASK |
+            gdk::EventMask::BUTTON_MOTION_MASK | gdk::EventMask::LEAVE_NOTIFY_MASK |
+            gdk::EventMask::BUTTON_RELEASE_MASK;
         drawing_area.add_events(events.bits() as i32);
         let graticule = Rc::new(
             GraticuleCore{

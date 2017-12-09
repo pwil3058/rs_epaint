@@ -92,7 +92,7 @@ impl<C> PaintPartsSpinButtonInterface<C> for PaintPartsSpinButton<C>
                 remove_me_callbacks: remove_me_callbacks
             }
         );
-        let events = gdk::BUTTON_PRESS_MASK | gdk::BUTTON_RELEASE_MASK;
+        let events = gdk::EventMask::BUTTON_PRESS_MASK | gdk::EventMask::BUTTON_RELEASE_MASK;
         spin_button.event_box.set_tooltip_text(Some(paint.tooltip_text().as_str()));
         spin_button.event_box.add_events(events.bits() as i32);
         spin_button.label.set_widget_colour(&paint.colour());

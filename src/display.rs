@@ -149,7 +149,7 @@ impl<A, C> PaintDisplayDialogInterface<A, C> for PaintDisplayDialog<A, C>
         let dialog = gtk::Dialog::new_with_buttons(
             Some(title.as_str()),
             parent,
-            gtk::DIALOG_USE_HEADER_BAR,
+            gtk::DialogFlags::USE_HEADER_BAR,
             &[]
         );
         if paint.is_series() {
