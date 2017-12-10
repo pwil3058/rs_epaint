@@ -439,7 +439,6 @@ impl<A, C> PaintMixerInterface<A, C> for PaintMixer<A, C>
         let paint_mixer_c = paint_mixer.clone();
         paint_mixer.print_report_btn.connect_clicked(
             move |_| {
-                println!("Report:\n {:?}", paint_mixer_c.pango_markup_chunks());
                 let dummy: Option<&gtk::Window> = None;
                 print_markup_chunks(paint_mixer_c.pango_markup_chunks(), dummy);
             }
