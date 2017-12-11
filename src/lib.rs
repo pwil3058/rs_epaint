@@ -32,6 +32,7 @@ pub mod characteristics;
 pub mod colour_edit;
 pub mod colour_mix;
 pub mod display;
+pub mod entry;
 pub mod hue_wheel;
 pub mod icons;
 pub mod graticule;

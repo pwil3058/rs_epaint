@@ -122,6 +122,37 @@ pub trait BasicPaintInterface<C>: Hash + Clone + PartialEq + ColouredItemInterfa
     fn notes(&self) -> String;
     fn tooltip_text(&self) -> String;
     fn characteristics(&self) -> C;
+
+    fn get_spec(&self) -> BasicPaintSpec<C> {
+        BasicPaintSpec::<C> {
+            rgb: self.rgb(),
+            name: self.name(),
+            notes: self.notes(),
+            characteristics: self.characteristics(),
+        }
+    }
+
+    fn matches_spec(&self, spec: BasicPaintSpec<C>) -> bool {
+        if self.rgb() != spec.rgb {
+            false
+        } else if self.name() != spec.name {
+            false
+        } else if self.notes() != spec.notes {
+            false
+        } else if self.characteristics() != spec.characteristics {
+            false
+        } else {
+            true
+        }
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub struct BasicPaintSpec<C: CharacteristicsInterface> {
+    pub rgb: RGB,
+    pub name: String,
+    pub notes: String,
+    pub characteristics: C,
 }
 
 pub const SP_NAME: i32 = 0;

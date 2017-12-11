@@ -32,7 +32,7 @@ use mixed_paint::*;
 use mixed_paint::components::*;
 use mixed_paint::mixer::*;
 use series_paint::*;
-pub use series_paint::entry::*;
+pub use entry::*;
 pub use series_paint::manager::*;
 
 #[derive(Debug, PartialEq, Hash, Clone, Copy)]
@@ -298,7 +298,7 @@ impl ColourAttributesInterface for ModelPaintAttributes {
 }
 
 pub type ModelSeriesPaint = SeriesPaint<ModelPaintCharacteristics>;
-pub type ModelSeriesPaintSpec = SeriesPaintSpec<ModelPaintCharacteristics>;
+pub type ModelSeriesPaintSpec = BasicPaintSpec<ModelPaintCharacteristics>;
 pub type ModelMixedPaint = MixedPaint<ModelPaintCharacteristics>;
 pub type ModelPaint = Paint<ModelPaintCharacteristics>;
 pub type ModelPaintDisplayDialog = PaintDisplayDialog<ModelPaintAttributes, ModelPaintCharacteristics>;
@@ -308,7 +308,7 @@ pub type ModelPaintMixer = PaintMixer<ModelPaintAttributes, ModelPaintCharacteri
 pub type ModelPaintHueAttrWheel = PaintHueAttrWheel<ModelPaintAttributes, ModelPaintCharacteristics>;
 pub type ModelPaintSeriesView = PaintSeriesView<ModelPaintAttributes, ModelPaintCharacteristics>;
 pub type ModelPaintSeriesManager = SeriesPaintManager<ModelPaintAttributes, ModelPaintCharacteristics>;
-pub type ModelSeriesPaintEntry = SeriesPaintEntry<ModelPaintAttributes, ModelPaintCharacteristics>;
+pub type ModelSeriesPaintEntry = BasicPaintEntry<ModelPaintAttributes, ModelPaintCharacteristics, ModelPaint>;
 
 const IDEAL_PAINT_STR: &str =
 "Manufacturer: Imaginary

@@ -135,6 +135,10 @@ impl<A> ColourEditorCore<A>
         colour
     }
 
+    pub fn get_rgb(&self) -> RGB {
+        self.rgb_manipulator.get_rgb()
+    }
+
     pub fn get_colour(&self) -> Colour {
         self.rgb_manipulator.get_rgb().into()
     }

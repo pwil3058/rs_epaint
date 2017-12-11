@@ -73,18 +73,10 @@ fn series_from_str(string: &str) -> Result<String, PaintError> {
     }
 }
 
-#[derive(Debug, PartialEq)]
-pub struct SeriesPaintSpec<C: CharacteristicsInterface> {
-    pub rgb: RGB,
-    pub name: String,
-    pub notes: String,
-    pub characteristics: C,
-}
-
-impl<C: CharacteristicsInterface> FromStr for SeriesPaintSpec<C> {
+impl<C: CharacteristicsInterface> FromStr for BasicPaintSpec<C> {
     type Err = PaintError;
 
-    fn from_str(string: &str) -> Result<SeriesPaintSpec<C>, PaintError> {
+    fn from_str(string: &str) -> Result<BasicPaintSpec<C>, PaintError> {
         let captures = SERIES_PAINT_RE.captures(string).ok_or(PaintError::MalformedText(string.to_string()))?;
         let c_match = captures.name("characteristics").ok_or(PaintError::MalformedText(string.to_string()))?;
         let rgb_match = captures.name("rgb").ok_or(PaintError::MalformedText(string.to_string()))?;
@@ -96,7 +88,7 @@ impl<C: CharacteristicsInterface> FromStr for SeriesPaintSpec<C> {
             None => "".to_string()
         };
         Ok(
-            SeriesPaintSpec::<C> {
+            BasicPaintSpec::<C> {
                 rgb: RGB::from(rgb16),
                 name: name_match.as_str().to_string(),
                 notes: notes,
@@ -132,7 +124,7 @@ impl<C: CharacteristicsInterface> FromStr for PaintSeriesCore<C> {
         let paints: RefCell<Vec<SeriesPaint<C>>> = RefCell::new(Vec::new());
         let psc = PaintSeriesCore::<C>{series_id, paints};
         for line in lines {
-            let spec = SeriesPaintSpec::<C>::from_str(line)?;
+            let spec = BasicPaintSpec::<C>::from_str(line)?;
             psc.add_paint(&spec)?;
         }
         Ok(psc)
@@ -189,7 +181,7 @@ impl<C: CharacteristicsInterface> PaintSeriesCore<C> {
         self.find_name(name).is_ok()
     }
 
-    pub fn add_paint(&self, spec: &SeriesPaintSpec<C>) -> Result<SeriesPaint<C>, PaintError> {
+    pub fn add_paint(&self, spec: &BasicPaintSpec<C>) -> Result<SeriesPaint<C>, PaintError> {
         match self.find_name(&spec.name) {
             Ok(_) => Err(PaintError::AlreadyExists(spec.name.clone())),
             Err(index) => {

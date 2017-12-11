@@ -18,7 +18,6 @@ use std::rc::Rc;
 
 use pw_gix::colour::*;
 
-pub mod entry;
 pub mod hue_wheel;
 pub mod manager;
 pub mod series;

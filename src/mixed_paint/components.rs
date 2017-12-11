@@ -465,14 +465,14 @@ mod tests {
         let series = PaintSeries::<EPC>::create("empty", "empty");
         let epc = EPC::from_str(&"").unwrap();
         for spec in [
-            SeriesPaintSpec::<EPC>{rgb: RED, name: "Red".to_string(), notes: "".to_string(), characteristics: epc},
-            SeriesPaintSpec::<EPC>{rgb: GREEN, name: "Green".to_string(), notes: "".to_string(), characteristics: epc},
-            SeriesPaintSpec::<EPC>{rgb: BLUE, name: "Blue".to_string(), notes: "".to_string(), characteristics: epc},
-            SeriesPaintSpec::<EPC>{rgb: CYAN, name: "Cyan".to_string(), notes: "".to_string(), characteristics: epc},
-            SeriesPaintSpec::<EPC>{rgb: MAGENTA, name: "Magenta".to_string(), notes: "".to_string(), characteristics: epc},
-            SeriesPaintSpec::<EPC>{rgb: YELLOW, name: "Yellow".to_string(), notes: "".to_string(), characteristics: epc},
-            SeriesPaintSpec::<EPC>{rgb: BLACK, name: "Black".to_string(), notes: "".to_string(), characteristics: epc},
-            SeriesPaintSpec::<EPC>{rgb: WHITE, name: "White".to_string(), notes: "".to_string(), characteristics: epc},
+            BasicPaintSpec::<EPC>{rgb: RED, name: "Red".to_string(), notes: "".to_string(), characteristics: epc},
+            BasicPaintSpec::<EPC>{rgb: GREEN, name: "Green".to_string(), notes: "".to_string(), characteristics: epc},
+            BasicPaintSpec::<EPC>{rgb: BLUE, name: "Blue".to_string(), notes: "".to_string(), characteristics: epc},
+            BasicPaintSpec::<EPC>{rgb: CYAN, name: "Cyan".to_string(), notes: "".to_string(), characteristics: epc},
+            BasicPaintSpec::<EPC>{rgb: MAGENTA, name: "Magenta".to_string(), notes: "".to_string(), characteristics: epc},
+            BasicPaintSpec::<EPC>{rgb: YELLOW, name: "Yellow".to_string(), notes: "".to_string(), characteristics: epc},
+            BasicPaintSpec::<EPC>{rgb: BLACK, name: "Black".to_string(), notes: "".to_string(), characteristics: epc},
+            BasicPaintSpec::<EPC>{rgb: WHITE, name: "White".to_string(), notes: "".to_string(), characteristics: epc},
         ].iter()
         {
             if let Err(err) = series.add_paint(spec) {
