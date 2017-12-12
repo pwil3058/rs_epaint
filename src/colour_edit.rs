@@ -31,7 +31,7 @@ use pw_gix::rgb_math::rgb::*;
 use pw_gix::rgb_math::rgb_manipulator::RGBManipulator;
 use pw_gix::sample;
 
-use paint::*;
+use basic_paint::*;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 enum DeltaSize {
@@ -463,7 +463,7 @@ pub type ColourEditor<A> = Rc<ColourEditorCore<A>>;
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    //use super::*;
 
     #[test]
     fn it_works() {

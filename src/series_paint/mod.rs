@@ -22,7 +22,7 @@ pub mod hue_wheel;
 pub mod manager;
 pub mod series;
 
-use paint::*;
+use basic_paint::*;
 
 pub use self::series::*;
 
@@ -136,8 +136,6 @@ impl<C> BasicPaintInterface<C> for SeriesPaint<C>
         self.characteristics.clone()
     }
 }
-
-impl<C: CharacteristicsInterface> PaintTreeViewColumnData<C> for SeriesPaint<C> {}
 
 impl<C> SeriesPaintInterface<C> for SeriesPaint<C>
     where   C: CharacteristicsInterface

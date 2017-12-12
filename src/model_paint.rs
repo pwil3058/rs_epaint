@@ -24,7 +24,9 @@ use pw_gix::colour::attributes::*;
 use pw_gix::gtkx::tree_view_column::*;
 use pw_gix::pwo::*;
 
+use basic_paint::*;
 use display::*;
+use error::*;
 use paint::*;
 use characteristics::*;
 use hue_wheel::*;
@@ -32,7 +34,7 @@ use mixed_paint::*;
 use mixed_paint::components::*;
 use mixed_paint::mixer::*;
 use series_paint::*;
-pub use entry::*;
+pub use basic_paint::entry::*;
 pub use series_paint::manager::*;
 
 #[derive(Debug, PartialEq, Hash, Clone, Copy)]
@@ -330,7 +332,6 @@ pub fn create_ideal_model_paint_series() -> ModelPaintSeries {
 mod tests {
     use super::*;
     use pw_gix::rgb_math::rgb::*;
-    use pw_gix::colour::*;
 
 const OBSOLETE_PAINT_STR: &str =
 "Manufacturer: Tamiya
@@ -344,7 +345,7 @@ NamedColour(name=\"XF 4: Yellow Green *\", rgb=RGB(0xAA00, 0xAE00, 0x4000), tran
     #[test]
     fn paint_model_paint() {
         let test_str = r#"ModelPaint(name="71.001 White", rgb=RGB16(red=0xF800, green=0xFA00, blue=0xF600), transparency="O", finish="F", metallic="NM", fluorescence="NF", notes="FS37925 RAL9016 RLM21")"#.to_string();
-        assert!(SERIES_PAINT_RE.is_match(&test_str));
+        assert!(BASIC_PAINT_RE.is_match(&test_str));
         if let Ok(spec) = ModelSeriesPaintSpec::from_str(&test_str) {
             assert_eq!(spec.name, "71.001 White");
             assert_eq!(spec.characteristics.finish, Finish::Flat);
@@ -364,7 +365,7 @@ NamedColour(name=\"XF 4: Yellow Green *\", rgb=RGB(0xAA00, 0xAE00, 0x4000), tran
     #[test]
     fn paint_model_paint_obsolete() {
         let test_str = r#"NamedColour(name="XF 2: Flat White *", rgb=RGB16(0xF800, 0xFA00, 0xF600), transparency="O", finish="F")"#.to_string();
-        assert!(SERIES_PAINT_RE.is_match(&test_str));
+        assert!(BASIC_PAINT_RE.is_match(&test_str));
         if let Ok(spec) = ModelSeriesPaintSpec::from_str(&test_str) {
             assert_eq!(spec.name, "XF 2: Flat White *");
             assert_eq!(spec.characteristics.finish, Finish::Flat);

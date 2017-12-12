@@ -20,7 +20,7 @@ use gtk::{ComboBoxExt, ComboBoxTextExt};
 
 use regex::*;
 
-use paint::PaintError;
+use error::PaintError;
 
 pub trait CharacteristicInterface: FromStr + PartialEq {
     fn name() -> &'static str;

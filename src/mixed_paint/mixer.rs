@@ -31,6 +31,7 @@ use pw_gix::gtkx::paned::*;
 use pw_gix::printer::*;
 use pw_gix::rgb_math::rgb::*;
 
+use basic_paint::*;
 use paint::*;
 use series_paint::*;
 use series_paint::manager::*;

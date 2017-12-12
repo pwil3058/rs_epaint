@@ -22,6 +22,7 @@ use pw_gix::cairox::*;
 use pw_gix::colour::*;
 use pw_gix::rgb_math::rgb::*;
 
+use basic_paint::*;
 use paint::*;
 use mixed_paint::*;
 use mixed_paint::target::*;

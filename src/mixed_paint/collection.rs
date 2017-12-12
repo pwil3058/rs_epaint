@@ -28,8 +28,9 @@ use pw_gix::gtkx::list_store::*;
 use pw_gix::gtkx::tree_view_column::*;
 use pw_gix::rgb_math::rgb::*;
 
+use basic_paint::*;
 use display::*;
-use paint::*;
+use error::*;
 use super::*;
 
 pub struct MixedPaintCollectionCore<C: CharacteristicsInterface> {
@@ -405,6 +406,6 @@ impl<A, C> MixedPaintCollectionViewInterface<A, C> for MixedPaintCollectionView<
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    //use super::*;
 
 }

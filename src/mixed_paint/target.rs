@@ -24,8 +24,8 @@ use pw_gix::colour::*;
 use pw_gix::gtkx::coloured::*;
 use pw_gix::gtkx::dialog::*;
 
+use basic_paint::*;
 use colour_edit::*;
-use paint::*;
 
 #[derive(Debug)]
 pub struct TargetColourCore {

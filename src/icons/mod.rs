@@ -16,7 +16,7 @@ pub mod series_paint_xpm;
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    //use super::*;
 
     #[test]
     fn it_works() {

@@ -27,6 +27,7 @@ use pw_gix::gtkx::dialog::*;
 use pw_gix::gtkx::list_store::*;
 use pw_gix::gtkx::tree_view_column::*;
 
+use basic_paint::*;
 use paint::*;
 use series_paint::*;
 use mixed_paint::*;
@@ -479,7 +480,7 @@ impl<A, C> PaintComponentListViewInterface<A, C> for PaintComponentListView<A, C
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    //use super::*;
 
     #[test]
     fn it_works() {

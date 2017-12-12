@@ -22,17 +22,34 @@ use gtk::prelude::*;
 use pw_gix::gtkx::list_store::*;
 use pw_gix::gtkx::tree_view_column::*;
 
-use paint::*;
+use basic_paint::*;
 
-pub trait CollnPaintInterface<C, CID>: PaintTreeViewColumnData<C>
-    where   C: CharacteristicsInterface
+// COLLECTION PAINT
+pub trait CollectionIdEntryInterface<CID: CollectionIdInterface> {
+    fn create() -> Self;
+    fn pwo(&self) -> gtk::Grid;
+    fn get_colln_id(&self) -> Option<CID>;
+    fn set_colln_id(&self, o_characteristics: Option<&CID>);
+    fn connect_changed<F: 'static + Fn()>(&self, callback: F);
+}
+
+pub trait CollectionIdInterface: Debug + PartialEq + Clone + Copy {
+    type Entry: CollectionIdEntryInterface<Self>;
+
+    fn create() -> Self;
+}
+
+pub trait CollnPaintInterface<C, CID>: BasicPaintInterface<C>
+    where   C: CharacteristicsInterface,
+            CID: CollectionIdInterface
 {
     fn create(cid: &Rc<CID>, spec: &BasicPaintSpec<C>) -> Self;
     fn colln_id(&self) -> Rc<CID>;
 }
 
-pub struct BasicPaintCollnCore<C, P, CID>
+pub struct CollnPaintCollnCore<C, P, CID>
     where   C: CharacteristicsInterface,
+            CID: CollectionIdInterface,
             P: CollnPaintInterface<C, CID>,
 {
     colln_id: Rc<CID>,
@@ -40,8 +57,9 @@ pub struct BasicPaintCollnCore<C, P, CID>
     phantom: PhantomData<C>
 }
 
-impl<C, P, CID> BasicPaintCollnCore<C, P, CID>
+impl<C, P, CID> CollnPaintCollnCore<C, P, CID>
     where   C: CharacteristicsInterface,
+            CID: CollectionIdInterface,
             P: CollnPaintInterface<C, CID>,
 {
     fn find_name(&self, name: &str) -> Result<usize, usize> {
@@ -77,57 +95,50 @@ impl<C, P, CID> BasicPaintCollnCore<C, P, CID>
     pub fn has_paint_named(&self, name: &str) -> bool {
         self.find_name(name).is_ok()
     }
-
-    pub fn add_paint(&self, spec: &BasicPaintSpec<C>) -> Result<P, PaintError> {
-        match self.find_name(&spec.name) {
-            Ok(_) => Err(PaintError::AlreadyExists(spec.name.clone())),
-            Err(index) => {
-                let paint = P::create(&self.colln_id, spec);
-                self.paints.borrow_mut().insert(index, paint.clone());
-                Ok(paint)
-            }
-        }
-    }
 }
 
-pub type BasicPaintColln<C, P, CID> = Rc<BasicPaintCollnCore<C, P, CID>>;
+pub type CollnPaintColln<C, P, CID> = Rc<CollnPaintCollnCore<C, P, CID>>;
 
-pub trait BasicPaintCollnInterface<C, P, CID>
+pub trait CollnPaintCollnInterface<C, P, CID>
     where   C: CharacteristicsInterface,
+            CID: CollectionIdInterface,
             P: CollnPaintInterface<C, CID>
 {
-    fn create(cid: CID) -> BasicPaintColln<C, P, CID>;
+    fn create(cid: CID) -> CollnPaintColln<C, P, CID>;
 }
 
 
-impl<C, P, CID> BasicPaintCollnInterface<C, P, CID> for BasicPaintColln<C, P, CID>
+impl<C, P, CID> CollnPaintCollnInterface<C, P, CID> for CollnPaintColln<C, P, CID>
     where   C: CharacteristicsInterface,
+            CID: CollectionIdInterface,
             P: CollnPaintInterface<C, CID>
 {
-    fn create(cid: CID) -> BasicPaintColln<C, P, CID> {
+    fn create(cid: CID) -> CollnPaintColln<C, P, CID> {
         let colln_id = Rc::new(cid);
         let paints: RefCell<Vec<P>> = RefCell::new(Vec::new());
         let phantom = PhantomData;
-        Rc::new(BasicPaintCollnCore::<C, P, CID>{colln_id, paints, phantom})
+        Rc::new(CollnPaintCollnCore::<C, P, CID>{colln_id, paints, phantom})
     }
 }
 
-pub struct BasicPaintCollnViewCore<A, C, P, CID>
+pub struct CollnPaintCollnViewCore<A, C, P, CID>
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static,
+            CID: CollectionIdInterface,
             P: CollnPaintInterface<C, CID>
 {
     scrolled_window: gtk::ScrolledWindow,
     list_store: gtk::ListStore,
     view: gtk::TreeView,
-    colln: BasicPaintColln<C, P, CID>,
+    colln: CollnPaintColln<C, P, CID>,
     chosen_paint: RefCell<Option<P>>,
     spec: PhantomData<A>
 }
 
-impl<A, C, P, CID> BasicPaintCollnViewCore<A, C, P, CID>
+impl<A, C, P, CID> CollnPaintCollnViewCore<A, C, P, CID>
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static,
+            CID: CollectionIdInterface,
             P: CollnPaintInterface<C, CID>
 {
     pub fn set_chosen_paint_from_position(&self, posn: (f64, f64)) -> Option<P> {
@@ -150,29 +161,51 @@ impl<A, C, P, CID> BasicPaintCollnViewCore<A, C, P, CID>
         *self.chosen_paint.borrow_mut() = None;
         None
     }
+
+    pub fn colln_id(&self) -> Rc<CID> {
+        self.colln.colln_id()
+    }
+
+    pub fn len(&self) -> usize {
+        self.colln.len()
+    }
+
+    pub fn get_paint(&self, name: &str) -> Option<P> {
+        self.colln.get_paint(name)
+    }
+
+    pub fn get_paints(&self) -> Vec<P> {
+        self.colln.get_paints()
+    }
+
+    pub fn has_paint_named(&self, name: &str) -> bool {
+        self.colln.has_paint_named(name)
+    }
 }
 
-pub type BasicPaintCollnView<A, C, P, CID> = Rc<BasicPaintCollnViewCore<A, C, P, CID>>;
+pub type CollnPaintCollnView<A, C, P, CID> = Rc<CollnPaintCollnViewCore<A, C, P, CID>>;
 
-pub trait BasicPaintCollnViewInterface<A, C, P, CID>
+pub trait CollnPaintCollnViewInterface<A, C, P, CID>
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static,
+            CID: CollectionIdInterface,
             P: CollnPaintInterface<C, CID>
 {
     fn pwo(&self) -> gtk::ScrolledWindow;
-    fn create(colln: &BasicPaintColln<C, P, CID>) -> BasicPaintCollnView<A, C, P, CID>;
+    fn create(colln: &CollnPaintColln<C, P, CID>) -> CollnPaintCollnView<A, C, P, CID>;
 }
 
-impl<A, C, P, CID> BasicPaintCollnViewInterface<A, C, P, CID> for BasicPaintCollnView<A, C, P, CID>
+impl<A, C, P, CID> CollnPaintCollnViewInterface<A, C, P, CID> for CollnPaintCollnView<A, C, P, CID>
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static,
+            CID: CollectionIdInterface,
             P: CollnPaintInterface<C, CID>
 {
     fn pwo(&self) -> gtk::ScrolledWindow {
         self.scrolled_window.clone()
     }
 
-    fn create(colln: &BasicPaintColln<C, P, CID>) -> BasicPaintCollnView<A, C, P, CID> {
+    fn create(colln: &CollnPaintColln<C, P, CID>) -> CollnPaintCollnView<A, C, P, CID> {
         let len = P::tv_row_len();
         let list_store = gtk::ListStore::new(&STANDARD_PAINT_ROW_SPEC[0..len]);
         for paint in colln.get_paints().iter() {
@@ -191,7 +224,7 @@ impl<A, C, P, CID> BasicPaintCollnViewInterface<A, C, P, CID> for BasicPaintColl
         menu.show_all();
 
         let mspl = Rc::new(
-            BasicPaintCollnViewCore::<A, C, P, CID> {
+            CollnPaintCollnViewCore::<A, C, P, CID> {
                 scrolled_window: gtk::ScrolledWindow::new(None, None),
                 list_store: list_store,
                 colln: colln.clone(),

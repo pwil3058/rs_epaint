@@ -23,6 +23,7 @@ use gtk::prelude::*;
 use pw_gix::cairox::*;
 use pw_gix::colour::*;
 
+use basic_paint::*;
 use display::*;
 use graticule::*;
 use paint::*;

@@ -31,6 +31,7 @@ use pw_gix::pwo::*;
 
 use icons::series_paint_xpm::*;
 
+use basic_paint::*;
 use super::*;
 use super::hue_wheel::*;
 

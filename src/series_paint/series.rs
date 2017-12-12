@@ -30,10 +30,10 @@ use gtk::prelude::*;
 use pw_gix::colour::*;
 use pw_gix::gtkx::list_store::*;
 use pw_gix::gtkx::tree_view_column::*;
-use pw_gix::rgb_math::rgb::*;
 
-
+use basic_paint::*;
 use display::*;
+use error::*;
 use paint::*;
 use super::*;
 
@@ -44,10 +44,6 @@ lazy_static! {
 
     pub static ref SERIES_RE: Regex = Regex::new(
         r#"^Series:\s*(?P<series>.*)\s*$"#
-    ).unwrap();
-
-    pub static ref SERIES_PAINT_RE: Regex = Regex::new(
-        r#"^(?P<ptype>\w+)\((name=)?"(?P<name>.+)", rgb=(?P<rgb>RGB(16)?\([^)]+\))(?P<characteristics>(?:, \w+="\w+")*)(, notes="(?P<notes>.*)")?\)$"#
     ).unwrap();
 }
 
@@ -70,31 +66,6 @@ fn series_from_str(string: &str) -> Result<String, PaintError> {
         }
     } else {
         return Err(PaintError::MalformedText(string.to_string()));
-    }
-}
-
-impl<C: CharacteristicsInterface> FromStr for BasicPaintSpec<C> {
-    type Err = PaintError;
-
-    fn from_str(string: &str) -> Result<BasicPaintSpec<C>, PaintError> {
-        let captures = SERIES_PAINT_RE.captures(string).ok_or(PaintError::MalformedText(string.to_string()))?;
-        let c_match = captures.name("characteristics").ok_or(PaintError::MalformedText(string.to_string()))?;
-        let rgb_match = captures.name("rgb").ok_or(PaintError::MalformedText(string.to_string()))?;
-        let name_match = captures.name("name").ok_or(PaintError::MalformedText(string.to_string()))?;
-        let characteristics = C::from_str(c_match.as_str()).map_err(|_| PaintError::MalformedText(string.to_string()))?;
-        let rgb16 = RGB16::from_str(rgb_match.as_str()).map_err(|_| PaintError::MalformedText(string.to_string()))?;
-        let notes = match captures.name("notes") {
-            Some(notes_match) => notes_match.as_str().to_string(),
-            None => "".to_string()
-        };
-        Ok(
-            BasicPaintSpec::<C> {
-                rgb: RGB::from(rgb16),
-                name: name_match.as_str().to_string(),
-                notes: notes,
-                characteristics: characteristics,
-            }
-        )
     }
 }
 
@@ -443,27 +414,6 @@ impl<A, C> PaintSeriesViewInterface<A, C> for PaintSeriesView<A, C>
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    //use super::*;
 
-    #[test]
-    fn paint_series_paint_regex() {
-        let test_str = r#"ModelPaint(name="71.001 White", rgb=RGB16(red=0xF800, green=0xFA00, blue=0xF600), transparency="O", finish="F", metallic="NM", fluorescence="NF", notes="FS37925 RAL9016 RLM21")"#.to_string();
-        assert!(SERIES_PAINT_RE.is_match(&test_str));
-        let captures = SERIES_PAINT_RE.captures(&test_str).unwrap();
-        assert_eq!(captures.name("ptype").unwrap().as_str(), "ModelPaint");
-        assert_eq!(captures.name("rgb").unwrap().as_str(), "RGB16(red=0xF800, green=0xFA00, blue=0xF600)");
-        assert_eq!(captures.name("characteristics").unwrap().as_str(), ", transparency=\"O\", finish=\"F\", metallic=\"NM\", fluorescence=\"NF\"");
-        assert_eq!(captures.name("notes").unwrap().as_str(), "FS37925 RAL9016 RLM21");
-    }
-
-    #[test]
-    fn paint_series_paint_obsolete_regex() {
-        let test_str = r#"NamedColour(name="XF 1: Flat Black *", rgb=RGB(0x2D00, 0x2B00, 0x3000), transparency="O", finish="F")"#.to_string();
-        assert!(SERIES_PAINT_RE.is_match(&test_str));
-        let captures = SERIES_PAINT_RE.captures(&test_str).unwrap();
-        assert_eq!(captures.name("ptype").unwrap().as_str(), "NamedColour");
-        assert_eq!(captures.name("rgb").unwrap().as_str(), "RGB(0x2D00, 0x2B00, 0x3000)");
-        assert_eq!(captures.name("characteristics").unwrap().as_str(), ", transparency=\"O\", finish=\"F\"");
-        assert_eq!(captures.name("notes"), None);
-    }
 }

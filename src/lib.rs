@@ -28,12 +28,26 @@ extern crate gdk;
 extern crate gtk;
 extern crate gdk_pixbuf;
 
+pub mod error {
+    use std::io;
+
+    #[derive(Debug)]
+    pub enum PaintError {
+        AlreadyExists(String),
+        MalformedText(String),
+        PaintTypeMismatch,
+        IOError(io::Error),
+        NoSubstantiveComponents,
+        NotFound(String),
+        DifferentPaintSameName
+    }
+}
+
+pub mod basic_paint;
 pub mod characteristics;
-pub mod collection;
 pub mod colour_edit;
 pub mod colour_mix;
 pub mod display;
-pub mod entry;
 pub mod hue_wheel;
 pub mod icons;
 pub mod graticule;
@@ -42,6 +56,19 @@ pub mod model_paint;
 pub mod paint;
 pub mod series_paint;
 pub mod shape;
+
+pub mod paint_error {
+    use std::io;
+
+    #[derive(Debug)]
+    pub enum PaintError {
+        AlreadyExists(String),
+        MalformedText(String),
+        PaintTypeMismatch,
+        IOError(io::Error),
+        NoSubstantiveComponents
+    }
+}
 
 #[cfg(test)]
 mod tests {

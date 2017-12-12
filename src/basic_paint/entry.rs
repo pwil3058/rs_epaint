@@ -18,8 +18,8 @@ use std::rc::Rc;
 use gtk;
 use gtk::prelude::*;
 
+use basic_paint::*;
 use colour_edit::*;
-use paint::*;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum EntryStatus {
@@ -261,7 +261,7 @@ impl<A, C, P> CreateAndPackInterface for BasicPaintEntry<A, C, P>
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    //use super::*;
 
     #[test]
     fn it_works() {

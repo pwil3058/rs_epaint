@@ -24,6 +24,7 @@ use gtk::prelude::*;
 use pw_gix::colour::*;
 use pw_gix::gtkx::coloured::*;
 
+use basic_paint::*;
 use colour_mix::*;
 use series_paint::*;
 use super::*;
@@ -414,13 +415,26 @@ mod tests {
 
     use pw_gix::rgb_math::rgb::*;
 
+    use error::*;
+
     #[derive(Debug, PartialEq, Hash, Clone, Copy)]
     pub struct EPC { }
+    pub struct Entry { }
+
+    impl CharacteristicsEntryInterface<EPC> for Rc<Entry> {
+        fn create() -> Self { Rc::new(Entry{})}
+        fn pwo(&self) -> gtk::Grid { gtk::Grid::new() }
+        fn get_characteristics(&self) -> Option<EPC> { None }
+        fn set_characteristics(&self, _o_characteristics: Option<&EPC>) {}
+        fn connect_changed<F: 'static + Fn()>(&self, _callback: F) {}
+    }
 
     impl CharacteristicsInterface for EPC {
+        type Entry = Rc<Entry>;
+
         fn tv_row_len() -> usize {0}
 
-        fn tv_columns(start_col_id: i32) -> Vec<gtk::TreeViewColumn> {
+        fn tv_columns(_start_col_id: i32) -> Vec<gtk::TreeViewColumn> {
             vec![]
         }
 
@@ -428,7 +442,7 @@ mod tests {
             gtk::Box::new(gtk::Orientation::Vertical, 1)
         }
 
-        fn from_floats(floats: &Vec<f64>) -> EPC {
+        fn from_floats(_floats: &Vec<f64>) -> EPC {
             EPC{}
         }
 
