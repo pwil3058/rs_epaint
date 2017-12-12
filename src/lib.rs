@@ -29,6 +29,7 @@ extern crate gtk;
 extern crate gdk_pixbuf;
 
 pub mod characteristics;
+pub mod collection;
 pub mod colour_edit;
 pub mod colour_mix;
 pub mod display;
