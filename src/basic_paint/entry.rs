@@ -27,11 +27,12 @@ pub enum EntryStatus {
     EditingReady,
     EditingNotReady,
     CreatingReady,
-    CreatingNotReady,
+    CreatingNotReadyNamed,
+    CreatingNotReadyUnnamed,
 }
 
 pub trait CreateAndPackInterface {
-    fn create() -> Self;
+    fn create(extra_buttons: &Vec<gtk::Button>) -> Self;
     fn pwo(&self) -> gtk::Box;
 }
 
@@ -61,6 +62,9 @@ impl<A, C> BasicPaintSpecEntryCore<A, C>
             self.characteristics_entry.set_characteristics(Some(&spec.characteristics));
             *self.edited_spec.borrow_mut() = Some(spec);
         } else {
+            self.colour_editor.reset();
+            self.name_entry.set_text("");
+            self.notes_entry.set_text("");
             *self.edited_spec.borrow_mut() = None;
         };
         self.inform_status_changed();
@@ -117,10 +121,14 @@ impl<A, C> BasicPaintSpecEntryCore<A, C>
             } else {
                 EntryStatus::EditingNotReady
             }
-        } else if self.paint_spec_is_available() {
-            EntryStatus::CreatingReady
+        } else if self.name_entry.get_text_length() > 0 {
+            if self.characteristics_entry.get_characteristics().is_some() {
+                EntryStatus::CreatingReady
+            } else {
+                EntryStatus::CreatingNotReadyNamed
+            }
         } else {
-            EntryStatus::CreatingNotReady
+            EntryStatus::CreatingNotReadyUnnamed
         }
     }
 
@@ -144,7 +152,7 @@ impl<A, C> CreateAndPackInterface for  Rc<BasicPaintSpecEntryCore<A, C>>
         self.vbox.clone()
     }
 
-    fn create() -> Self {
+    fn create(extra_buttons: &Vec<gtk::Button>) -> Self {
         let spe = Rc::new(
             BasicPaintSpecEntryCore::<A, C>{
                 vbox: gtk::Box::new(gtk::Orientation::Vertical, 0),
@@ -152,7 +160,7 @@ impl<A, C> CreateAndPackInterface for  Rc<BasicPaintSpecEntryCore<A, C>>
                 characteristics_entry: C::Entry::create(),
                 name_entry: gtk::Entry::new(),
                 notes_entry: gtk::Entry::new(),
-                colour_editor: ColourEditor::<A>::create(&vec![]),
+                colour_editor: ColourEditor::<A>::create(extra_buttons),
                 status_changed_callbacks: RefCell::new(Vec::new()),
             }
         );
@@ -186,78 +194,16 @@ impl<A, C> CreateAndPackInterface for  Rc<BasicPaintSpecEntryCore<A, C>>
             move || spe_c.inform_status_changed()
         );
 
+        let spe_c = spe.clone();
+        spe.colour_editor.connect_colour_changed (
+            move |_| spe_c.inform_status_changed()
+        );
+
         spe
     }
 }
 
 pub type BasicPaintSpecEntry<A, C> = Rc<BasicPaintSpecEntryCore<A, C>>;
-
-pub struct BasicPaintEntryCore<A, C, P>
-    where   C: CharacteristicsInterface + 'static,
-            A: ColourAttributesInterface + 'static,
-            P: BasicPaintInterface<C>
-{
-    paint_spec_entry: BasicPaintSpecEntry<A, C>,
-    edited_paint: RefCell<Option<P>>
-}
-
-impl<A, C, P> BasicPaintEntryCore<A, C, P>
-    where   C: CharacteristicsInterface + 'static,
-            A: ColourAttributesInterface + 'static,
-            P: BasicPaintInterface<C>
-{
-    pub fn set_edited_paint(&self, o_paint: Option<&P>) {
-        if let Some(paint) = o_paint {
-            // TODO: check for unsaved changes before setting edited spec
-            *self.edited_paint.borrow_mut() = Some(paint.clone());
-            self.paint_spec_entry.set_edited_spec(Some(paint.get_spec()))
-        } else {
-            *self.edited_paint.borrow_mut() = None;
-            self.paint_spec_entry.set_edited_spec(None)
-        };
-    }
-
-    pub fn get_basic_paint_spec(&self) -> Option<BasicPaintSpec<C>> {
-        self.paint_spec_entry.get_basic_paint_spec()
-    }
-
-    pub fn matches_edited_paint(&self) -> bool {
-        self.paint_spec_entry.matches_edited_spec()
-    }
-
-    pub fn paint_spec_is_available(&self) -> bool {
-        self.paint_spec_entry.paint_spec_is_available()
-    }
-
-    pub fn get_status(&self) -> EntryStatus {
-        self.paint_spec_entry.get_status()
-    }
-
-    pub fn connect_status_changed<F: 'static + Fn(EntryStatus)>(&self, callback: F) {
-        self.paint_spec_entry.connect_status_changed(callback)
-    }
-}
-
-pub type BasicPaintEntry<A, C, P> = Rc<BasicPaintEntryCore<A, C, P>>;
-
-impl<A, C, P> CreateAndPackInterface for BasicPaintEntry<A, C, P>
-    where   C: CharacteristicsInterface + 'static,
-            A: ColourAttributesInterface + 'static,
-            P: BasicPaintInterface<C>
-{
-    fn pwo(&self) -> gtk::Box {
-        self.paint_spec_entry.pwo()
-    }
-
-    fn create() -> Self {
-        Rc::new(
-            BasicPaintEntryCore::<A, C, P>{
-                paint_spec_entry: BasicPaintSpecEntry::<A, C>::create(),
-                edited_paint: RefCell::new(None)
-            }
-        )
-    }
-}
 
 #[cfg(test)]
 mod tests {

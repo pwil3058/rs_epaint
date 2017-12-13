@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::cmp::Ordering;
+use std::fmt;
 use std::fmt::Debug;
 use std::hash::*;
 use std::rc::Rc;
@@ -31,13 +33,14 @@ use pw_gix::rgb_math::hue::*;
 use error::*;
 
 pub mod collection;
-//pub mod editor;
+pub mod display;
+pub mod editor;
 pub mod entry;
 pub mod factory;
 pub mod hue_wheel;
 
 pub trait CharacteristicsInterface:
-    Debug + Hash + PartialEq + Clone + Copy + FromStr
+    Debug + Hash + PartialEq + Clone + Copy + FromStr + ToString
 {
     type Entry: CharacteristicsEntryInterface<Self>;
 
@@ -194,8 +197,64 @@ pub struct BasicPaintSpec<C: CharacteristicsInterface> {
     pub characteristics: C,
 }
 
-pub trait CreateFromSpec<C: CharacteristicsInterface> {
-    fn create(spec: &BasicPaintSpec<C>) -> Self;
+#[derive(Debug, Hash, Clone)]
+pub struct BasicPaintCore<C: CharacteristicsInterface> {
+    colour: Colour,
+    name: String,
+    notes: String,
+    characteristics: C,
+}
+
+pub type BasicPaint<C> = Rc<BasicPaintCore<C>>;
+
+impl<C: CharacteristicsInterface> ColouredItemInterface for BasicPaint<C> {
+    fn colour(&self) -> Colour {
+        self.colour.clone()
+    }
+}
+
+impl<C: CharacteristicsInterface> PartialEq for BasicPaintCore<C> {
+    fn eq(&self, other: &BasicPaintCore<C>) -> bool {
+        self.name == other.name
+    }
+}
+
+impl<C: CharacteristicsInterface> Eq for BasicPaintCore<C> {}
+
+impl<C: CharacteristicsInterface> PartialOrd for BasicPaintCore<C> {
+    fn partial_cmp(&self, other: &BasicPaintCore<C>) -> Option<Ordering> {
+        self.name.partial_cmp(&other.name)
+    }
+}
+
+impl<C: CharacteristicsInterface> Ord for BasicPaintCore<C> {
+    fn cmp(&self, other: &BasicPaintCore<C>) -> Ordering {
+        self.name.cmp(&other.name)
+    }
+}
+
+impl<C> BasicPaintInterface<C> for BasicPaint<C>
+    where   C: CharacteristicsInterface
+{
+    fn name(&self) -> String {
+        self.name.clone()
+    }
+
+    fn notes(&self) -> String {
+        self.notes.clone()
+    }
+
+    fn tooltip_text(&self) -> String {
+        if self.notes.len() > 0 {
+            format!("{}\n{}", self.name, self.notes)
+        } else {
+            format!("{}", self.name)
+        }
+    }
+
+    fn characteristics(&self) -> C {
+        self.characteristics.clone()
+    }
 }
 
 lazy_static! {
@@ -221,11 +280,22 @@ impl<C: CharacteristicsInterface> FromStr for BasicPaintSpec<C> {
         Ok(
             BasicPaintSpec::<C> {
                 rgb: RGB::from(rgb16),
-                name: name_match.as_str().to_string(),
-                notes: notes,
+                name: name_match.as_str().to_string().replace("\\\"", "\""),
+                notes: notes.replace("\\\"", "\""),
                 characteristics: characteristics,
             }
         )
+    }
+}
+
+impl<C: CharacteristicsInterface> fmt::Display for BasicPaintSpec<C> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "PaintSpec(name=\"{}\", rgb={}), {}, notes=\"{}\")",
+            self.name.replace("\"", "\\\""),
+            RGB16::from(self.rgb).to_string(),
+            self.characteristics.to_string(),
+            self.notes.replace("\"", "\\\"")
+         )
     }
 }
 

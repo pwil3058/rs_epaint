@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::fmt;
 use std::rc::Rc;
 use std::str::FromStr;
 
@@ -186,6 +187,12 @@ impl From<Finish> for f64 {
     }
 }
 
+impl fmt::Display for Finish {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "finish=\"{}\"", self.abbrev())
+    }
+}
+
 implement_entry_core!(Finish, FinishEntryCore);
 
 pub type FinishEntry = Rc<FinishEntryCore>;
@@ -291,6 +298,12 @@ impl From<Transparency> for f64 {
     }
 }
 
+impl fmt::Display for Transparency {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "transparency=\"{}\"", self.abbrev())
+    }
+}
+
 implement_entry_core!(Transparency, TransparencyEntryCore);
 
 pub type TransparencyEntry = Rc<TransparencyEntryCore>;
@@ -389,6 +402,12 @@ impl From<Fluorescence> for f64 {
     }
 }
 
+impl fmt::Display for Fluorescence {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "fluorescence=\"{}\"", self.abbrev())
+    }
+}
+
 implement_entry_core!(Fluorescence, FluorescenceEntryCore);
 
 pub type FluorescenceEntry = Rc<FluorescenceEntryCore>;
@@ -484,6 +503,12 @@ impl From<Metallic> for f64 {
             Metallic::SemiMetallic => 2.0,
             Metallic::Nonmetallic => 1.0,
         }
+    }
+}
+
+impl fmt::Display for Metallic {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "metallic=\"{}\"", self.abbrev())
     }
 }
 

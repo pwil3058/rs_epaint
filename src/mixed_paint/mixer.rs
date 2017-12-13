@@ -25,7 +25,7 @@ use gtk::prelude::*;
 
 use pw_gix::cairox::*;
 
-use pw_gix::pwo::*;
+use pw_gix::struct_traits::*;
 use pw_gix::colour::*;
 use pw_gix::gtkx::paned::*;
 use pw_gix::printer::*;

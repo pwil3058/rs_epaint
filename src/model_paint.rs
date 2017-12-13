@@ -16,15 +16,18 @@ use gtk;
 use gtk::prelude::*;
 
 use std::cell::RefCell;
+use std::fmt;
 use std::rc::Rc;
 use std::str::FromStr;
 
 use pw_gix::colour::*;
 use pw_gix::colour::attributes::*;
 use pw_gix::gtkx::tree_view_column::*;
-use pw_gix::pwo::*;
+use pw_gix::struct_traits::*;
 
 use basic_paint::*;
+use basic_paint::editor::*;
+use basic_paint::factory::*;
 use display::*;
 use error::*;
 use paint::*;
@@ -121,6 +124,17 @@ impl FromStr for ModelPaintCharacteristics {
             Err(_) => Metallic::Nonmetallic,
         };
         Ok(ModelPaintCharacteristics{finish, transparency, fluorescence, metallic})
+    }
+}
+
+impl fmt::Display for ModelPaintCharacteristics {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}, {}, {}, {}",
+            self.finish.to_string(),
+            self.transparency.to_string(),
+            self.fluorescence.to_string(),
+            self.metallic.to_string(),
+        )
     }
 }
 
@@ -277,7 +291,7 @@ impl ColourAttributesInterface for ModelPaintAttributes {
         vec![
             simple_text_column("Hue", -1, SP_HUE_ANGLE, SP_HUE_RGB, -1, 50, false),
             simple_text_column("Grey", SP_GREYNESS, SP_GREYNESS, SP_RGB, SP_RGB_FG, fw, false),
-            simple_text_column("Value", SP_VALUE, SP_VALUE, SP_MONO_RGB, SP_MONO_RGB, fw, false),
+            simple_text_column("Value", SP_VALUE, SP_VALUE, SP_MONO_RGB, SP_MONO_RGB_FG, fw, false),
         ]
     }
 
@@ -303,6 +317,7 @@ pub type ModelSeriesPaint = SeriesPaint<ModelPaintCharacteristics>;
 pub type ModelSeriesPaintSpec = BasicPaintSpec<ModelPaintCharacteristics>;
 pub type ModelMixedPaint = MixedPaint<ModelPaintCharacteristics>;
 pub type ModelPaint = Paint<ModelPaintCharacteristics>;
+pub type BasicModelPaint = BasicPaint<ModelPaintCharacteristics>;
 pub type ModelPaintDisplayDialog = PaintDisplayDialog<ModelPaintAttributes, ModelPaintCharacteristics>;
 pub type ModelPaintSeries = PaintSeries<ModelPaintCharacteristics>;
 pub type ModelPaintComponentsBox = PaintComponentsBox<ModelPaintCharacteristics>;
@@ -310,7 +325,9 @@ pub type ModelPaintMixer = PaintMixer<ModelPaintAttributes, ModelPaintCharacteri
 pub type ModelPaintHueAttrWheel = PaintHueAttrWheel<ModelPaintAttributes, ModelPaintCharacteristics>;
 pub type ModelPaintSeriesView = PaintSeriesView<ModelPaintAttributes, ModelPaintCharacteristics>;
 pub type ModelPaintSeriesManager = SeriesPaintManager<ModelPaintAttributes, ModelPaintCharacteristics>;
-pub type ModelSeriesPaintEntry = BasicPaintEntry<ModelPaintAttributes, ModelPaintCharacteristics, ModelPaint>;
+//pub type ModelSeriesPaintEntry = BasicPaintEntry<ModelPaintAttributes, ModelPaintCharacteristics, ModelPaint>;
+pub type ModelPaintFactoryDisplay = BasicPaintFactoryDisplay<ModelPaintAttributes, ModelPaintCharacteristics>;
+pub type BasicModelPaintEditor = BasicPaintEditor<ModelPaintAttributes, ModelPaintCharacteristics, PaintSeriesId>;
 
 const IDEAL_PAINT_STR: &str =
 "Manufacturer: Imaginary

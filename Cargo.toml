@@ -16,6 +16,7 @@ xml-rs = "0.7.0"
 cairo-rs = "0.3.0"
 gdk = "0.7.0"
 gdk-pixbuf = "0.3.0"
+glib = "0.4.0"
 gtk = "0.3.0"
 
 [features]

@@ -23,6 +23,7 @@ pub mod manager;
 pub mod series;
 
 use basic_paint::*;
+use basic_paint::collection::*;
 
 pub use self::series::*;
 
@@ -42,7 +43,34 @@ impl PaintSeriesIdentityData {
     }
 }
 
+impl CollnIdInterface for PaintSeriesIdentityData {
+    fn new(colln_name: &str, colln_owner: &str) -> PaintSeriesIdentityData {
+        PaintSeriesIdentityData{
+            manufacturer: colln_owner.to_string(),
+            series_name: colln_name.to_string(),
+        }
+    }
+
+    fn colln_name_label() -> String {
+        "Series Name:".to_string()
+    }
+
+    fn colln_owner_label() -> String {
+        "Manufacturer:".to_string()
+    }
+
+    fn colln_name(&self) -> String {
+        self.series_name.clone()
+    }
+
+    fn colln_owner(&self) -> String {
+        self.manufacturer.clone()
+    }
+}
+
 pub type PaintSeriesIdentity = Rc<PaintSeriesIdentityData>;
+
+pub type PaintSeriesId = PaintSeriesIdentityData;
 
 pub trait SeriesPaintInterface<C>: BasicPaintInterface<C>
     where   C: CharacteristicsInterface

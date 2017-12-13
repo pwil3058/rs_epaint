@@ -128,8 +128,8 @@ impl<A> ColourEditorCore<A>
             self.incr_chroma_btn.set_widget_colour_rgb(high_chroma_rgb);
             self.decr_chroma_btn.set_widget_colour_rgb(low_chroma_rgb);
 
-            self.hue_left_btn.set_widget_colour_rgb(rgb.components_rotated(-DEG_30));
-            self.hue_right_btn.set_widget_colour_rgb(rgb.components_rotated(DEG_30));
+            self.hue_left_btn.set_widget_colour_rgb(rgb.components_rotated(DEG_30));
+            self.hue_right_btn.set_widget_colour_rgb(rgb.components_rotated(-DEG_30));
         }
         self.drawing_area.queue_draw();
         colour
@@ -194,6 +194,10 @@ impl<A> ColourEditorCore<A>
     pub fn reset(&self) {
         self.samples.borrow_mut().clear();
         self.set_rgb_and_inform(WHITE * 0.5);
+    }
+
+    pub fn connect_colour_changed<F: 'static + Fn(&Colour)>(&self, callback: F) {
+        self.colour_changed_callbacks.borrow_mut().push(Box::new(callback))
     }
 }
 
@@ -374,7 +378,7 @@ impl<A> ColourEditorInterface for  Rc<ColourEditorCore<A>>
         let ced_c = ced.clone();
         ced.hue_left_btn.connect_clicked(
             move |_| {
-                if ced_c.rgb_manipulator.rotate(-ced_c.delta_size.get().for_hue()) {
+                if ced_c.rgb_manipulator.rotate(ced_c.delta_size.get().for_hue()) {
                     ced_c.set_rgb_and_inform(ced_c.rgb_manipulator.get_rgb());
                 };
             }
@@ -382,7 +386,7 @@ impl<A> ColourEditorInterface for  Rc<ColourEditorCore<A>>
         let ced_c = ced.clone();
         ced.hue_right_btn.connect_clicked(
             move |_| {
-                if ced_c.rgb_manipulator.rotate(ced_c.delta_size.get().for_hue()) {
+                if ced_c.rgb_manipulator.rotate(-ced_c.delta_size.get().for_hue()) {
                     ced_c.set_rgb_and_inform(ced_c.rgb_manipulator.get_rgb());
                 };
             }

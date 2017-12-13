@@ -193,8 +193,7 @@ impl<A, C> PaintHueAttrWheelInterface<A, C> for PaintHueAttrWheel<A, C>
                                 wheel_c.series_paint_dialogs.borrow_mut().insert(dialog.id_no(), dialog.clone());
                                 dialog.show();
                             },
-                            Paint::Mixed(ref mixed_paint) => {
-                                println!("Show information for: {:?}", mixed_paint);
+                            Paint::Mixed(_) => {
                                 PaintDisplayDialog::<A, C>::create(&paint, None, None, vec![]).show();
                             }
                         }

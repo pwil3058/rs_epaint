@@ -18,6 +18,7 @@ use std::rc::Rc;
 use cairo;
 use gdk;
 use gdk::prelude::*;
+use glib::signal::SignalHandlerId;
 use gtk;
 use gtk::prelude::*;
 
@@ -152,6 +153,10 @@ impl GraticuleCore {
         } else {
             None
         }
+    }
+
+    pub fn connect_button_press_event<F: Fn(&gtk::DrawingArea, &gdk::EventButton) -> Inhibit + 'static>(&self, f: F) -> SignalHandlerId {
+        self.drawing_area.connect_button_press_event(f)
     }
 }
 
