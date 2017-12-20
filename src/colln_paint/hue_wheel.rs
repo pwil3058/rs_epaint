@@ -16,29 +16,30 @@ use std::cell::RefCell;
 use std::marker::PhantomData;
 use std::rc::Rc;
 
-use gdk;
-use glib::signal::SignalHandlerId;
 use gtk;
 use gtk::prelude::*;
 
 use pw_gix::cairox::*;
 use pw_gix::colour::*;
+use pw_gix::rgb_math::rgb::*;
 
 use basic_paint::*;
 use graticule::*;
 use shape::*;
 
-// BASIC PAINT
-pub struct BasicPaintShape<C>
+use super::{CollnIdInterface, CollnPaint};
+
+pub struct CollnPaintShape<C, CID>
     where   C: CharacteristicsInterface + 'static,
+            CID: CollnIdInterface,
 {
-    paint: BasicPaint<C>,
+    paint: CollnPaint<C, CID>,
     xy: Point,
-    phantom: PhantomData<C>,
 }
 
-impl<C> ColourShapeInterface for BasicPaintShape<C>
+impl<C, CID> ColourShapeInterface for CollnPaintShape<C, CID>
     where   C: CharacteristicsInterface + 'static,
+            CID: CollnIdInterface,
 {
     fn xy(&self) -> Point {
         self.xy
@@ -53,60 +54,65 @@ impl<C> ColourShapeInterface for BasicPaintShape<C>
     }
 }
 
-impl<C> ColouredItemShapeInterface<BasicPaint<C>> for BasicPaintShape<C>
+impl<C, CID> ColouredItemShapeInterface<CollnPaint<C, CID>> for CollnPaintShape<C, CID>
     where   C: CharacteristicsInterface,
+            CID: CollnIdInterface,
 {
-    fn new(paint: &BasicPaint<C>, attr: ScalarAttribute) -> BasicPaintShape<C> {
+    fn new(paint: &CollnPaint<C, CID>, attr: ScalarAttribute) -> CollnPaintShape<C, CID> {
         let radius = paint.scalar_attribute(attr);
         let angle = paint.hue().angle();
-        BasicPaintShape::<C>{
+        CollnPaintShape::<C, CID>{
             paint: paint.clone(),
             xy: Point::from((angle, radius)),
-            phantom: PhantomData,
         }
     }
 
-    fn coloured_item(&self) -> BasicPaint<C> {
+    fn coloured_item(&self) -> CollnPaint<C, CID> {
         self.paint.clone()
     }
 }
 
-pub type BasicPaintShapeList<C> = ColouredItemSpapeList<BasicPaint<C>, BasicPaintShape<C>>;
+pub type CollnPaintShapeList<C, CID> = ColouredItemSpapeList<CollnPaint<C, CID>, CollnPaintShape<C, CID>>;
 
 
 // WHEEL
-pub struct BasicPaintHueAttrWheelCore<C>
+pub struct CollnPaintHueAttrWheelCore<C, CID>
     where   C: CharacteristicsInterface + 'static,
+            CID: CollnIdInterface + 'static,
 {
-    paints: BasicPaintShapeList<C>,
-    chosen_paint: RefCell<Option<BasicPaint<C>>>,
+    paints: CollnPaintShapeList<C, CID>,
     graticule: Graticule,
 }
 
-pub type BasicPaintHueAttrWheel<C> = Rc<BasicPaintHueAttrWheelCore<C>>;
+pub type CollnPaintHueAttrWheel<C, CID> = Rc<CollnPaintHueAttrWheelCore<C, CID>>;
 
-pub trait BasicPaintHueAttrWheelInterface<C>
+pub trait CollnPaintHueAttrWheelInterface<C, CID>
     where   C: CharacteristicsInterface + 'static,
+            CID: CollnIdInterface + 'static,
 {
     fn pwo(&self) -> gtk::DrawingArea;
-    fn create(attr: ScalarAttribute) -> BasicPaintHueAttrWheel<C>;
+    fn create(attr: ScalarAttribute, paints: Rc<Vec<CollnPaint<C, CID>>>) -> CollnPaintHueAttrWheel<C, CID>;
 }
 
-impl<C> BasicPaintHueAttrWheelInterface<C> for BasicPaintHueAttrWheel<C>
+impl<C, CID> CollnPaintHueAttrWheelInterface<C, CID> for CollnPaintHueAttrWheel<C, CID>
     where   C: CharacteristicsInterface + 'static,
+            CID: CollnIdInterface + 'static,
 {
     fn pwo(&self) -> gtk::DrawingArea {
         self.graticule.drawing_area()
     }
 
-    fn create(attr: ScalarAttribute) -> BasicPaintHueAttrWheel<C> {
+    fn create(attr: ScalarAttribute, paints: Rc<Vec<CollnPaint<C, CID>>>) -> CollnPaintHueAttrWheel<C, CID> {
         let wheel = Rc::new(
-            BasicPaintHueAttrWheelCore::<C> {
-                paints: BasicPaintShapeList::<C>::new(attr),
+            CollnPaintHueAttrWheelCore::<C, CID> {
+                paints: CollnPaintShapeList::<C, CID>::new(attr),
                 graticule: Graticule::create(attr),
-                chosen_paint: RefCell::new(None),
             }
         );
+        for paint in paints.iter() {
+            wheel.add_paint(paint)
+        }
+
         let wheel_c = wheel.clone();
         wheel.graticule.drawing_area().connect_query_tooltip(
             move |_, x, y, _, tooltip| {
@@ -114,7 +120,7 @@ impl<C> BasicPaintHueAttrWheelInterface<C> for BasicPaintHueAttrWheel<C>
                 //let rectangle = gtk::Rectangle{x: x, y: y, width: 10, height: -10};
                 //println!("Rectangle: {:?}", rectangle);
                 //tooltip.set_tip_area(&rectangle);
-                match wheel_c.get_paint_at((x as f64, y as f64)) {
+                match wheel_c.get_paint_at(Point(x as f64, y as f64)) {
                     Some(paint) => {
                         tooltip.set_text(Some(paint.tooltip_text().as_str()));
                         true
@@ -134,24 +140,12 @@ impl<C> BasicPaintHueAttrWheelInterface<C> for BasicPaintHueAttrWheel<C>
     }
 }
 
-impl<C> BasicPaintHueAttrWheelCore<C>
+impl<C, CID> CollnPaintHueAttrWheelCore<C, CID>
     where   C: CharacteristicsInterface + 'static,
+            CID: CollnIdInterface + 'static,
 {
-    pub fn clear(&self) {
-        *self.chosen_paint.borrow_mut() = None;
-        self.paints.clear();
-    }
-
-    pub fn add_paint(&self, paint: &BasicPaint<C>) {
+    fn add_paint(&self, paint: &CollnPaint<C, CID>) {
         self.paints.add_coloured_item(paint);
-    }
-
-    pub fn remove_paint(&self, paint: &BasicPaint<C>) {
-        self.paints.remove_coloured_item(paint);
-    }
-
-    pub fn replace_paint(&self, old_paint: &BasicPaint<C>, paint: &BasicPaint<C>) {
-        self.paints.replace_coloured_item(old_paint, paint);
     }
 
     pub fn set_target_colour(&self, o_colour: Option<&Colour>) {
@@ -162,28 +156,14 @@ impl<C> BasicPaintHueAttrWheelCore<C>
         self.graticule.attr()
     }
 
-    pub fn get_paint_at(&self, posn: (f64, f64)) -> Option<BasicPaint<C>> {
-        let point = self.graticule.reverse_transform(Point::from(posn));
+    pub fn get_paint_at(&self, raw_point: Point) -> Option<CollnPaint<C, CID>> {
+        let point = self.graticule.reverse_transform(raw_point);
         let opr = self.paints.get_coloured_item_at(point);
         if let Some((paint, _)) = opr {
             Some(paint)
         } else {
             None
         }
-    }
-
-    pub fn set_chosen_paint_from(&self, posn: (f64, f64)) -> Option<BasicPaint<C>> {
-        if let Some(paint) = self.get_paint_at(posn) {
-            *self.chosen_paint.borrow_mut() = Some(paint.clone());
-            Some(paint)
-        } else {
-            *self.chosen_paint.borrow_mut() = None;
-            None
-        }
-    }
-
-    pub fn connect_button_press_event<F: Fn(&gtk::DrawingArea, &gdk::EventButton) -> Inhibit + 'static>(&self, f: F) -> SignalHandlerId {
-        self.graticule.connect_button_press_event(f)
     }
 }
 

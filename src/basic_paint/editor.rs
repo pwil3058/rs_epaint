@@ -20,8 +20,9 @@ use pw_gix::gtkx::paned::RememberPosition;
 
 use struct_traits::{PackableWidgetObject, SimpleCreation};
 
+use colln_paint::*;
+
 use super::*;
-use super::collection::*;
 use super::factory::*;
 use super::entry::*;
 

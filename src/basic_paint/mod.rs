@@ -13,6 +13,7 @@
 // limitations under the License.
 
 use std::cmp::Ordering;
+use std::convert::From;
 use std::fmt;
 use std::fmt::Debug;
 use std::hash::*;
@@ -32,7 +33,6 @@ use pw_gix::rgb_math::hue::*;
 
 use error::*;
 
-pub mod collection;
 pub mod display;
 pub mod editor;
 pub mod entry;
@@ -189,12 +189,23 @@ pub trait BasicPaintInterface<C>: Hash + Clone + PartialEq + Ord + Debug + Colou
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct BasicPaintSpec<C: CharacteristicsInterface> {
     pub rgb: RGB,
     pub name: String,
     pub notes: String,
     pub characteristics: C,
+}
+
+impl<C: CharacteristicsInterface> From<BasicPaint<C>> for BasicPaintSpec<C> {
+    fn from(paint: BasicPaint<C>) -> BasicPaintSpec<C> {
+        BasicPaintSpec::<C> {
+            rgb: paint.rgb(),
+            name: paint.name(),
+            notes: paint.notes(),
+            characteristics: paint.characteristics(),
+        }
+    }
 }
 
 #[derive(Debug, Hash, Clone)]
@@ -206,6 +217,23 @@ pub struct BasicPaintCore<C: CharacteristicsInterface> {
 }
 
 pub type BasicPaint<C> = Rc<BasicPaintCore<C>>;
+
+pub trait FromSpec<C: CharacteristicsInterface> {
+    fn from_spec(spec: &BasicPaintSpec<C>) -> Self;
+}
+
+impl<C: CharacteristicsInterface> FromSpec<C> for BasicPaint<C> {
+    fn from_spec(spec: &BasicPaintSpec<C>) -> BasicPaint<C> {
+        Rc::new(
+            BasicPaintCore::<C> {
+                colour: Colour::from(spec.rgb),
+                name: spec.name.clone(),
+                notes: spec.notes.clone(),
+                characteristics: spec.characteristics,
+            }
+        )
+    }
+}
 
 impl<C: CharacteristicsInterface> ColouredItemInterface for BasicPaint<C> {
     fn colour(&self) -> Colour {

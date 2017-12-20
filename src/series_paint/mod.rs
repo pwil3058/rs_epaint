@@ -23,7 +23,7 @@ pub mod manager;
 pub mod series;
 
 use basic_paint::*;
-use basic_paint::collection::*;
+use colln_paint::*;
 
 pub use self::series::*;
 
@@ -52,11 +52,19 @@ impl CollnIdInterface for PaintSeriesIdentityData {
     }
 
     fn colln_name_label() -> String {
-        "Series Name:".to_string()
+        "Series:".to_string()
     }
 
     fn colln_owner_label() -> String {
         "Manufacturer:".to_string()
+    }
+
+    fn paint_select_label() -> String {
+        "Add to Mixer".to_string()
+    }
+
+    fn paint_select_tooltip_text() -> String {
+        "Add this paint to the paint mixing area.".to_string()
     }
 
     fn colln_name(&self) -> String {

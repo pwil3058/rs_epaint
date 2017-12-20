@@ -41,6 +41,10 @@ pub struct BasicPaintFactoryCore<C>
 impl<C> BasicPaintFactoryCore<C>
     where   C: CharacteristicsInterface,
 {
+    fn clear(&self) {
+        self.paints.borrow_mut().clear()
+    }
+
     fn find_name(&self, name: &str) -> Result<usize, usize> {
         self.paints.borrow().binary_search_by_key(
             &name.to_string(),
@@ -83,14 +87,7 @@ impl<C> BasicPaintFactoryCore<C>
         match self.find_name(&spec.name) {
             Ok(_) => Err(PaintError::AlreadyExists(spec.name.clone())),
             Err(index) => {
-                let paint = Rc::new(
-                    BasicPaintCore::<C> {
-                        colour: Colour::from(spec.rgb),
-                        name: spec.name.clone(),
-                        notes: spec.notes.clone(),
-                        characteristics: spec.characteristics,
-                    }
-                );
+                let paint = BasicPaint::<C>::from_spec(spec);
                 self.paints.borrow_mut().insert(index, paint.clone());
                 Ok(paint)
             }
@@ -136,7 +133,7 @@ pub struct BasicPaintFactoryViewCore<A, C>
     scrolled_window: gtk::ScrolledWindow,
     list_store: gtk::ListStore,
     view: gtk::TreeView,
-    colln: BasicPaintFactory<C>,
+    paint_factory: BasicPaintFactory<C>,
     chosen_paint: RefCell<Option<BasicPaint<C>>>,
     spec: PhantomData<A>
 }
@@ -145,6 +142,12 @@ impl<A, C> BasicPaintFactoryViewCore<A, C>
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static,
 {
+    fn clear(&self) {
+        *self.chosen_paint.borrow_mut() = None;
+        self.list_store.clear();
+        self.paint_factory.clear();
+    }
+
     pub fn get_paint_at(&self, posn: (f64, f64)) -> Option<BasicPaint<C>> {
         let x = posn.0 as i32;
         let y = posn.1 as i32;
@@ -154,7 +157,7 @@ impl<A, C> BasicPaintFactoryViewCore<A, C>
                     let name: String = self.list_store.get_value(&iter, 0).get().unwrap_or_else(
                         || panic!("File: {:?} Line: {:?}", file!(), line!())
                     );
-                    let paint = self.colln.get_paint(&name).unwrap_or_else(
+                    let paint = self.paint_factory.get_paint(&name).unwrap_or_else(
                         || panic!("File: {:?} Line: {:?}", file!(), line!())
                     );
                     return Some(paint)
@@ -175,27 +178,27 @@ impl<A, C> BasicPaintFactoryViewCore<A, C>
     }
 
     pub fn len(&self) -> usize {
-        self.colln.len()
+        self.paint_factory.len()
     }
 
     pub fn get_paint(&self, name: &str) -> Option<BasicPaint<C>> {
-        self.colln.get_paint(name)
+        self.paint_factory.get_paint(name)
     }
 
     pub fn get_paints(&self) -> Vec<BasicPaint<C>> {
-        self.colln.get_paints()
+        self.paint_factory.get_paints()
     }
 
     pub fn get_paint_specs(&self) -> Vec<BasicPaintSpec<C>> {
-        self.colln.get_paint_specs()
+        self.paint_factory.get_paint_specs()
     }
 
     pub fn has_paint_named(&self, name: &str) -> bool {
-        self.colln.has_paint_named(name)
+        self.paint_factory.has_paint_named(name)
     }
 
     pub fn add_paint(&self, spec: &BasicPaintSpec<C>) -> Result<BasicPaint<C>, PaintError> {
-        match self.colln.add_paint(spec) {
+        match self.paint_factory.add_paint(spec) {
             Ok(paint) => {
                 self.list_store.append_row(&paint.tv_rows());
                 Ok(paint)
@@ -211,7 +214,7 @@ impl<A, C> BasicPaintFactoryViewCore<A, C>
     }
 
     pub fn remove_paint(&self, paint: &BasicPaint<C>) {
-        self.colln.remove_paint(paint);
+        self.paint_factory.remove_paint(paint);
         if let Some((_, iter)) = self.find_paint_named(&paint.name()) {
             self.list_store.remove(&iter);
         } else {
@@ -220,7 +223,7 @@ impl<A, C> BasicPaintFactoryViewCore<A, C>
     }
 
     pub fn replace_paint(&self, paint: &BasicPaint<C>, spec: &BasicPaintSpec<C>) -> Result<BasicPaint<C>, PaintError> {
-        let new_paint = self.colln.replace_paint(paint, spec)?;
+        let new_paint = self.paint_factory.replace_paint(paint, spec)?;
         if let Some((index, iter)) = self.find_paint_named(&paint.name()) {
             self.list_store.remove(&iter);
             self.list_store.insert_row(index, &new_paint.tv_rows());
@@ -272,7 +275,7 @@ impl<A, C> BasicPaintFactoryViewInterface<A, C> for BasicPaintFactoryView<A, C>
             BasicPaintFactoryViewCore::<A, C> {
                 scrolled_window: gtk::ScrolledWindow::new(None, None),
                 list_store: list_store,
-                colln: BasicPaintFactory::<C>::create(),
+                paint_factory: BasicPaintFactory::<C>::create(),
                 view: view,
                 chosen_paint: RefCell::new(None),
                 spec: PhantomData,
@@ -368,6 +371,17 @@ impl<A, C> BasicPaintFactoryDisplayCore<A, C>
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static,
 {
+    pub fn clear(&self) {
+        for dialog in self.paint_dialogs.borrow().values() {
+            dialog.close();
+        };
+        *self.chosen_paint.borrow_mut() = None;
+        self.paint_factory_view.clear();
+        for wheel in self.hue_attr_wheels.iter() {
+            wheel.clear()
+        };
+    }
+
     pub fn set_initiate_edit_ok(&self, value: bool) {
         self.initiate_edit_ok.set(value);
         for dialog in self.paint_dialogs.borrow().values() {

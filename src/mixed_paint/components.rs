@@ -412,6 +412,7 @@ impl<C> PaintComponentsBoxInterface<C> for PaintComponentsBox<C>
 mod tests {
     use super::*;
     use std::str::FromStr;
+    use std::fmt;
 
     use pw_gix::rgb_math::rgb::*;
 
@@ -420,6 +421,12 @@ mod tests {
     #[derive(Debug, PartialEq, Hash, Clone, Copy)]
     pub struct EPC { }
     pub struct Entry { }
+
+    impl fmt::Display for EPC {
+        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+            write!(f, "nothing")
+        }
+    }
 
     impl CharacteristicsEntryInterface<EPC> for Rc<Entry> {
         fn create() -> Self { Rc::new(Entry{})}

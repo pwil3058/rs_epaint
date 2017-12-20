@@ -140,6 +140,10 @@ impl<CI, PS> ColouredItemSpapeList<CI, PS>
         }
     }
 
+    pub fn clear(&self) {
+        self.shapes.borrow_mut().clear()
+    }
+
     pub fn len(&self) -> usize {
         self.shapes.borrow().len()
     }

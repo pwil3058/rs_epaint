@@ -28,6 +28,7 @@ use pw_gix::struct_traits::*;
 use basic_paint::*;
 use basic_paint::editor::*;
 use basic_paint::factory::*;
+use colln_paint::*;
 use display::*;
 use error::*;
 use paint::*;
@@ -328,6 +329,7 @@ pub type ModelPaintSeriesManager = SeriesPaintManager<ModelPaintAttributes, Mode
 //pub type ModelSeriesPaintEntry = BasicPaintEntry<ModelPaintAttributes, ModelPaintCharacteristics, ModelPaint>;
 pub type ModelPaintFactoryDisplay = BasicPaintFactoryDisplay<ModelPaintAttributes, ModelPaintCharacteristics>;
 pub type BasicModelPaintEditor = BasicPaintEditor<ModelPaintAttributes, ModelPaintCharacteristics, PaintSeriesId>;
+pub type ModelPaintSeriesSpec = PaintCollnSpec<ModelPaintCharacteristics, PaintSeriesId>;
 
 const IDEAL_PAINT_STR: &str =
 "Manufacturer: Imaginary
@@ -479,6 +481,53 @@ NamedColour(name=\"XF 4: Yellow Green *\", rgb=RGB(0xAA00, 0xAE00, 0x4000), tran
             let paint = series.get_paint(pair.0).unwrap();
             assert_eq!(paint.colour().rgb(), pair.1);
             components_box.add_paint(&paint);
+        }
+    }
+
+    #[test]
+    fn paint_model_paint_spec_ideal_series() {
+        if let Ok(spec) = ModelPaintSeriesSpec::from_str(IDEAL_PAINT_STR) {
+            for pair in [
+                ("Red", RED),
+                ("Green", GREEN),
+                ("Blue", BLUE),
+                ("Cyan", CYAN),
+                ("Magenta", MAGENTA),
+                ("Yellow", YELLOW),
+                ("Black", BLACK),
+                ("White", WHITE)
+            ].iter()
+            {
+                if let Some(index) = spec.get_index_for_name(pair.0) {
+                    assert_eq!(spec.paint_specs[index].rgb, pair.1);}
+                else {
+                    panic!("File: {:?} Line: {:?}", file!(), line!())
+                }
+            }
+        } else {
+            panic!("File: {:?} Line: {:?}", file!(), line!())
+        }
+    }
+
+    #[test]
+    fn paint_model_paint_spec_obsolete_series() {
+        match ModelPaintSeriesSpec::from_str(OBSOLETE_PAINT_STR) {
+            Ok(spec) => {
+                for pair in [
+                    ("XF 1: Flat Black *", RGB16::from_str("RGB(0x2D00, 0x2B00, 0x3000)").unwrap()),
+                    ("XF 2: Flat White *", RGB16::from_str("RGB(0xFE00, 0xFE00, 0xFE00)").unwrap()),
+                    ("XF 3: Flat Yellow *", RGB16::from_str("RGB(0xF800, 0xCD00, 0x2900)").unwrap()),
+                    ("XF 4: Yellow Green *", RGB16::from_str("RGB(0xAA00, 0xAE00, 0x4000)").unwrap()),
+                ].iter()
+                {
+                    if let Some(index) = spec.get_index_for_name(pair.0) {
+                        assert_eq!(spec.paint_specs[index].rgb, RGB::from(pair.1));}
+                    else {
+                        panic!("File: {:?} Line: {:?}", file!(), line!())
+                    }
+                }
+            },
+            Err(err) => panic!("File: {:?} Line: {:?} {:?}", file!(), line!(), err),
         }
     }
 }
