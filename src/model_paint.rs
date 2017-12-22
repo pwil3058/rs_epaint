@@ -23,7 +23,7 @@ use std::str::FromStr;
 use pw_gix::colour::*;
 use pw_gix::colour::attributes::*;
 use pw_gix::gtkx::tree_view_column::*;
-use pw_gix::struct_traits::*;
+pub use pw_gix::pwo_trait::*;
 
 use basic_paint::*;
 use basic_paint::editor::*;

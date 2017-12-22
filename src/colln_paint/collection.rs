@@ -587,17 +587,6 @@ impl<A, C, CID> CollnPaintCollnWidgetInterface<A, C, CID> for CollnPaintCollnWid
             }
         );
 
-        //for wheel in paint_selector.hue_attr_wheels.iter() {
-            //let paint_selector_c = paint_selector.clone();
-            //wheel.connect_add_paint(
-                //move |paint| paint_selector_c.inform_paint_selected(paint)
-            //);
-        //}
-        //let paint_selector_c = paint_selector.clone();
-        //paint_selector.paint_colln_view.connect_add_paint(
-            //move |paint| paint_selector_c.inform_paint_selected(paint)
-        //);
-
         cpcw
     }
 }

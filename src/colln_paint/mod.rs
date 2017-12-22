@@ -16,8 +16,11 @@ use std::cell::RefCell;
 use std::cmp::{Ordering};
 use std::fmt;
 use std::fmt::Debug;
+use std::fs::File;
 use std::hash::*;
+use std::io::Read;
 use std::marker::PhantomData;
+use std::path::Path;
 use std::rc::Rc;
 use std::str::FromStr;
 
@@ -25,14 +28,15 @@ use gtk;
 use gtk::prelude::*;
 
 use pw_gix::colour::*;
+pub use pw_gix::pwo_trait::PackableWidgetObject;
 
+pub mod binder;
 pub mod collection;
 pub mod display;
 
-use struct_traits::{PackableWidgetObject, SimpleCreation};
-
 use basic_paint::*;
 use error::*;
+use struct_traits::SimpleCreation;
 
 pub trait CollnIdInterface:
     Debug + PartialEq + PartialOrd + Eq + Ord + Clone + Default + Hash
@@ -264,6 +268,17 @@ impl<C, CID> PaintCollnSpec<C, CID>
     where   C: CharacteristicsInterface,
             CID: CollnIdInterface
 {
+    fn from_file(path: &Path) -> Result<PaintCollnSpec<C, CID>, PaintError> {
+        let mut file = File::open(path).map_err(
+            |err| PaintError::IOError(err)
+        )?;
+        let mut string = String::new();
+        file.read_to_string(&mut string).map_err(
+            |err| PaintError::IOError(err)
+        )?;
+        PaintCollnSpec::<C, CID>::from_str(string.as_str())
+    }
+
     pub fn get_index_for_name(&self, name: &str) -> Option<usize> {
         match self.paint_specs.binary_search_by_key(&name.to_string(), |spec| spec.name.clone()) {
             Ok(index) => Some(index),

@@ -15,7 +15,7 @@
 #[macro_use]
 extern crate lazy_static;
 
-//#[macro_use]
+#[macro_use]
 extern crate pw_gix;
 
 extern crate chrono;
@@ -29,27 +29,7 @@ extern crate glib;
 extern crate gtk;
 extern crate gdk_pixbuf;
 
-// NB: can't use struct_traits module from pw_gix due to crate limitations
-#[macro_use]
 pub mod struct_traits {
-    #[macro_export]
-    macro_rules! implement_pwo {
-        ( $f:ty, $field:ident, $t:ty ) => (
-            impl PackableWidgetObject<$t> for $f {
-                fn pwo(&self) -> $t {
-                    self.$field.clone()
-                }
-            }
-        )
-    }
-
-    extern crate glib;
-    extern crate gtk;
-
-    pub trait PackableWidgetObject<PWT: glib::IsA<gtk::Widget>> {
-        fn pwo(&self) -> PWT;
-    }
-
     pub trait SimpleCreation {
         fn create() -> Self;
     }

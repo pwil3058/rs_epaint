@@ -27,7 +27,7 @@ use pw_gix::dialogue::*;
 use pw_gix::gtkx::notebook::*;
 use pw_gix::gtkx::paned::*;
 use pw_gix::gtkx::window::*;
-use pw_gix::struct_traits::*;
+pub use pw_gix::pwo_trait::*;
 
 use icons::series_paint_xpm::*;
 

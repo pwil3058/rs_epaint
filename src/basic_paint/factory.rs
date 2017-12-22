@@ -24,9 +24,10 @@ use gtk::prelude::*;
 use pw_gix::dialogue::*;
 use pw_gix::gtkx::list_store::*;
 use pw_gix::gtkx::tree_view_column::*;
+pub use pw_gix::pwo_trait::*;
 
-use struct_traits::*;
 use basic_paint::*;
+use struct_traits::*;
 
 use super::display::*;
 use super::hue_wheel::*;

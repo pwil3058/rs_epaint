@@ -17,10 +17,10 @@ use std::rc::Rc;
 
 use pw_gix::dialogue::*;
 use pw_gix::gtkx::paned::RememberPosition;
-
-use struct_traits::{PackableWidgetObject, SimpleCreation};
+pub use pw_gix::pwo_trait::PackableWidgetObject;
 
 use colln_paint::*;
+use struct_traits::SimpleCreation;
 
 use super::*;
 use super::factory::*;
