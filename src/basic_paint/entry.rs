@@ -31,9 +31,8 @@ pub enum EntryStatus {
     CreatingNotReadyUnnamed,
 }
 
-pub trait CreateAndPackInterface {
+pub trait CreateInterface {
     fn create(extra_buttons: &Vec<gtk::Button>) -> Self;
-    fn pwo(&self) -> gtk::Box;
 }
 
 pub struct BasicPaintSpecEntryCore<A, C>
@@ -42,11 +41,20 @@ pub struct BasicPaintSpecEntryCore<A, C>
 {
     vbox: gtk::Box,
     edited_spec: RefCell<Option<BasicPaintSpec<C>>>,
-    characteristics_entry: C::Entry,
+    characteristics_entry: Rc<C::Entry>,
     name_entry: gtk::Entry,
     notes_entry: gtk::Entry,
     colour_editor: ColourEditor<A>,
     status_changed_callbacks: RefCell<Vec<Box<Fn(EntryStatus)>>>,
+}
+
+impl<A, C> WidgetWrapper<gtk::Box> for BasicPaintSpecEntryCore<A, C>
+    where   C: CharacteristicsInterface + 'static,
+            A: ColourAttributesInterface + 'static
+{
+    fn pwo(&self) -> gtk::Box {
+        self.vbox.clone()
+    }
 }
 
 impl<A, C> BasicPaintSpecEntryCore<A, C>
@@ -144,14 +152,10 @@ impl<A, C> BasicPaintSpecEntryCore<A, C>
     }
 }
 
-impl<A, C> CreateAndPackInterface for  Rc<BasicPaintSpecEntryCore<A, C>>
+impl<A, C> CreateInterface for  Rc<BasicPaintSpecEntryCore<A, C>>
     where   C: CharacteristicsInterface + 'static,
             A: ColourAttributesInterface + 'static
 {
-    fn pwo(&self) -> gtk::Box {
-        self.vbox.clone()
-    }
-
     fn create(extra_buttons: &Vec<gtk::Button>) -> Self {
         let spe = Rc::new(
             BasicPaintSpecEntryCore::<A, C>{

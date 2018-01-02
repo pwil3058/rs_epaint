@@ -53,6 +53,10 @@ impl<A, C, CID> CollnPaintDisplayDialogCore<A, C, CID>
             A: ColourAttributesInterface + 'static,
             CID: CollnIdInterface + 'static,
 {
+    pub fn set_transient_for_from<W: gtk::WidgetExt>(&self, widget: &W) {
+        self.dialog.set_transient_for_from(widget)
+    }
+
     pub fn show(&self) {
         self.dialog.show()
     }

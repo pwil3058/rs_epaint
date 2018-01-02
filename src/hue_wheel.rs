@@ -22,6 +22,7 @@ use gtk::prelude::*;
 
 use pw_gix::cairox::*;
 use pw_gix::colour::*;
+use pw_gix::wrapper::*;
 
 use basic_paint::*;
 use display::*;
@@ -91,13 +92,21 @@ pub struct PaintHueAttrWheelCore<A, C>
     series_paint_dialogs: RefCell<HashMap<u32, PaintDisplayDialog<A, C>>>,
 }
 
+impl<A, C> WidgetWrapper<gtk::DrawingArea> for PaintHueAttrWheelCore<A, C>
+    where   C: CharacteristicsInterface + 'static,
+            A: ColourAttributesInterface + 'static
+{
+    fn pwo(&self) -> gtk::DrawingArea {
+        self.graticule.drawing_area()
+    }
+}
+
 pub type PaintHueAttrWheel<A, C> = Rc<PaintHueAttrWheelCore<A, C>>;
 
 pub trait PaintHueAttrWheelInterface<A, C>
     where   C: CharacteristicsInterface + 'static,
             A: ColourAttributesInterface + 'static
 {
-    fn pwo(&self) -> gtk::DrawingArea;
     fn create(attr: ScalarAttribute) -> PaintHueAttrWheel<A, C>;
 }
 
@@ -105,10 +114,6 @@ impl<A, C> PaintHueAttrWheelInterface<A, C> for PaintHueAttrWheel<A, C>
     where   C: CharacteristicsInterface + 'static,
             A: ColourAttributesInterface + 'static
 {
-    fn pwo(&self) -> gtk::DrawingArea {
-        self.graticule.drawing_area()
-    }
-
     fn create(attr: ScalarAttribute) -> PaintHueAttrWheel<A, C> {
         let menu = gtk::Menu::new();
         let paint_info_item = gtk::MenuItem::new_with_label("Information");
@@ -186,6 +191,7 @@ impl<A, C> PaintHueAttrWheelInterface<A, C> for PaintHueAttrWheel<A, C>
                                     None,
                                     buttons
                                 );
+                                dialog.set_transient_for_from(&wheel_c.pwo());
                                 let wheel_c_c = wheel_c.clone();
                                 dialog.connect_destroy(
                                     move |id| { wheel_c_c.series_paint_dialogs.borrow_mut().remove(&id); }
@@ -199,7 +205,9 @@ impl<A, C> PaintHueAttrWheelInterface<A, C> for PaintHueAttrWheel<A, C>
                         }
                     },
                     ChosenItem::TargetColour(ref colour) => {
-                        TargetColourDisplayDialog::<A>::create(&colour, None).show();
+                        let dialog = TargetColourDisplayDialog::<A>::create(&colour, None);
+                        dialog.set_transient_for_from(&wheel_c.pwo());
+                        dialog.show();
                     },
                     ChosenItem::None => panic!("File: {:?} Line: {:?} SHOULDN'T GET HERE", file!(), line!())
                 }

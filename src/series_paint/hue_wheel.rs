@@ -22,6 +22,7 @@ use gtk::prelude::*;
 
 use pw_gix::cairox::*;
 use pw_gix::colour::*;
+use pw_gix::wrapper::*;
 
 use basic_paint::*;
 use display::*;
@@ -44,13 +45,21 @@ pub struct SeriesPaintHueAttrWheelCore<A, C>
     series_paint_dialogs: RefCell<HashMap<u32, PaintDisplayDialog<A, C>>>,
 }
 
+impl<A, C> WidgetWrapper<gtk::DrawingArea> for SeriesPaintHueAttrWheelCore<A, C>
+    where   C: CharacteristicsInterface + 'static,
+            A: ColourAttributesInterface + 'static
+{
+    fn pwo(&self) -> gtk::DrawingArea {
+        self.graticule.drawing_area()
+    }
+}
+
 pub type SeriesPaintHueAttrWheel<A, C> = Rc<SeriesPaintHueAttrWheelCore<A, C>>;
 
 pub trait SeriesPaintHueAttrWheelInterface<A, C>
     where   C: CharacteristicsInterface + 'static,
             A: ColourAttributesInterface + 'static
 {
-    fn pwo(&self) -> gtk::DrawingArea;
     fn create(attr: ScalarAttribute) -> SeriesPaintHueAttrWheel<A, C>;
 }
 
@@ -58,10 +67,6 @@ impl<A, C> SeriesPaintHueAttrWheelInterface<A, C> for SeriesPaintHueAttrWheel<A,
     where   C: CharacteristicsInterface + 'static,
             A: ColourAttributesInterface + 'static
 {
-    fn pwo(&self) -> gtk::DrawingArea {
-        self.graticule.drawing_area()
-    }
-
     fn create(attr: ScalarAttribute) -> SeriesPaintHueAttrWheel<A, C> {
         let menu = gtk::Menu::new();
         let paint_info_item = gtk::MenuItem::new_with_label("Information");
@@ -121,6 +126,7 @@ impl<A, C> SeriesPaintHueAttrWheelInterface<A, C> for SeriesPaintHueAttrWheel<A,
                             callback:  Box::new(move || wheel_c_c.inform_add_paint(&paint_c))
                         };
                         let dialog = PaintDisplayDialog::<A, C>::series_create(&paint, target, None, vec![spec]);
+                        dialog.set_transient_for_from(&wheel_c.pwo());
                         let wheel_c_c = wheel_c.clone();
                         dialog.connect_destroy(
                             move |id| { wheel_c_c.series_paint_dialogs.borrow_mut().remove(&id); }

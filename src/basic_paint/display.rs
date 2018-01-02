@@ -50,6 +50,10 @@ impl<A, C> BasicPaintDisplayDialogCore<A, C>
     where   C: CharacteristicsInterface + 'static,
             A: ColourAttributesInterface + 'static,
 {
+    pub fn set_transient_for_from<W: gtk::WidgetExt>(&self, widget: &W) {
+        self.dialog.set_transient_for_from(widget)
+    }
+
     pub fn show(&self) {
         self.dialog.show()
     }

@@ -25,7 +25,7 @@ use gtk::prelude::*;
 
 use pw_gix::cairox::*;
 
-pub use pw_gix::pwo_trait::*;
+pub use pw_gix::wrapper::*;
 use pw_gix::colour::*;
 use pw_gix::gtkx::paned::*;
 use pw_gix::printer::*;
@@ -87,7 +87,7 @@ impl ColourMatchAreaCore {
 
 type ColourMatchArea = Rc<ColourMatchAreaCore>;
 
-implement_pwo!(ColourMatchAreaCore, drawing_area, gtk::DrawingArea);
+impl_widget_wrapper!(ColourMatchAreaCore, drawing_area, gtk::DrawingArea);
 
 impl ColourMatchAreaInterface for ColourMatchArea {
     type ColourMatchAreaType = ColourMatchArea;
@@ -162,7 +162,6 @@ pub trait PaintMixerInterface<A, C>
 {
     type PaintMixerType;
 
-    fn pwo(&self) -> gtk::Box;
     fn create(series_paint_data_path: &Path) -> Self::PaintMixerType;
 }
 
@@ -340,6 +339,15 @@ impl<A, C> PaintMixerCore<A, C>
     }
 }
 
+impl<A, C> WidgetWrapper<gtk::Box> for PaintMixerCore<A, C>
+    where   A: ColourAttributesInterface + 'static,
+            C: CharacteristicsInterface + 'static
+{
+    fn pwo(&self) -> gtk::Box {
+        self.vbox.clone()
+    }
+}
+
 pub type PaintMixer<A, C> = Rc<PaintMixerCore<A, C>>;
 
 impl<A, C> PaintMixerInterface<A, C> for PaintMixer<A, C>
@@ -347,10 +355,6 @@ impl<A, C> PaintMixerInterface<A, C> for PaintMixer<A, C>
             C: CharacteristicsInterface + 'static
 {
     type PaintMixerType = PaintMixer<A, C>;
-
-    fn pwo(&self) -> gtk::Box {
-        self.vbox.clone()
-    }
 
     fn create(series_paint_data_path: &Path) -> PaintMixer<A, C> {
         let mut view_attr_wheels:Vec<MixerHueAttrWheel<A, C>> = Vec::new();
@@ -449,7 +453,9 @@ impl<A, C> PaintMixerInterface<A, C> for PaintMixer<A, C>
         let paint_mixer_c = paint_mixer.clone();
         paint_mixer.new_mixture_btn.connect_clicked(
             move |_| {
-                if let Some((ref notes, ref colour)) = NewTargetColourDialog::<A>::create(None).get_new_target() {
+                let dialog = NewTargetColourDialog::<A>::create(None);
+                dialog.set_transient_for_from(&paint_mixer_c.pwo());
+                if let Some((ref notes, ref colour)) = dialog.get_new_target() {
                     paint_mixer_c.start_new_mixture(Some(&notes), Some(&colour))
                 }
             }

@@ -23,7 +23,7 @@ use std::str::FromStr;
 use pw_gix::colour::*;
 use pw_gix::colour::attributes::*;
 use pw_gix::gtkx::tree_view_column::*;
-pub use pw_gix::pwo_trait::*;
+pub use pw_gix::wrapper::*;
 
 use basic_paint::*;
 use basic_paint::editor::*;
@@ -50,7 +50,7 @@ pub struct ModelPaintCharacteristics {
 }
 
 impl CharacteristicsInterface for ModelPaintCharacteristics {
-    type Entry = Rc<ModelPaintCharacteristicsEntryCore>;
+    type Entry = ModelPaintCharacteristicsEntryCore;
 
     fn tv_row_len() -> usize {
         4
@@ -156,8 +156,8 @@ impl ModelPaintCharacteristicsEntryCore {
     }
 }
 
-impl CharacteristicsEntryInterface<ModelPaintCharacteristics> for Rc<ModelPaintCharacteristicsEntryCore> {
-    fn create() -> Self {
+impl CharacteristicsEntryInterface<ModelPaintCharacteristics> for ModelPaintCharacteristicsEntryCore {
+    fn create() -> Rc<ModelPaintCharacteristicsEntryCore> {
         let cei = Rc::new(
             ModelPaintCharacteristicsEntryCore {
                 grid: gtk::Grid::new(),
@@ -264,11 +264,13 @@ pub struct ModelPaintAttributes {
     value_cad: ValueCAD,
 }
 
-impl ColourAttributesInterface for ModelPaintAttributes {
+impl WidgetWrapper<gtk::Box> for ModelPaintAttributes {
     fn pwo(&self) -> gtk::Box {
         self.vbox.clone()
     }
+}
 
+impl ColourAttributesInterface for ModelPaintAttributes {
     fn create() -> Rc<ModelPaintAttributes> {
         let vbox = gtk::Box::new(gtk::Orientation::Vertical, 1);
         let hue_cad = HueCAD::create();

@@ -23,7 +23,7 @@ use gtk::prelude::*;
 use pw_gix::gtkx::list_store::*;
 use pw_gix::gtkx::tree_view_column::*;
 
-use struct_traits::{PackableWidgetObject, SimpleCreation};
+use struct_traits::SimpleCreation;
 
 use basic_paint::*;
 
@@ -52,7 +52,7 @@ pub struct CollnIdEntryData<CID>
     phantom_data: PhantomData<CID>,
 }
 
-impl<CID> PackableWidgetObject<gtk::Grid> for CollnIdEntryData<CID>
+impl<CID> WidgetWrapper<gtk::Grid> for CollnIdEntryData<CID>
     where   CID: CollnIdInterface
 {
     fn pwo(&self) -> gtk::Grid {
@@ -365,6 +365,16 @@ impl<A, C, CID> CollnPaintCollnViewCore<A, C, CID>
     }
 }
 
+impl<A, C, CID> WidgetWrapper<gtk::ScrolledWindow> for CollnPaintCollnViewCore<A, C, CID>
+    where   A: ColourAttributesInterface + 'static,
+            C: CharacteristicsInterface + 'static,
+            CID: CollnIdInterface,
+{
+    fn pwo(&self) -> gtk::ScrolledWindow {
+        self.scrolled_window.clone()
+    }
+}
+
 pub type CollnPaintCollnView<A, C, CID> = Rc<CollnPaintCollnViewCore<A, C, CID>>;
 
 pub trait CollnPaintCollnViewInterface<A, C, CID>
@@ -372,7 +382,6 @@ pub trait CollnPaintCollnViewInterface<A, C, CID>
             C: CharacteristicsInterface + 'static,
             CID: CollnIdInterface,
 {
-    fn pwo(&self) -> gtk::ScrolledWindow;
     fn create(colln: &CollnPaintColln<C, CID>) -> CollnPaintCollnView<A, C, CID>;
 }
 
@@ -381,10 +390,6 @@ impl<A, C, CID> CollnPaintCollnViewInterface<A, C, CID> for CollnPaintCollnView<
             C: CharacteristicsInterface + 'static,
             CID: CollnIdInterface,
 {
-    fn pwo(&self) -> gtk::ScrolledWindow {
-        self.scrolled_window.clone()
-    }
-
     fn create(colln: &CollnPaintColln<C, CID>) -> CollnPaintCollnView<A, C, CID> {
         let len = CollnPaint::<C, CID>::tv_row_len();
         let list_store = gtk::ListStore::new(&STANDARD_PAINT_ROW_SPEC[0..len]);

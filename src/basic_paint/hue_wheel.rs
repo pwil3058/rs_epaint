@@ -23,6 +23,7 @@ use gtk::prelude::*;
 
 use pw_gix::cairox::*;
 use pw_gix::colour::*;
+use pw_gix::wrapper::*;
 
 use basic_paint::*;
 use graticule::*;
@@ -83,22 +84,25 @@ pub struct BasicPaintHueAttrWheelCore<C>
     graticule: Graticule,
 }
 
+impl<C> WidgetWrapper<gtk::DrawingArea> for BasicPaintHueAttrWheelCore<C>
+    where   C: CharacteristicsInterface + 'static,
+{
+    fn pwo(&self) -> gtk::DrawingArea {
+        self.graticule.drawing_area()
+    }
+}
+
 pub type BasicPaintHueAttrWheel<C> = Rc<BasicPaintHueAttrWheelCore<C>>;
 
 pub trait BasicPaintHueAttrWheelInterface<C>
     where   C: CharacteristicsInterface + 'static,
 {
-    fn pwo(&self) -> gtk::DrawingArea;
     fn create(attr: ScalarAttribute) -> BasicPaintHueAttrWheel<C>;
 }
 
 impl<C> BasicPaintHueAttrWheelInterface<C> for BasicPaintHueAttrWheel<C>
     where   C: CharacteristicsInterface + 'static,
 {
-    fn pwo(&self) -> gtk::DrawingArea {
-        self.graticule.drawing_area()
-    }
-
     fn create(attr: ScalarAttribute) -> BasicPaintHueAttrWheel<C> {
         let wheel = Rc::new(
             BasicPaintHueAttrWheelCore::<C> {

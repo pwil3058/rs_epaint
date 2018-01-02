@@ -23,6 +23,7 @@ use gtk::prelude::*;
 
 use pw_gix::colour::*;
 use pw_gix::gtkx::coloured::*;
+use pw_gix::wrapper::*;
 
 use basic_paint::*;
 use colour_mix::*;
@@ -34,7 +35,6 @@ pub trait PaintPartsSpinButtonInterface<C>
 {
     type PaintPartsSpinButtonType;
 
-    fn pwo(&self) -> gtk::EventBox;
     fn create_with(paint: &Paint<C>, sensitive:bool) -> Self::PaintPartsSpinButtonType;
     fn get_parts(&self) -> u32;
     fn set_parts(&self, parts: u32);
@@ -66,16 +66,20 @@ impl<C> PartialEq for PaintPartsSpinButtonCore<C>
     }
 }
 
+impl<C> WidgetWrapper<gtk::EventBox> for PaintPartsSpinButtonCore<C>
+    where   C: CharacteristicsInterface + 'static
+{
+    fn pwo(&self) -> gtk::EventBox {
+        self.event_box.clone()
+    }
+}
+
 pub type PaintPartsSpinButton<C> = Rc<PaintPartsSpinButtonCore<C>>;
 
 impl<C> PaintPartsSpinButtonInterface<C> for PaintPartsSpinButton<C>
     where   C: CharacteristicsInterface + 'static
 {
     type PaintPartsSpinButtonType = PaintPartsSpinButton<C>;
-
-    fn pwo(&self) -> gtk::EventBox {
-        self.event_box.clone()
-    }
 
     fn create_with(paint: &Paint<C>, sensitive:bool) -> PaintPartsSpinButton<C> {
         let adj = gtk::Adjustment::new(0.0, 0.0, 999.0, 1.0, 10.0, 0.0);
@@ -194,7 +198,6 @@ impl<C> PaintPartsSpinButtonInterface<C> for PaintPartsSpinButton<C>
 pub trait PaintComponentsBoxInterface<C>
     where   C: CharacteristicsInterface
 {
-    fn pwo(&self) -> gtk::Box;
     fn create_with(n_cols: u32, sensitive:bool) -> PaintComponentsBox<C>;
     fn add_paint(&self, paint: &Paint<C>);
     fn add_series_paint(&self, paint: &SeriesPaint<C>);
@@ -210,6 +213,14 @@ pub struct PaintComponentsBoxCore<C: CharacteristicsInterface> {
     supress_change_notification: Cell<bool>,
     colour_changed_callbacks: RefCell<Vec<Box<Fn(Option<&Colour>)>>>,
     paint_removed_callbacks: RefCell<Vec<Box<Fn(&Paint<C>)>>>
+}
+
+impl<C> WidgetWrapper<gtk::Box> for PaintComponentsBoxCore<C>
+    where   C: CharacteristicsInterface + 'static
+{
+    fn pwo(&self) -> gtk::Box {
+        self.vbox.clone()
+    }
 }
 
 impl<C: CharacteristicsInterface + 'static> PaintComponentsBoxCore<C> {
@@ -362,10 +373,6 @@ pub type PaintComponentsBox<C> = Rc<PaintComponentsBoxCore<C>>;
 impl<C> PaintComponentsBoxInterface<C> for PaintComponentsBox<C>
     where   C: CharacteristicsInterface + 'static
 {
-    fn pwo(&self) -> gtk::Box {
-        self.vbox.clone()
-    }
-
     fn create_with(n_cols: u32, sensitive:bool) -> PaintComponentsBox<C> {
         let pcb_core = PaintComponentsBoxCore::<C> {
             vbox: gtk::Box::new(gtk::Orientation::Vertical, 1),

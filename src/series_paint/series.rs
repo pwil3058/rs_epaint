@@ -30,6 +30,7 @@ use gtk::prelude::*;
 use pw_gix::colour::*;
 use pw_gix::gtkx::list_store::*;
 use pw_gix::gtkx::tree_view_column::*;
+use pw_gix::wrapper::*;
 
 use basic_paint::*;
 use display::*;
@@ -266,13 +267,22 @@ impl<A, C> PaintSeriesViewCore<A, C>
     }
 }
 
+
+impl<A, C> WidgetWrapper<gtk::ScrolledWindow> for PaintSeriesViewCore<A, C>
+    where   A: ColourAttributesInterface + 'static,
+            C: CharacteristicsInterface + 'static,
+{
+    fn pwo(&self) -> gtk::ScrolledWindow {
+        self.scrolled_window.clone()
+    }
+}
+
 pub type PaintSeriesView<A, C> = Rc<PaintSeriesViewCore<A, C>>;
 
 pub trait PaintSeriesViewInterface<A, C>
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static,
 {
-    fn pwo(&self) -> gtk::ScrolledWindow;
     fn create(series: &PaintSeries<C>) -> PaintSeriesView<A, C>;
     fn connect_add_paint<F: 'static + Fn(&SeriesPaint<C>)>(&self, callback: F);
 }
@@ -281,10 +291,6 @@ impl<A, C> PaintSeriesViewInterface<A, C> for PaintSeriesView<A, C>
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static,
 {
-    fn pwo(&self) -> gtk::ScrolledWindow {
-        self.scrolled_window.clone()
-    }
-
     fn create(series: &PaintSeries<C>) -> PaintSeriesView<A, C> {
         let len = SeriesPaint::<C>::tv_row_len();
         let list_store = gtk::ListStore::new(&STANDARD_PAINT_ROW_SPEC[0..len]);
@@ -394,6 +400,7 @@ impl<A, C> PaintSeriesViewInterface<A, C> for PaintSeriesView<A, C>
                         None,
                         buttons
                     );
+                    dialog.set_transient_for_from(&mspl_c.pwo());
                     let mspl_c_c = mspl_c.clone();
                     dialog.connect_destroy(
                         move |id| { mspl_c_c.series_paint_dialogs.borrow_mut().remove(&id); }

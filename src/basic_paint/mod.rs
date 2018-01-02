@@ -30,6 +30,7 @@ use regex::*;
 use pw_gix::colour::*;
 use pw_gix::rgb_math::rgb::*;
 use pw_gix::rgb_math::hue::*;
+use pw_gix::wrapper::*;
 
 use error::*;
 
@@ -54,19 +55,18 @@ pub trait CharacteristicsInterface:
 }
 
 pub trait CharacteristicsEntryInterface<C: CharacteristicsInterface> {
-    fn create() -> Self;
+    fn create() -> Rc<Self>;
     fn pwo(&self) -> gtk::Grid;
     fn get_characteristics(&self) -> Option<C>;
     fn set_characteristics(&self, o_characteristics: Option<&C>);
     fn connect_changed<F: 'static + Fn()>(&self, callback: F);
 }
 
-pub trait ColourAttributesInterface {
+pub trait ColourAttributesInterface: WidgetWrapper<gtk::Box> {
     fn create() -> Rc<Self>;
     fn tv_columns() -> Vec<gtk::TreeViewColumn>;
     fn scalar_attributes() -> Vec<ScalarAttribute>;
 
-    fn pwo(&self) -> gtk::Box;
     fn set_colour(&self, colour: Option<&Colour>);
     fn set_target_colour(&self, target_colour: Option<&Colour>);
 }

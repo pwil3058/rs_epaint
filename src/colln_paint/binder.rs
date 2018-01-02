@@ -23,8 +23,8 @@ use gtk;
 use gtk::prelude::*;
 
 use pw_gix::colour::*;
-use pw_gix::dialogue::*;
 use pw_gix::gtkx::notebook::*;
+use pw_gix::wrapper::*;
 
 use basic_paint::*;
 use super::*;
@@ -41,7 +41,7 @@ pub struct CollnPaintCollnBinderCore<A, C, CID>
     paint_colln_files_data_path: PathBuf,
 }
 
-impl<A, C, CID> PackableWidgetObject<gtk::Notebook> for CollnPaintCollnBinderCore<A, C, CID>
+impl<A, C, CID> WidgetWrapper<gtk::Notebook> for CollnPaintCollnBinderCore<A, C, CID>
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static,
             CID: CollnIdInterface + 'static,
@@ -155,7 +155,7 @@ impl<A, C, CID> CollnPaintCollnBinderInterface<A, C, CID> for CollnPaintCollnBin
             } else {
                 let expln = format!("Error parsing \"{:?}\"\n", colln_file_path);
                 let msg = "Malformed Paint Series Text";
-                warn_user(parent_none(), msg, Some(expln.as_str()));
+                spm.warn_user(msg, Some(expln.as_str()));
             }
         };
         spm.notebook.show_all();
@@ -167,7 +167,7 @@ impl<A, C, CID> CollnPaintCollnBinderInterface<A, C, CID> for CollnPaintCollnBin
         let mut paint_collns = self.paint_collns.borrow_mut();
         if paint_collns.contains_key(&colln_spec.colln_id) {
             let expln = format!("{} ({}): already included in the tool box.\nSkipped.", colln_spec.colln_id.colln_name(), colln_spec.colln_id.colln_owner());
-            inform_user(parent_none(), "Duplicate Paint Series", Some(expln.as_str()));
+            self.inform_user("Duplicate Paint Series", Some(expln.as_str()));
             return;
         }
         let paint_colln = CollnPaintCollnWidget::<A, C, CID>::create(&colln_spec);

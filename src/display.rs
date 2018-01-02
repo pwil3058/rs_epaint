@@ -26,6 +26,7 @@ use pw_gix::gtkx::coloured::*;
 use pw_gix::gtkx::dialog::*;
 use pw_gix::gtkx::list_store::*;
 use pw_gix::gtkx::tree_view_column::*;
+use pw_gix::wrapper::*;
 
 use basic_paint::*;
 use paint::*;
@@ -66,6 +67,10 @@ impl<A, C> PaintDisplayDialogCore<A, C>
     where   C: CharacteristicsInterface + 'static,
             A: ColourAttributesInterface + 'static
 {
+    pub fn set_transient_for_from<W: gtk::WidgetExt>(&self, widget: &W) {
+        self.dialog.set_transient_for_from(widget)
+    }
+
     pub fn show(&self) {
         self.dialog.show()
     }
@@ -356,13 +361,21 @@ impl<A, C> PaintComponentListViewCore<A, C>
     }
 }
 
+impl<A, C> WidgetWrapper<gtk::ScrolledWindow> for PaintComponentListViewCore<A, C>
+    where   A: ColourAttributesInterface + 'static,
+            C: CharacteristicsInterface + 'static,
+{
+    fn pwo(&self) -> gtk::ScrolledWindow {
+        self.scrolled_window.clone()
+    }
+}
+
 pub type PaintComponentListView<A, C> = Rc<PaintComponentListViewCore<A, C>>;
 
 pub trait PaintComponentListViewInterface<A, C>
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static,
 {
-    fn pwo(&self) -> gtk::ScrolledWindow;
     fn create(
         components: &Rc<Vec<PaintComponent<C>>>,
         current_target: Option<&Colour>
@@ -373,10 +386,6 @@ impl<A, C> PaintComponentListViewInterface<A, C> for PaintComponentListView<A, C
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static,
 {
-    fn pwo(&self) -> gtk::ScrolledWindow {
-        self.scrolled_window.clone()
-    }
-
     fn create(
         components: &Rc<Vec<PaintComponent<C>>>,
         current_target: Option<&Colour>

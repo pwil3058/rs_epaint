@@ -103,6 +103,10 @@ pub struct TargetColourDisplayDialogCore<A>
 impl<A> TargetColourDisplayDialogCore<A>
     where   A: ColourAttributesInterface
 {
+    pub fn set_transient_for_from<W: gtk::WidgetExt>(&self, widget: &W) {
+        self.dialog.set_transient_for_from(widget)
+    }
+
     pub fn show(&self) {
         self.dialog.show()
     }
@@ -216,6 +220,10 @@ impl<A> NewTargetColourDialogInterface<A> for NewTargetColourDialog<A>
 impl <A> NewTargetColourDialogCore<A>
     where   A: ColourAttributesInterface
 {
+    pub fn set_transient_for_from<W: gtk::WidgetExt>(&self, widget: &W) {
+        self.dialog.set_transient_for_from(widget)
+    }
+
     pub fn get_new_target(&self) -> Option<(String, Colour)> {
         let ok: i32 = gtk::ResponseType::Accept.into();
         if self.dialog.run() == ok {

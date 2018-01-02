@@ -27,6 +27,7 @@ use pw_gix::colour::*;
 use pw_gix::gtkx::list_store::*;
 use pw_gix::gtkx::tree_view_column::*;
 use pw_gix::rgb_math::rgb::*;
+use pw_gix::wrapper::*;
 
 use basic_paint::*;
 use display::*;
@@ -257,13 +258,21 @@ impl<A, C> MixedPaintCollectionViewCore<A, C>
     }
 }
 
+impl<A, C> WidgetWrapper<gtk::ScrolledWindow> for MixedPaintCollectionViewCore<A, C>
+    where   A: ColourAttributesInterface + 'static,
+            C: CharacteristicsInterface + 'static,
+{
+    fn pwo(&self) -> gtk::ScrolledWindow {
+        self.scrolled_window.clone()
+    }
+}
+
 pub type MixedPaintCollectionView<A, C> = Rc<MixedPaintCollectionViewCore<A, C>>;
 
 pub trait MixedPaintCollectionViewInterface<A, C>
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static,
 {
-    fn pwo(&self) -> gtk::ScrolledWindow;
     fn create(collection: &MixedPaintCollection<C>) -> MixedPaintCollectionView<A, C>;
     fn connect_add_paint<F: 'static + Fn(&MixedPaint<C>)>(&self, callback: F);
 }
@@ -272,10 +281,6 @@ impl<A, C> MixedPaintCollectionViewInterface<A, C> for MixedPaintCollectionView<
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static,
 {
-    fn pwo(&self) -> gtk::ScrolledWindow {
-        self.scrolled_window.clone()
-    }
-
     fn create(collection: &MixedPaintCollection<C>) -> MixedPaintCollectionView<A, C> {
         let len = MixedPaint::<C>::tv_row_len();
         let list_store = gtk::ListStore::new(&MIXED_PAINT_ROW_SPEC[0..len]);
@@ -386,6 +391,7 @@ impl<A, C> MixedPaintCollectionViewInterface<A, C> for MixedPaintCollectionView<
                         None,
                         buttons
                     );
+                    dialog.set_transient_for_from(&mspl_c.pwo());
                     let mspl_c_c = mspl_c.clone();
                     dialog.connect_destroy(
                         move |id| { mspl_c_c.mixed_paint_dialogs.borrow_mut().remove(&id); }

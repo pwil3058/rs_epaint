@@ -23,6 +23,7 @@ use gtk::prelude::*;
 
 use pw_gix::cairox::*;
 use pw_gix::colour::*;
+use pw_gix::wrapper::*;
 
 use basic_paint::*;
 use display::*;
@@ -89,13 +90,21 @@ pub struct MixerHueAttrWheelCore<A, C>
     mixed_paint_dialogs: RefCell<HashMap<u32, PaintDisplayDialog<A, C>>>,
 }
 
+impl<A, C> WidgetWrapper<gtk::DrawingArea> for MixerHueAttrWheelCore<A, C>
+    where   C: CharacteristicsInterface + 'static,
+            A: ColourAttributesInterface + 'static
+{
+    fn pwo(&self) -> gtk::DrawingArea {
+        self.graticule.drawing_area()
+    }
+}
+
 pub type MixerHueAttrWheel<A, C> = Rc<MixerHueAttrWheelCore<A, C>>;
 
 pub trait MixerHueAttrWheelInterface<A, C>
     where   C: CharacteristicsInterface + 'static,
             A: ColourAttributesInterface + 'static
 {
-    fn pwo(&self) -> gtk::DrawingArea;
     fn create(attr: ScalarAttribute) -> MixerHueAttrWheel<A, C>;
 }
 
@@ -103,10 +112,6 @@ impl<A, C> MixerHueAttrWheelInterface<A, C> for MixerHueAttrWheel<A, C>
     where   C: CharacteristicsInterface + 'static,
             A: ColourAttributesInterface + 'static
 {
-    fn pwo(&self) -> gtk::DrawingArea {
-        self.graticule.drawing_area()
-    }
-
     fn create(attr: ScalarAttribute) -> MixerHueAttrWheel<A, C> {
         let menu = gtk::Menu::new();
         let paint_info_item = gtk::MenuItem::new_with_label("Information");
@@ -175,6 +180,7 @@ impl<A, C> MixerHueAttrWheelInterface<A, C> for MixerHueAttrWheel<A, C>
                                 callback:  Box::new(move || wheel_c_c.inform_add_series_paint(&paint_c))
                             };
                             let dialog = PaintDisplayDialog::<A, C>::series_create(&paint, target, None, vec![spec]);
+                            dialog.set_transient_for_from(&wheel_c.pwo());
                             let wheel_c_c = wheel_c.clone();
                             dialog.connect_destroy(
                                 move |id| { wheel_c_c.series_paint_dialogs.borrow_mut().remove(&id); }
@@ -196,6 +202,7 @@ impl<A, C> MixerHueAttrWheelInterface<A, C> for MixerHueAttrWheel<A, C>
                                 callback:  Box::new(move || wheel_c_c.inform_add_mixed_paint(&paint_c))
                             };
                             let dialog = PaintDisplayDialog::<A, C>::mixed_create(&paint, target, None, vec![spec]);
+                            dialog.set_transient_for_from(&wheel_c.pwo());
                             let wheel_c_c = wheel_c.clone();
                             dialog.connect_destroy(
                                 move |id| { wheel_c_c.mixed_paint_dialogs.borrow_mut().remove(&id); }
@@ -207,7 +214,9 @@ impl<A, C> MixerHueAttrWheelInterface<A, C> for MixerHueAttrWheel<A, C>
                         }
                     },
                     ChosenItem::TargetColour(ref colour) => {
-                        TargetColourDisplayDialog::<A>::create(&colour, None).show();
+                        let dialog = TargetColourDisplayDialog::<A>::create(&colour, None);
+                        dialog.set_transient_for_from(&wheel_c.pwo());
+                        dialog.show();
                     },
                     ChosenItem::None => panic!("File: {:?} Line: {:?} SHOULDN'T GET HERE", file!(), line!())
                 }

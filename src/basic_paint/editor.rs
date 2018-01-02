@@ -17,7 +17,7 @@ use std::rc::Rc;
 
 use pw_gix::dialogue::*;
 use pw_gix::gtkx::paned::RememberPosition;
-pub use pw_gix::pwo_trait::PackableWidgetObject;
+pub use pw_gix::wrapper::WidgetWrapper;
 
 use colln_paint::*;
 use struct_traits::SimpleCreation;
@@ -108,7 +108,7 @@ impl<A, C, CID> BasicPaintEditorCore<A, C, CID>
             self.set_edited_paint(Some(&paint));
         } else {
             let expln = format!("Paint with the name \"{}\" already exists in the collection.", basic_paint_spec.name);
-            warn_user(parent_none(), "Duplicate Paint Name!", Some(&expln));
+            self.warn_user("Duplicate Paint Name!", Some(&expln));
         }
     }
 
@@ -119,7 +119,7 @@ impl<A, C, CID> BasicPaintEditorCore<A, C, CID>
                 self.set_edited_paint(Some(&paint));
             } else {
                 let expln = format!("Paint with the name \"{}\" already exists in the collection.", basic_paint_spec.name);
-                warn_user(parent_none(), "Duplicate Paint Name!", Some(&expln));
+                self.warn_user("Duplicate Paint Name!", Some(&expln));
             }
         } else {
             panic!("File: {} Line: {}", file!(), line!())
@@ -139,7 +139,7 @@ impl<A, C, CID> BasicPaintEditorCore<A, C, CID>
     }
 }
 
-impl<A, C, CID> PackableWidgetObject<gtk::Paned> for BasicPaintEditorCore<A, C, CID>
+impl<A, C, CID> WidgetWrapper<gtk::Paned> for BasicPaintEditorCore<A, C, CID>
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static,
             CID: CollnIdInterface + 'static,

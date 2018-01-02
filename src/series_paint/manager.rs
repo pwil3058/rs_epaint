@@ -23,11 +23,10 @@ use gtk;
 use gtk::prelude::*;
 
 use pw_gix::colour::*;
-use pw_gix::dialogue::*;
 use pw_gix::gtkx::notebook::*;
 use pw_gix::gtkx::paned::*;
 use pw_gix::gtkx::window::*;
-pub use pw_gix::pwo_trait::*;
+pub use pw_gix::wrapper::*;
 
 use icons::series_paint_xpm::*;
 
@@ -51,7 +50,6 @@ pub trait PaintSelectorInterface<A, C>
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static,
 {
-    fn pwo(&self) -> gtk::Box;
     fn create(series: &PaintSeries<C>) -> PaintSelector<A, C>;
     fn connect_add_paint<F: 'static + Fn(&SeriesPaint<C>)>(&self, callback: F);
     fn set_target_colour(&self, ocolour: Option<&Colour>);
@@ -68,14 +66,19 @@ impl<A, C> PaintSelectorCore<A, C>
     }
 }
 
-impl<A, C> PaintSelectorInterface<A, C> for PaintSelector<A, C>
+impl<A, C> WidgetWrapper<gtk::Box> for PaintSelectorCore<A, C>
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static,
 {
     fn pwo(&self) -> gtk::Box {
         self.vbox.clone()
     }
+}
 
+impl<A, C> PaintSelectorInterface<A, C> for PaintSelector<A, C>
+    where   A: ColourAttributesInterface + 'static,
+            C: CharacteristicsInterface + 'static,
+{
     fn create(series: &PaintSeries<C>) -> PaintSelector<A, C> {
         let mut view_attr_wheels:Vec<SeriesPaintHueAttrWheel<A, C>> = Vec::new();
         for attr in A::scalar_attributes().iter() {
@@ -148,6 +151,15 @@ pub struct SeriesPaintManagerCore<A, C>
     add_paint_callbacks: RefCell<Vec<Box<Fn(&SeriesPaint<C>)>>>,
     paint_selectors: RefCell<HashMap<PaintSeriesIdentity, PaintSelector<A, C>>>,
     paint_series_files_data_path: PathBuf,
+}
+
+impl<A, C> WidgetWrapper<gtk::Notebook> for SeriesPaintManagerCore<A, C>
+    where   A: ColourAttributesInterface + 'static,
+            C: CharacteristicsInterface + 'static,
+{
+    fn pwo(&self) -> gtk::Notebook {
+        self.notebook.clone()
+    }
 }
 
 impl<A, C> SeriesPaintManagerCore<A, C>
@@ -263,7 +275,7 @@ impl<A, C> SeriesPaintManagerInterface<A, C> for SeriesPaintManager<A, C>
             } else {
                 let expln = format!("Error parsing \"{:?}\"\n", series_file_path);
                 let msg = "Malformed Paint Series Text";
-                warn_user(Some(&spm.window), msg, Some(expln.as_str()));
+                spm.warn_user(msg, Some(expln.as_str()));
             }
         };
         spm.notebook.show_all();
@@ -279,7 +291,7 @@ impl<A, C> SeriesPaintManagerInterface<A, C> for SeriesPaintManager<A, C>
         let mut selectors = self.paint_selectors.borrow_mut();
         if selectors.contains_key(&series.series_id()) {
             let expln = format!("{} ({}): already included in the tool box.\nSkipped.", series.series_id().series_name(), series.series_id().manufacturer());
-            inform_user(Some(&self.window), "Duplicate Paint Series", Some(expln.as_str()));
+            self.inform_user("Duplicate Paint Series", Some(expln.as_str()));
             return;
         }
         let paint_selector = PaintSelector::<A, C>::create(&series);

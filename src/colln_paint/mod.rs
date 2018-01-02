@@ -28,7 +28,7 @@ use gtk;
 use gtk::prelude::*;
 
 use pw_gix::colour::*;
-pub use pw_gix::pwo_trait::PackableWidgetObject;
+use pw_gix::wrapper::*;
 
 pub mod binder;
 pub mod collection;
@@ -70,7 +70,7 @@ pub struct CollnIdEntryData<CID>
     phantom_data: PhantomData<CID>,
 }
 
-impl<CID> PackableWidgetObject<gtk::Grid> for CollnIdEntryData<CID>
+impl<CID> WidgetWrapper<gtk::Grid> for CollnIdEntryData<CID>
     where   CID: CollnIdInterface
 {
     fn pwo(&self) -> gtk::Grid {

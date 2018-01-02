@@ -23,13 +23,14 @@ use gtk::prelude::*;
 
 use pw_gix::cairox::*;
 use pw_gix::colour::*;
-use pw_gix::dialogue::*;
 use pw_gix::gtkx::coloured::*;
 use pw_gix::gtkx::entry::*;
 use pw_gix::rgb_math::angle::*;
 use pw_gix::rgb_math::rgb::*;
 use pw_gix::rgb_math::rgb_manipulator::RGBManipulator;
 use pw_gix::sample;
+
+pub use pw_gix::wrapper::*;
 
 use basic_paint::*;
 
@@ -73,7 +74,6 @@ struct Sample {
 
 pub trait ColourEditorInterface {
     fn create(extra_buttons: &Vec<gtk::Button>) -> Self;
-    fn pwo(&self) -> gtk::Box;
 }
 
 pub struct ColourEditorCore<A>
@@ -101,6 +101,14 @@ pub struct ColourEditorCore<A>
     auto_match_btn: gtk::Button,
     auto_match_on_paste_btn: gtk::CheckButton,
     colour_changed_callbacks: RefCell<Vec<Box<Fn(&Colour)>>>,
+}
+
+impl<A> WidgetWrapper<gtk::Box> for ColourEditorCore<A>
+    where   A: ColourAttributesInterface + 'static,
+{
+    fn pwo(&self) -> gtk::Box {
+        self.vbox.clone()
+    }
 }
 
 impl<A> ColourEditorCore<A>
@@ -204,10 +212,6 @@ impl<A> ColourEditorCore<A>
 impl<A> ColourEditorInterface for  Rc<ColourEditorCore<A>>
     where   A: ColourAttributesInterface + 'static
 {
-    fn pwo(&self) -> gtk::Box {
-        self.vbox.clone()
-    }
-
     fn create(extra_buttons: &Vec<gtk::Button>) -> Self {
         let menu = gtk::Menu::new();
         let paste_sample_item = gtk::MenuItem::new_with_label("Paste Sample");
@@ -452,7 +456,7 @@ impl<A> ColourEditorInterface for  Rc<ColourEditorCore<A>>
                     };
                     ced_c.auto_match_btn.set_sensitive(true);
                 } else {
-                    inform_user::<gtk::Window>(None, "No image data on clipboard.", None);
+                    ced_c.inform_user("No image data on clipboard.", None);
                 }
             }
         );

@@ -24,7 +24,7 @@ use gtk::prelude::*;
 use pw_gix::dialogue::*;
 use pw_gix::gtkx::list_store::*;
 use pw_gix::gtkx::tree_view_column::*;
-pub use pw_gix::pwo_trait::*;
+use pw_gix::wrapper::*;
 
 use basic_paint::*;
 use struct_traits::*;
@@ -239,13 +239,21 @@ impl<A, C> BasicPaintFactoryViewCore<A, C>
     }
 }
 
+impl<A, C> WidgetWrapper<gtk::ScrolledWindow> for BasicPaintFactoryViewCore<A, C>
+    where   A: ColourAttributesInterface + 'static,
+            C: CharacteristicsInterface + 'static,
+{
+    fn pwo(&self) -> gtk::ScrolledWindow {
+        self.scrolled_window.clone()
+    }
+}
+
 pub type BasicPaintFactoryView<A, C> = Rc<BasicPaintFactoryViewCore<A, C>>;
 
 pub trait BasicPaintFactoryViewInterface<A, C>
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static,
 {
-    fn pwo(&self) -> gtk::ScrolledWindow;
     fn create() -> BasicPaintFactoryView<A, C>;
 }
 
@@ -253,10 +261,6 @@ impl<A, C> BasicPaintFactoryViewInterface<A, C> for BasicPaintFactoryView<A, C>
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static,
 {
-    fn pwo(&self) -> gtk::ScrolledWindow {
-        self.scrolled_window.clone()
-    }
-
     fn create() -> BasicPaintFactoryView<A, C> {
         let len = BasicPaint::<C>::tv_row_len();
         let list_store = gtk::ListStore::new(&STANDARD_PAINT_ROW_SPEC[0..len]);
@@ -459,7 +463,7 @@ impl<A, C> BasicPaintFactoryDisplayCore<A, C>
 // FACTORY DISPLAY
 pub type BasicPaintFactoryDisplay<A, C> = Rc<BasicPaintFactoryDisplayCore<A, C>>;
 
-impl<A, C> PackableWidgetObject<gtk::Notebook> for BasicPaintFactoryDisplayCore<A, C>
+impl<A, C> WidgetWrapper<gtk::Notebook> for BasicPaintFactoryDisplayCore<A, C>
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static,
 {
@@ -557,6 +561,7 @@ impl<A, C> SimpleCreation for BasicPaintFactoryDisplay<A, C>
                         callback:  Box::new(move || bpf_c_c.remove_paint_after_confirmation(&paint_c))
                     };
                     let dialog = BasicPaintDisplayDialog::<A, C>::create(&paint, None, vec![edit_btn_spec, remove_btn_spec]);
+                    dialog.set_transient_for_from(&bpf_c.pwo());
                     let bpf_c_c = bpf_c.clone();
                     dialog.connect_destroy(
                         move |id| { bpf_c_c.paint_dialogs.borrow_mut().remove(&id); }
