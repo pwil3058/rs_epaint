@@ -112,6 +112,11 @@ impl<C> BasicPaintHueAttrWheelInterface<C> for BasicPaintHueAttrWheel<C>
             }
         );
         let wheel_c = wheel.clone();
+        wheel.paints.connect_changed(
+            move || wheel_c.graticule.queue_draw()
+        );
+
+        let wheel_c = wheel.clone();
         wheel.graticule.drawing_area().connect_query_tooltip(
             move |_, x, y, _, tooltip| {
                 // TODO: find out why tooltip.set_tip_area() nobbles tooltips
@@ -127,6 +132,7 @@ impl<C> BasicPaintHueAttrWheelInterface<C> for BasicPaintHueAttrWheel<C>
                 }
              }
         );
+
         let wheel_c = wheel.clone();
         wheel.graticule.connect_draw(
             move |graticule, cairo_context| {

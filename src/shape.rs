@@ -125,7 +125,8 @@ pub struct ColouredItemSpapeList<CI, PS>
 {
     attr: ScalarAttribute,
     shapes: RefCell<Vec<PS>>,
-    pc: PhantomData<CI>
+    changed_callbacks: RefCell<Vec<Box<Fn()>>>,
+    pc: PhantomData<CI>,
 }
 
 impl<CI, PS> ColouredItemSpapeList<CI, PS>
@@ -136,6 +137,7 @@ impl<CI, PS> ColouredItemSpapeList<CI, PS>
         ColouredItemSpapeList::<CI, PS> {
             attr: attr,
             shapes: RefCell::new(Vec::new()),
+            changed_callbacks: RefCell::new(Vec::new()),
             pc: PhantomData
         }
     }
@@ -163,6 +165,7 @@ impl<CI, PS> ColouredItemSpapeList<CI, PS>
         if let Err(index) = self.find_coloured_item(coloured_item) {
             let shape = PS::new(coloured_item, self.attr);
             self.shapes.borrow_mut().insert(index, shape);
+            self.inform_changed();
         } else {
             // we already contain this paint so quietly ignore
         }
@@ -172,6 +175,7 @@ impl<CI, PS> ColouredItemSpapeList<CI, PS>
         match self.find_coloured_item(coloured_item) {
             Ok(index) => {
                 self.shapes.borrow_mut().remove(index);
+                self.inform_changed();
             },
             Err(_) => panic!("File: {:?} Line: {:?} not found: {:?}", file!(), line!(), coloured_item)
         }
@@ -206,6 +210,16 @@ impl<CI, PS> ColouredItemSpapeList<CI, PS>
                 if r < range { range = r;  index = *i; }
             }
             Some((self.shapes.borrow()[index].coloured_item(), range))
+        }
+    }
+
+    pub fn connect_changed<F: 'static + Fn()>(&self, callback: F) {
+        self.changed_callbacks.borrow_mut().push(Box::new(callback))
+    }
+
+    pub fn inform_changed(&self) {
+        for callback in self.changed_callbacks.borrow().iter() {
+            callback();
         }
     }
 }

@@ -135,6 +135,10 @@ impl GraticuleCore {
         }
     }
 
+    pub fn queue_draw(&self) {
+        self.drawing_area.queue_draw()
+    }
+
     pub fn connect_draw<F: 'static + Fn(&GraticuleCore, &cairo::Context)>(&self, callback: F) {
         self.draw_callbacks.borrow_mut().push(Box::new(callback))
     }
@@ -144,7 +148,8 @@ impl GraticuleCore {
             *self.current_target.borrow_mut() = Some(CurrentTargetShape::create(&colour, self.attr));
         } else {
             *self.current_target.borrow_mut() = None;
-        }
+        };
+        self.queue_draw()
     }
 
     pub fn current_target_colour(&self) -> Option<Colour> {
