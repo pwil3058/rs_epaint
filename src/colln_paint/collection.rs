@@ -207,14 +207,6 @@ impl<A, C, CID> CollnPaintCollnViewInterface<A, C, CID> for CollnPaintCollnView<
         view.set_headers_visible(true);
         view.get_selection().set_mode(gtk::SelectionMode::None);
 
-        let menu = gtk::Menu::new();
-        let paint_info_item = gtk::MenuItem::new_with_label("Information");
-        menu.append(&paint_info_item.clone());
-        let add_paint_item = gtk::MenuItem::new_with_label("Add to Mixer");
-        add_paint_item.set_visible(false);
-        menu.append(&add_paint_item.clone());
-        menu.show_all();
-
         let mspl = Rc::new(
             CollnPaintCollnViewCore::<A, C, CID> {
                 scrolled_window: gtk::ScrolledWindow::new(None, None),
