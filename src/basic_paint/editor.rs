@@ -15,7 +15,6 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use pw_gix::dialogue::*;
 use pw_gix::gtkx::paned::RememberPosition;
 pub use pw_gix::wrapper::WidgetWrapper;
 
@@ -89,13 +88,13 @@ impl<A, C, CID> BasicPaintEditorCore<A, C, CID>
             EntryStatus::EditingReady | EntryStatus::EditingNotReady => {
                 if let Some(ref edited_paint) = *self.edited_paint.borrow() {
                     let expln = format!("Unsaved changes to \"{}\" will be lost", edited_paint.name());
-                    ask_confirm_action(parent_none(), &"Confirm reset?", Some(&expln))
+                    self.ask_confirm_action(&"Confirm reset?", Some(&expln))
                 } else {
                     panic!("File: {} Line: {}", file!(), line!())
                 }
             },
             EntryStatus::CreatingReady| EntryStatus::CreatingNotReadyNamed => {
-                ask_confirm_action(parent_none(), &"Confirm reset?", Some(&"Unsaved changes to new will be lost"))
+                self.ask_confirm_action(&"Confirm reset?", Some(&"Unsaved changes to new will be lost"))
             },
             EntryStatus::CreatingNotReadyUnnamed => {
                 true

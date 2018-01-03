@@ -21,7 +21,6 @@ use glib::signal::SignalHandlerId;
 use gtk;
 use gtk::prelude::*;
 
-use pw_gix::dialogue::*;
 use pw_gix::gtkx::list_store::*;
 use pw_gix::gtkx::menu::*;
 use pw_gix::gtkx::tree_view_column::*;
@@ -380,7 +379,7 @@ impl<A, C> BasicPaintFactoryDisplayCore<A, C>
 
     fn remove_paint_after_confirmation(&self, paint: &BasicPaint<C>) {
         let question = format!("Confirm remove {}?", paint.name());
-        if ask_confirm_action(parent_none(), &question, None) {
+        if self.ask_confirm_action(&question, None) {
             self.remove_paint(paint)
         }
     }
