@@ -23,6 +23,7 @@ use gtk::prelude::*;
 
 use pw_gix::dialogue::*;
 use pw_gix::gtkx::list_store::*;
+use pw_gix::gtkx::menu::*;
 use pw_gix::gtkx::tree_view_column::*;
 use pw_gix::wrapper::*;
 
@@ -305,57 +306,6 @@ impl<A, C> BasicPaintFactoryViewInterface<A, C> for BasicPaintFactoryView<A, C>
     }
 }
 
-// FACTORY POPUP
-struct FactoryPopup {
-    menu: gtk::Menu,
-    show_paint_info_mi: gtk::MenuItem,
-    edit_paint_mi: gtk::MenuItem,
-    remove_paint_mi: gtk::MenuItem,
-}
-
-impl FactoryPopup {
-    fn new() -> FactoryPopup {
-        let fp = FactoryPopup {
-            menu: gtk::Menu::new(),
-            show_paint_info_mi: gtk::MenuItem::new_with_label("Paint Information"),
-            edit_paint_mi: gtk::MenuItem::new_with_label("Edit Paint"),
-            remove_paint_mi: gtk::MenuItem::new_with_label("Remove Paint"),
-        };
-        fp.menu.append(&fp.edit_paint_mi.clone());
-        fp.menu.append(&fp.show_paint_info_mi.clone());
-        fp.menu.append(&fp.remove_paint_mi.clone());
-        fp.menu.show_all();
-
-        fp.show_paint_info_mi.set_tooltip_text("Display this paint's information");
-        fp.edit_paint_mi.set_tooltip_text("Select this paint for editing");
-        fp.remove_paint_mi.set_tooltip_text("Remove this paint from the collection");
-
-        fp
-    }
-
-    fn connect_show_paint_info<F: Fn(&gtk::MenuItem) + 'static>(&self, f: F) {
-        self.show_paint_info_mi.connect_activate(f);
-    }
-
-    fn connect_edit_paint<F: Fn(&gtk::MenuItem) + 'static>(&self, f: F) {
-        self.edit_paint_mi.connect_activate(f);
-    }
-
-    fn connect_remove_paint<F: Fn(&gtk::MenuItem) + 'static>(&self, f: F) {
-        self.remove_paint_mi.connect_activate(f);
-    }
-
-    fn set_sensitivities(&self, edit_sensitivity: bool, other_sensitivity: bool) {
-        self.edit_paint_mi.set_sensitive(edit_sensitivity);
-        self.show_paint_info_mi.set_sensitive(other_sensitivity);
-        self.remove_paint_mi.set_sensitive(other_sensitivity);
-    }
-
-    fn popup_at_event(&self, event: &gdk::EventButton) {
-        self.menu.popup_easy(event.get_button(), event.get_time());
-    }
-}
-
 // FACTORY DISPLAY CORE
 pub struct BasicPaintFactoryDisplayCore<A, C>
     where   A: ColourAttributesInterface + 'static,
@@ -365,7 +315,7 @@ pub struct BasicPaintFactoryDisplayCore<A, C>
     paint_factory_view: BasicPaintFactoryView<A, C>,
     hue_attr_wheels: Vec<BasicPaintHueAttrWheel<C>>,
     chosen_paint: RefCell<Option<BasicPaint<C>>>,
-    popup_menu: FactoryPopup,
+    popup_menu: PopupMenu,
     initiate_edit_ok: Cell<bool>,
     paint_dialogs: RefCell<HashMap<u32, BasicPaintDisplayDialog<A, C>>>,
     paint_removed_callbacks: RefCell<Vec<Box<Fn(&BasicPaint<C>)>>>,
@@ -495,7 +445,7 @@ impl<A, C> SimpleCreation for BasicPaintFactoryDisplay<A, C>
                 paint_factory_view: paint_factory_view,
                 hue_attr_wheels: hue_attr_wheels,
                 chosen_paint: RefCell::new(None),
-                popup_menu: FactoryPopup::new(),
+                popup_menu: PopupMenu::new(&vec![]),
                 initiate_edit_ok: Cell::new(false),
                 paint_dialogs: RefCell::new(HashMap::new()),
                 paint_removed_callbacks: RefCell::new(Vec::new()),
@@ -504,46 +454,24 @@ impl<A, C> SimpleCreation for BasicPaintFactoryDisplay<A, C>
         );
 
         let bpf_c = bpf.clone();
-        bpf.paint_factory_view.connect_button_press_event(
-            move |_, event| {
-                if event.get_button() == 3 {
-                    if let Some(paint) = bpf_c.paint_factory_view.get_paint_at(event.get_position()) {
-                        bpf_c.popup_menu.set_sensitivities(bpf_c.initiate_edit_ok.get(), true);
-                        *bpf_c.chosen_paint.borrow_mut() = Some(paint);
-                    } else {
-                        bpf_c.popup_menu.set_sensitivities(false, false);
-                        *bpf_c.chosen_paint.borrow_mut() = None;
-                    };
-                    bpf_c.popup_menu.popup_at_event(event);
-                    return Inhibit(true)
-                };
-                Inhibit(false)
+        bpf.popup_menu.append_item(
+            "edit",
+            "Edit Paint",
+            "Select this paint for editing"
+        ).connect_activate(
+            move |_| {
+                if let Some(ref paint) = *bpf_c.chosen_paint.borrow() {
+                    bpf_c.inform_edit_paint(paint)
+                }
             }
         );
 
-        for wheel in bpf.hue_attr_wheels.iter() {
-            let bpf_c = bpf.clone();
-            let wheel_c = wheel.clone();
-            wheel.connect_button_press_event(
-                move |_, event| {
-                    if event.get_button() == 3 {
-                        if let Some(paint) = wheel_c.get_paint_at(event.get_position()) {
-                            bpf_c.popup_menu.set_sensitivities(bpf_c.initiate_edit_ok.get(), true);
-                            *bpf_c.chosen_paint.borrow_mut() = Some(paint);
-                        } else {
-                            bpf_c.popup_menu.set_sensitivities(false, false);
-                            *bpf_c.chosen_paint.borrow_mut() = None;
-                        };
-                        bpf_c.popup_menu.popup_at_event(event);
-                        return Inhibit(true)
-                    };
-                    Inhibit(false)
-                }
-            );
-        }
-
         let bpf_c = bpf.clone();
-        bpf.popup_menu.connect_show_paint_info(
+        bpf.popup_menu.append_item(
+            "info",
+            "Paint Information",
+            "Display this paint's information"
+        ).connect_activate(
             move |_| {
                 if let Some(ref paint) = *bpf_c.chosen_paint.borrow() {
                     let bpf_c_c = bpf_c.clone();
@@ -573,22 +501,58 @@ impl<A, C> SimpleCreation for BasicPaintFactoryDisplay<A, C>
         );
 
         let bpf_c = bpf.clone();
-        bpf.popup_menu.connect_edit_paint(
-            move |_| {
-                if let Some(ref paint) = *bpf_c.chosen_paint.borrow() {
-                    bpf_c.inform_edit_paint(paint)
-                }
-            }
-        );
-
-        let bpf_c = bpf.clone();
-        bpf.popup_menu.connect_remove_paint(
+        bpf.popup_menu.append_item(
+            "remove",
+            "Remove Paint",
+            "Remove this paint from the collection"
+        ).connect_activate(
             move |_| {
                 if let Some(ref paint) = *bpf_c.chosen_paint.borrow() {
                     bpf_c.remove_paint_after_confirmation(paint)
                 }
             }
         );
+
+        let bpf_c = bpf.clone();
+        bpf.paint_factory_view.connect_button_press_event(
+            move |_, event| {
+                if event.get_button() == 3 {
+                    if let Some(paint) = bpf_c.paint_factory_view.get_paint_at(event.get_position()) {
+                        bpf_c.popup_menu.set_sensitivities(bpf_c.initiate_edit_ok.get(), &["edit"]);
+                        bpf_c.popup_menu.set_sensitivities(true, &["info", "remove"]);
+                        *bpf_c.chosen_paint.borrow_mut() = Some(paint);
+                    } else {
+                        bpf_c.popup_menu.set_sensitivities(false, &["edit", "info", "remove"]);
+                        *bpf_c.chosen_paint.borrow_mut() = None;
+                    };
+                    bpf_c.popup_menu.popup_at_event(event);
+                    return Inhibit(true)
+                };
+                Inhibit(false)
+            }
+        );
+
+        for wheel in bpf.hue_attr_wheels.iter() {
+            let bpf_c = bpf.clone();
+            let wheel_c = wheel.clone();
+            wheel.connect_button_press_event(
+                move |_, event| {
+                    if event.get_button() == 3 {
+                        if let Some(paint) = wheel_c.get_paint_at(event.get_position()) {
+                        bpf_c.popup_menu.set_sensitivities(bpf_c.initiate_edit_ok.get(), &["edit"]);
+                        bpf_c.popup_menu.set_sensitivities(true, &["info", "remove"]);
+                            *bpf_c.chosen_paint.borrow_mut() = Some(paint);
+                        } else {
+                        bpf_c.popup_menu.set_sensitivities(false, &["edit", "info", "remove"]);
+                            *bpf_c.chosen_paint.borrow_mut() = None;
+                        };
+                        bpf_c.popup_menu.popup_at_event(event);
+                        return Inhibit(true)
+                    };
+                    Inhibit(false)
+                }
+            );
+        }
 
         bpf
     }
