@@ -53,7 +53,7 @@ pub struct PaintPartsSpinButtonCore<C: CharacteristicsInterface> {
     event_box: gtk::EventBox,
     entry: gtk::SpinButton,
     label: gtk::Label,
-    popup_menu: PopupMenu,
+    popup_menu: WrappedMenu,
     paint: Paint<C>,
 // TODO: implement info dialog for PaintPartsSpinButton
 //    dialog: RefCell<Option<PaintDisplayDialog::<A, C>>>,
@@ -94,7 +94,7 @@ impl<C> PaintPartsSpinButtonInterface<C> for PaintPartsSpinButton<C>
                 event_box: gtk::EventBox::new(),
                 entry: gtk::SpinButton::new(Some(&adj), 0.0, 0),
                 label: gtk::Label::new(Some(label_text.as_str())),
-                popup_menu: PopupMenu::new(&vec![]),
+                popup_menu: WrappedMenu::new(&vec![]),
                 paint: paint.clone(),
                 parts_changed_callbacks: parts_changed_callbacks,
                 remove_me_callbacks: remove_me_callbacks

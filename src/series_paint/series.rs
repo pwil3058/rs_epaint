@@ -216,7 +216,7 @@ pub struct PaintSeriesViewCore<A, C>
     scrolled_window: gtk::ScrolledWindow,
     list_store: gtk::ListStore,
     view: gtk::TreeView,
-    popup_menu: PopupMenu,
+    popup_menu: WrappedMenu,
     series: PaintSeries<C>,
     chosen_paint: RefCell<Option<SeriesPaint<C>>>,
     current_target: RefCell<Option<Colour>>,
@@ -304,7 +304,7 @@ impl<A, C> PaintSeriesViewInterface<A, C> for PaintSeriesView<A, C>
             PaintSeriesViewCore::<A, C> {
                 scrolled_window: gtk::ScrolledWindow::new(None, None),
                 list_store: list_store,
-                popup_menu: PopupMenu::new(&vec![]),
+                popup_menu: WrappedMenu::new(&vec![]),
                 series: series.clone(),
                 view: view,
                 chosen_paint: RefCell::new(None),

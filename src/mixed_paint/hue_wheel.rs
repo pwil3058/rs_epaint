@@ -77,7 +77,7 @@ pub struct MixerHueAttrWheelCore<A, C>
     where   C: CharacteristicsInterface + 'static,
             A: ColourAttributesInterface + 'static
 {
-    popup_menu: PopupMenu,
+    popup_menu: WrappedMenu,
     series_paints: SeriesPaintShapeList<C>,
     mixed_paints: MixedPaintShapeList<C>,
     target_colours: TargetColourShapeList,
@@ -114,7 +114,7 @@ impl<A, C> MixerHueAttrWheelInterface<A, C> for MixerHueAttrWheel<A, C>
     fn create(attr: ScalarAttribute) -> MixerHueAttrWheel<A, C> {
         let wheel = Rc::new(
             MixerHueAttrWheelCore::<A, C> {
-                popup_menu: PopupMenu::new(&vec![]),
+                popup_menu: WrappedMenu::new(&vec![]),
                 series_paints: SeriesPaintShapeList::<C>::new(attr),
                 mixed_paints: MixedPaintShapeList::<C>::new(attr),
                 target_colours: TargetColourShapeList::new(attr),

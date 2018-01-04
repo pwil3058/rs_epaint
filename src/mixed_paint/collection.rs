@@ -180,7 +180,7 @@ pub struct MixedPaintCollectionViewCore<A, C>
     scrolled_window: gtk::ScrolledWindow,
     list_store: gtk::ListStore,
     view: gtk::TreeView,
-    popup_menu: PopupMenu,
+    popup_menu: WrappedMenu,
     collection: MixedPaintCollection<C>,
     chosen_paint: RefCell<Option<MixedPaint<C>>>,
     current_target: RefCell<Option<Colour>>,
@@ -294,7 +294,7 @@ impl<A, C> MixedPaintCollectionViewInterface<A, C> for MixedPaintCollectionView<
             MixedPaintCollectionViewCore::<A, C> {
                 scrolled_window: gtk::ScrolledWindow::new(None, None),
                 list_store: list_store,
-                popup_menu: PopupMenu::new(&vec![]),
+                popup_menu: WrappedMenu::new(&vec![]),
                 collection: collection.clone(),
                 view: view,
                 chosen_paint: RefCell::new(None),

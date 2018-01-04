@@ -36,7 +36,7 @@ pub struct SeriesPaintHueAttrWheelCore<A, C>
     where   C: CharacteristicsInterface + 'static,
             A: ColourAttributesInterface + 'static
 {
-    popup_menu: PopupMenu,
+    popup_menu: WrappedMenu,
     paints: SeriesPaintShapeList<C>,
     chosen_item: RefCell<Option<SeriesPaint<C>>>,
     graticule: Graticule,
@@ -67,7 +67,7 @@ impl<A, C> SeriesPaintHueAttrWheelInterface<A, C> for SeriesPaintHueAttrWheel<A,
             A: ColourAttributesInterface + 'static
 {
     fn create(attr: ScalarAttribute) -> SeriesPaintHueAttrWheel<A, C> {
-        //let popup_menu = PopupMenu::new();
+        //let popup_menu = WrappedMenu::new();
         //let paint_info_item = gtk::MenuItem::new_with_label("Information");
         //popup_menu.append(&paint_info_item.clone());
         //let add_paint_item = gtk::MenuItem::new_with_label("Add to Mixer");
@@ -76,7 +76,7 @@ impl<A, C> SeriesPaintHueAttrWheelInterface<A, C> for SeriesPaintHueAttrWheel<A,
         //popup_menu.show_all();
         let wheel = Rc::new(
             SeriesPaintHueAttrWheelCore::<A, C> {
-                popup_menu: PopupMenu::new(&vec![]),
+                popup_menu: WrappedMenu::new(&vec![]),
                 paints: SeriesPaintShapeList::<C>::new(attr),
                 graticule: Graticule::create(attr),
                 chosen_item: RefCell::new(None),

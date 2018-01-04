@@ -82,7 +82,7 @@ pub struct PaintHueAttrWheelCore<A, C>
     where   C: CharacteristicsInterface + 'static,
             A: ColourAttributesInterface + 'static
 {
-    popup_menu: PopupMenu,
+    popup_menu: WrappedMenu,
     paints: PaintShapeList<C>,
     target_colours: TargetColourShapeList,
     chosen_item: RefCell<ChosenItem<C>>,
@@ -121,7 +121,7 @@ impl<A, C> PaintHueAttrWheelInterface<A, C> for PaintHueAttrWheel<A, C>
         let series_paint_dialogs: RefCell<HashMap<u32, PaintDisplayDialog<A, C>>> = RefCell::new(HashMap::new());
         let wheel = Rc::new(
             PaintHueAttrWheelCore::<A, C> {
-                popup_menu: PopupMenu::new(&vec![]),
+                popup_menu: WrappedMenu::new(&vec![]),
                 paints: paints,
                 target_colours: target_colours,
                 graticule: graticule,
