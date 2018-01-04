@@ -24,6 +24,7 @@ use gtk::prelude::*;
 
 use pw_gix::cairox::*;
 use pw_gix::gtkx::list_store::*;
+use pw_gix::gtkx::menu::*;
 use pw_gix::gtkx::paned::*;
 use pw_gix::gtkx::tree_view_column::*;
 use pw_gix::rgb_math::rgb::*;
@@ -379,48 +380,6 @@ impl<C, CID> CollnPaintHueAttrWheelCore<C, CID>
     }
 }
 
-// COLLN POPUP
-struct CollnPopup {
-    menu: gtk::Menu,
-    show_paint_info_mi: gtk::MenuItem,
-    select_paint_mi: gtk::MenuItem,
-}
-
-impl CollnPopup {
-    fn new(select_label: &str, select_tooltip_text: &str) -> CollnPopup {
-        let fp = CollnPopup {
-            menu: gtk::Menu::new(),
-            show_paint_info_mi: gtk::MenuItem::new_with_label("Paint Information"),
-            select_paint_mi: gtk::MenuItem::new_with_label(select_label),
-        };
-        fp.menu.append(&fp.select_paint_mi.clone());
-        fp.menu.append(&fp.show_paint_info_mi.clone());
-        fp.menu.show_all();
-
-        fp.show_paint_info_mi.set_tooltip_text("Display this paint's information");
-        fp.select_paint_mi.set_tooltip_text(select_tooltip_text);
-
-        fp
-    }
-
-    fn connect_show_paint_info<F: Fn(&gtk::MenuItem) + 'static>(&self, f: F) {
-        self.show_paint_info_mi.connect_activate(f);
-    }
-
-    fn connect_select_paint<F: Fn(&gtk::MenuItem) + 'static>(&self, f: F) {
-        self.select_paint_mi.connect_activate(f);
-    }
-
-    fn set_sensitivities(&self, select_sensitivity: bool, other_sensitivity: bool) {
-        self.select_paint_mi.set_sensitive(select_sensitivity);
-        self.show_paint_info_mi.set_sensitive(other_sensitivity);
-    }
-
-    fn popup_at_event(&self, event: &gdk::EventButton) {
-        self.menu.popup_easy(event.get_button(), event.get_time());
-    }
-}
-
 // WIDGET
 pub struct CollnPaintCollnWidgetCore<A, C, CID>
     where   A: ColourAttributesInterface + 'static,
@@ -430,7 +389,7 @@ pub struct CollnPaintCollnWidgetCore<A, C, CID>
     vbox: gtk::Box,
     hue_attr_wheels: Vec<CollnPaintHueAttrWheel<C, CID>>,
     paint_colln_view: CollnPaintCollnView<A, C, CID>,
-    popup_menu: CollnPopup,
+    popup_menu: PopupMenu,
     paint_dialogs: RefCell<HashMap<u32, CollnPaintDisplayDialog<A, C, CID>>>,
     initiate_select_ok: Cell<bool>,
     chosen_paint: RefCell<Option<CollnPaint<C, CID>>>,
@@ -509,7 +468,7 @@ impl<A, C, CID> CollnPaintCollnWidgetInterface<A, C, CID> for CollnPaintCollnWid
                 hue_attr_wheels: view_attr_wheels,
                 paint_colln_view: CollnPaintCollnView::<A, C, CID>::create(&paint_colln),
                 paint_dialogs: RefCell::new(HashMap::new()),
-                popup_menu: CollnPopup::new(&CID::paint_select_label(), &CID::paint_select_tooltip_text()),
+                popup_menu: PopupMenu::new(&vec![]),
                 initiate_select_ok: Cell::new(false),
                 chosen_paint: RefCell::new(None),
                 current_target: RefCell::new(None),
@@ -535,25 +494,11 @@ impl<A, C, CID> CollnPaintCollnWidgetInterface<A, C, CID> for CollnPaintCollnWid
         cpcw.vbox.pack_start(&hpaned, true, true, 0);
 
         let cpcw_c = cpcw.clone();
-        cpcw.paint_colln_view.connect_button_press_event(
-            move |_, event| {
-                if event.get_button() == 3 {
-                    if let Some(paint) = cpcw_c.paint_colln_view.get_paint_at(event.get_position()) {
-                        cpcw_c.popup_menu.set_sensitivities(cpcw_c.initiate_select_ok.get(), true);
-                        *cpcw_c.chosen_paint.borrow_mut() = Some(paint);
-                    } else {
-                        cpcw_c.popup_menu.set_sensitivities(false, false);
-                        *cpcw_c.chosen_paint.borrow_mut() = None;
-                    };
-                    cpcw_c.popup_menu.popup_at_event(event);
-                    return Inhibit(true)
-                };
-                Inhibit(false)
-            }
-        );
-
-        let cpcw_c = cpcw.clone();
-        cpcw.popup_menu.connect_show_paint_info(
+        cpcw.popup_menu.append_item(
+            "info",
+            "Paint Information",
+            "Display this paint's information",
+        ).connect_activate(
             move |_| {
                 if let Some(ref paint) = *cpcw_c.chosen_paint.borrow() {
                     let cpcw_c_c = cpcw_c.clone();
@@ -585,11 +530,34 @@ impl<A, C, CID> CollnPaintCollnWidgetInterface<A, C, CID> for CollnPaintCollnWid
         );
 
         let cpcw_c = cpcw.clone();
-        cpcw.popup_menu.connect_select_paint(
+        cpcw.popup_menu.append_item(
+            "select",
+            &CID::paint_select_label(),
+            &CID::paint_select_tooltip_text(),
+        ).connect_activate(
             move |_| {
                 if let Some(ref paint) = *cpcw_c.chosen_paint.borrow() {
                     cpcw_c.inform_paint_selected(paint)
                 }
+            }
+        );
+
+        let cpcw_c = cpcw.clone();
+        cpcw.paint_colln_view.connect_button_press_event(
+            move |_, event| {
+                if event.get_button() == 3 {
+                    if let Some(paint) = cpcw_c.paint_colln_view.get_paint_at(event.get_position()) {
+                        cpcw_c.popup_menu.set_sensitivities(cpcw_c.initiate_select_ok.get(), &["select"]);
+                        cpcw_c.popup_menu.set_sensitivities(true, &["info"]);
+                        *cpcw_c.chosen_paint.borrow_mut() = Some(paint);
+                    } else {
+                        cpcw_c.popup_menu.set_sensitivities(false, &["info", "select"]);
+                        *cpcw_c.chosen_paint.borrow_mut() = None;
+                    };
+                    cpcw_c.popup_menu.popup_at_event(event);
+                    return Inhibit(true)
+                };
+                Inhibit(false)
             }
         );
 

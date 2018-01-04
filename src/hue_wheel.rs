@@ -22,6 +22,7 @@ use gtk::prelude::*;
 
 use pw_gix::cairox::*;
 use pw_gix::colour::*;
+use pw_gix::gtkx::menu::*;
 use pw_gix::wrapper::*;
 
 use basic_paint::*;
@@ -81,9 +82,7 @@ pub struct PaintHueAttrWheelCore<A, C>
     where   C: CharacteristicsInterface + 'static,
             A: ColourAttributesInterface + 'static
 {
-    menu: gtk::Menu,
-    paint_info_item: gtk::MenuItem,
-    add_paint_item: gtk::MenuItem,
+    popup_menu: PopupMenu,
     paints: PaintShapeList<C>,
     target_colours: TargetColourShapeList,
     chosen_item: RefCell<ChosenItem<C>>,
@@ -115,13 +114,6 @@ impl<A, C> PaintHueAttrWheelInterface<A, C> for PaintHueAttrWheel<A, C>
             A: ColourAttributesInterface + 'static
 {
     fn create(attr: ScalarAttribute) -> PaintHueAttrWheel<A, C> {
-        let menu = gtk::Menu::new();
-        let paint_info_item = gtk::MenuItem::new_with_label("Information");
-        menu.append(&paint_info_item.clone());
-        let add_paint_item = gtk::MenuItem::new_with_label("Add to Mixer");
-        add_paint_item.set_visible(false);
-        menu.append(&add_paint_item.clone());
-        menu.show_all();
         let paints = PaintShapeList::<C>::new(attr);
         let target_colours = TargetColourShapeList::new(attr);
         let graticule = Graticule::create(attr);
@@ -129,9 +121,7 @@ impl<A, C> PaintHueAttrWheelInterface<A, C> for PaintHueAttrWheel<A, C>
         let series_paint_dialogs: RefCell<HashMap<u32, PaintDisplayDialog<A, C>>> = RefCell::new(HashMap::new());
         let wheel = Rc::new(
             PaintHueAttrWheelCore::<A, C> {
-                menu: menu,
-                paint_info_item: paint_info_item.clone(),
-                add_paint_item: add_paint_item.clone(),
+                popup_menu: PopupMenu::new(&vec![]),
                 paints: paints,
                 target_colours: target_colours,
                 graticule: graticule,
@@ -140,27 +130,13 @@ impl<A, C> PaintHueAttrWheelInterface<A, C> for PaintHueAttrWheel<A, C>
                 series_paint_dialogs: series_paint_dialogs,
             }
         );
+
         let wheel_c = wheel.clone();
-        wheel.graticule.drawing_area().connect_button_press_event(
-            move |_, event| {
-                if event.get_event_type() == gdk::EventType::ButtonPress {
-                    if event.get_button() == 3 {
-                        let chosen_item = wheel_c.get_item_at(Point::from(event.get_position()));
-                        wheel_c.paint_info_item.set_sensitive(!chosen_item.is_none());
-                        wheel_c.add_paint_item.set_sensitive(chosen_item.is_series_paint());
-                        let have_listeners = wheel_c.add_paint_callbacks.borrow().len() > 0;
-                        wheel_c.add_paint_item.set_visible(have_listeners);
-                        *wheel_c.chosen_item.borrow_mut() = chosen_item;
-                        // TODO: needs v3_22: wheel_c.menu.popup_at_pointer(None);
-                        wheel_c.menu.popup_easy(event.get_button(), event.get_time());
-                        return Inhibit(true)
-                    }
-                }
-                Inhibit(false)
-             }
-        );
-        let wheel_c = wheel.clone();
-        paint_info_item.clone().connect_activate(
+        wheel.popup_menu.append_item(
+            "info",
+            "Paint Information",
+            "Display this paint's information",
+        ).connect_activate(
             move |_| {
                 match *wheel_c.chosen_item.borrow() {
                     ChosenItem::Paint(ref paint) => {
@@ -213,8 +189,13 @@ impl<A, C> PaintHueAttrWheelInterface<A, C> for PaintHueAttrWheel<A, C>
                 }
             }
         );
+
         let wheel_c = wheel.clone();
-        add_paint_item.clone().connect_activate(
+        wheel.popup_menu.append_item(
+            "add",
+            "Add to Mixer",
+            "Add this paint to the mixer palette",
+        ).connect_activate(
             move |_| {
                 if let ChosenItem::Paint(ref paint) = *wheel_c.chosen_item.borrow() {
                     if let Paint::Series(ref series_paint) = *paint {
@@ -227,6 +208,26 @@ impl<A, C> PaintHueAttrWheelInterface<A, C> for PaintHueAttrWheel<A, C>
                 }
             }
         );
+
+        let wheel_c = wheel.clone();
+        wheel.graticule.drawing_area().connect_button_press_event(
+            move |_, event| {
+                if event.get_event_type() == gdk::EventType::ButtonPress {
+                    if event.get_button() == 3 {
+                        let chosen_item = wheel_c.get_item_at(Point::from(event.get_position()));
+                        wheel_c.popup_menu.set_sensitivities(!chosen_item.is_none(), &["info"]);
+                        wheel_c.popup_menu.set_sensitivities(chosen_item.is_series_paint(), &["add"]);
+                        let have_listeners = wheel_c.add_paint_callbacks.borrow().len() > 0;
+                        wheel_c.popup_menu.set_visibilities(have_listeners, &["add"]);
+                        *wheel_c.chosen_item.borrow_mut() = chosen_item;
+                        wheel_c.popup_menu.popup_at_event(event);
+                        return Inhibit(true)
+                    }
+                }
+                Inhibit(false)
+             }
+        );
+
         let wheel_c = wheel.clone();
         wheel.graticule.drawing_area().connect_query_tooltip(
             move |_, x, y, _, tooltip| {
@@ -247,6 +248,7 @@ impl<A, C> PaintHueAttrWheelInterface<A, C> for PaintHueAttrWheel<A, C>
                 }
              }
         );
+
         let wheel_c = wheel.clone();
         wheel.graticule.connect_draw(
             move |graticule, cairo_context| {

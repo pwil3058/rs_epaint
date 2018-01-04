@@ -25,6 +25,7 @@ use pw_gix::cairox::*;
 use pw_gix::colour::*;
 use pw_gix::gtkx::coloured::*;
 use pw_gix::gtkx::entry::*;
+use pw_gix::gtkx::menu::*;
 use pw_gix::rgb_math::angle::*;
 use pw_gix::rgb_math::rgb::*;
 use pw_gix::rgb_math::rgb_manipulator::RGBManipulator;
@@ -92,12 +93,10 @@ pub struct ColourEditorCore<A>
     incr_greyness_btn: gtk::Button,
     decr_chroma_btn: gtk::Button,
     incr_chroma_btn: gtk::Button,
-    menu: gtk::Menu,
-    paste_sample_item: gtk::MenuItem,
-    remove_samples_item: gtk::MenuItem,
+    popup_menu: PopupMenu,
     samples: RefCell<Vec<Sample>>,
     delta_size: Cell<DeltaSize>,
-    menu_position: Cell<Point>,
+    popup_menu_position: Cell<Point>,
     auto_match_btn: gtk::Button,
     auto_match_on_paste_btn: gtk::CheckButton,
     colour_changed_callbacks: RefCell<Vec<Box<Fn(&Colour)>>>,
@@ -213,13 +212,6 @@ impl<A> ColourEditorInterface for  Rc<ColourEditorCore<A>>
     where   A: ColourAttributesInterface + 'static
 {
     fn create(extra_buttons: &Vec<gtk::Button>) -> Self {
-        let menu = gtk::Menu::new();
-        let paste_sample_item = gtk::MenuItem::new_with_label("Paste Sample");
-        menu.append(&paste_sample_item.clone());
-        let remove_samples_item = gtk::MenuItem::new_with_label("Remove Samples");
-        remove_samples_item.set_visible(false);
-        menu.append(&remove_samples_item.clone());
-        menu.show_all();
         let ced = Rc::new(
             ColourEditorCore::<A>{
                 vbox: gtk::Box::new(gtk::Orientation::Vertical, 0),
@@ -235,14 +227,12 @@ impl<A> ColourEditorInterface for  Rc<ColourEditorCore<A>>
                 incr_greyness_btn: gtk::Button::new_with_label("Greyness++"),
                 decr_chroma_btn: gtk::Button::new_with_label("Chroma--"),
                 incr_chroma_btn: gtk::Button::new_with_label("Chroma++"),
-                menu: menu,
-                paste_sample_item: paste_sample_item,
-                remove_samples_item: remove_samples_item,
+                popup_menu: PopupMenu::new(&vec![]),
                 samples: RefCell::new(Vec::new()),
                 delta_size: Cell::new(DeltaSize::Normal),
                 auto_match_btn: gtk::Button::new_with_label("Auto Match"),
                 auto_match_on_paste_btn: gtk::CheckButton::new_with_label("On Paste?"),
-                menu_position: Cell::new(Point(0.0, 0.0)),
+                popup_menu_position: Cell::new(Point(0.0, 0.0)),
                 colour_changed_callbacks: RefCell::new(Vec::new()),
             }
         );
@@ -415,39 +405,15 @@ impl<A> ColourEditorInterface for  Rc<ColourEditorCore<A>>
         );
 
         let ced_c = ced.clone();
-        ced.drawing_area.connect_button_press_event(
-            move |_, event| {
-                if event.get_event_type() == gdk::EventType::ButtonPress {
-                    if event.get_button() == 3 {
-                        let position = Point::from(event.get_position());
-                        let n_samples = ced_c.samples.borrow().len();
-                        let cbd = gtk::Clipboard::get(&gdk::SELECTION_CLIPBOARD);
-                        ced_c.paste_sample_item.set_sensitive(cbd.wait_is_image_available());
-                        ced_c.remove_samples_item.set_sensitive(n_samples > 0);
-                        ced_c.menu_position.set(position);
-                        // TODO: needs v3_22: ced_c.menu.popup_at_pointer(None);
-                        ced_c.menu.popup_easy(event.get_button(), event.get_time());
-                        return Inhibit(true)
-                    }
-                }
-                Inhibit(false)
-             }
-        );
-        let ced_c = ced.clone();
-        ced_c.auto_match_btn.set_sensitive(false);
-        ced.remove_samples_item.clone().connect_activate(
-            move |_| {
-                ced_c.samples.borrow_mut().clear();
-                ced_c.drawing_area.queue_draw();
-                ced_c.auto_match_btn.set_sensitive(false);
-            }
-        );
-        let ced_c = ced.clone();
-        ced.paste_sample_item.clone().connect_activate(
+        ced.popup_menu.append_item(
+            "paste",
+            "Paste Sample",
+            "Paste image sample from the clipboard at this position",
+        ).connect_activate(
             move |_| {
                 let cbd = gtk::Clipboard::get(&gdk::SELECTION_CLIPBOARD);
                 if let Some(pixbuf) = cbd.wait_for_image() {
-                    let sample = Sample{pix_buf: pixbuf, position: ced_c.menu_position.get()};
+                    let sample = Sample{pix_buf: pixbuf, position: ced_c.popup_menu_position.get()};
                     ced_c.samples.borrow_mut().push(sample);
                     if ced_c.auto_match_on_paste_btn.get_active() {
                         ced_c.auto_match_samples();
@@ -459,6 +425,38 @@ impl<A> ColourEditorInterface for  Rc<ColourEditorCore<A>>
                     ced_c.inform_user("No image data on clipboard.", None);
                 }
             }
+        );
+
+        let ced_c = ced.clone();
+        ced.popup_menu.append_item(
+            "remove",
+            "Remove Sample(s)",
+            "Remove all image samples from the sample area",
+        ).connect_activate(
+            move |_| {
+                ced_c.samples.borrow_mut().clear();
+                ced_c.drawing_area.queue_draw();
+                ced_c.auto_match_btn.set_sensitive(false);
+            }
+        );
+
+        let ced_c = ced.clone();
+        ced.drawing_area.connect_button_press_event(
+            move |_, event| {
+                if event.get_event_type() == gdk::EventType::ButtonPress {
+                    if event.get_button() == 3 {
+                        let position = Point::from(event.get_position());
+                        let n_samples = ced_c.samples.borrow().len();
+                        let cbd = gtk::Clipboard::get(&gdk::SELECTION_CLIPBOARD);
+                        ced_c.popup_menu.set_sensitivities(cbd.wait_is_image_available(), &["paste"]);
+                        ced_c.popup_menu.set_sensitivities(n_samples > 0, &["remove"]);
+                        ced_c.popup_menu_position.set(position);
+                        ced_c.popup_menu.popup_at_event(event);
+                        return Inhibit(true)
+                    }
+                }
+                Inhibit(false)
+             }
         );
 
         ced.reset();

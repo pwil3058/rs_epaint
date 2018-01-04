@@ -25,6 +25,7 @@ use pw_gix::colour::*;
 use pw_gix::gtkx::coloured::*;
 use pw_gix::gtkx::dialog::*;
 use pw_gix::gtkx::list_store::*;
+use pw_gix::gtkx::menu::*;
 use pw_gix::gtkx::tree_view_column::*;
 use pw_gix::wrapper::*;
 
@@ -310,8 +311,7 @@ pub struct PaintComponentListViewCore<A, C>
     scrolled_window: gtk::ScrolledWindow,
     list_store: gtk::ListStore,
     view: gtk::TreeView,
-    menu: gtk::Menu,
-    paint_info_item: gtk::MenuItem,
+    popup_menu: PopupMenu,
     components: Rc<Vec<PaintComponent<C>>>,
     chosen_paint: RefCell<Option<Paint<C>>>,
     current_target: RefCell<Option<Colour>>,
@@ -399,11 +399,6 @@ impl<A, C> PaintComponentListViewInterface<A, C> for PaintComponentListView<A, C
         view.set_headers_visible(true);
         view.get_selection().set_mode(gtk::SelectionMode::None);
 
-        let menu = gtk::Menu::new();
-        let paint_info_item = gtk::MenuItem::new_with_label("Information");
-        menu.append(&paint_info_item.clone());
-        menu.show_all();
-
         let my_current_target = if let Some(colour) = current_target {
             Some(colour.clone())
         } else {
@@ -414,8 +409,7 @@ impl<A, C> PaintComponentListViewInterface<A, C> for PaintComponentListView<A, C
             PaintComponentListViewCore::<A, C> {
                 scrolled_window: gtk::ScrolledWindow::new(None, None),
                 list_store: list_store,
-                menu: menu,
-                paint_info_item: paint_info_item.clone(),
+                popup_menu: PopupMenu::new(&vec![]),
                 components: components.clone(),
                 view: view,
                 chosen_paint: RefCell::new(None),
@@ -441,24 +435,11 @@ impl<A, C> PaintComponentListViewInterface<A, C> for PaintComponentListView<A, C
         pclv.scrolled_window.show_all();
 
         let pclv_c = pclv.clone();
-        pclv.view.connect_button_press_event(
-            move |_, event| {
-                if event.get_event_type() == gdk::EventType::ButtonPress {
-                    if event.get_button() == 3 {
-                        let o_paint = pclv_c.get_paint_at(event.get_position());
-                        pclv_c.paint_info_item.set_sensitive(o_paint.is_some());
-                        *pclv_c.chosen_paint.borrow_mut() = o_paint;
-                        // TODO: needs v3_22: pclv_c.menu.popup_at_pointer(None);
-                        pclv_c.menu.popup_easy(event.get_button(), event.get_time());
-                        return Inhibit(true)
-                    }
-                }
-                Inhibit(false)
-             }
-        );
-
-        let pclv_c = pclv.clone();
-        paint_info_item.clone().connect_activate(
+        pclv.popup_menu.append_item(
+            "info",
+            "Paint Information",
+            "Display this paint's information",
+        ).connect_activate(
             move |_| {
                 if let Some(ref paint) = *pclv_c.chosen_paint.borrow() {
                     let current_target = pclv_c.current_target.borrow().clone();
@@ -481,6 +462,23 @@ impl<A, C> PaintComponentListViewInterface<A, C> for PaintComponentListView<A, C
                     dialog.show();
                 }
             }
+        );
+
+        let pclv_c = pclv.clone();
+        pclv.view.connect_button_press_event(
+            move |_, event| {
+                if event.get_event_type() == gdk::EventType::ButtonPress {
+                    if event.get_button() == 3 {
+                        let o_paint = pclv_c.get_paint_at(event.get_position());
+                        pclv_c.popup_menu.set_sensitivities(o_paint.is_some(), &["info"]);
+                        *pclv_c.chosen_paint.borrow_mut() = o_paint;
+                        // TODO: needs v3_22: pclv_c.menu.popup_at_pointer(None);
+                        pclv_c.popup_menu.popup_at_event(event);
+                        return Inhibit(true)
+                    }
+                }
+                Inhibit(false)
+             }
         );
 
         pclv

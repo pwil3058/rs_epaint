@@ -448,7 +448,7 @@ impl<A, C> SimpleCreation for BasicPaintFactoryDisplay<A, C>
         bpf.popup_menu.append_item(
             "edit",
             "Edit Paint",
-            "Select this paint for editing"
+            "Select this paint for editing",
         ).connect_activate(
             move |_| {
                 if let Some(ref paint) = *bpf_c.chosen_paint.borrow() {
@@ -461,7 +461,7 @@ impl<A, C> SimpleCreation for BasicPaintFactoryDisplay<A, C>
         bpf.popup_menu.append_item(
             "info",
             "Paint Information",
-            "Display this paint's information"
+            "Display this paint's information",
         ).connect_activate(
             move |_| {
                 if let Some(ref paint) = *bpf_c.chosen_paint.borrow() {
@@ -495,7 +495,7 @@ impl<A, C> SimpleCreation for BasicPaintFactoryDisplay<A, C>
         bpf.popup_menu.append_item(
             "remove",
             "Remove Paint",
-            "Remove this paint from the collection"
+            "Remove this paint from the collection",
         ).connect_activate(
             move |_| {
                 if let Some(ref paint) = *bpf_c.chosen_paint.borrow() {

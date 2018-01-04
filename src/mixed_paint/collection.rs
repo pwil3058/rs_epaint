@@ -25,6 +25,7 @@ use gtk::prelude::*;
 
 use pw_gix::colour::*;
 use pw_gix::gtkx::list_store::*;
+use pw_gix::gtkx::menu::*;
 use pw_gix::gtkx::tree_view_column::*;
 use pw_gix::rgb_math::rgb::*;
 use pw_gix::wrapper::*;
@@ -179,9 +180,7 @@ pub struct MixedPaintCollectionViewCore<A, C>
     scrolled_window: gtk::ScrolledWindow,
     list_store: gtk::ListStore,
     view: gtk::TreeView,
-    menu: gtk::Menu,
-    paint_info_item: gtk::MenuItem,
-    add_paint_item: gtk::MenuItem,
+    popup_menu: PopupMenu,
     collection: MixedPaintCollection<C>,
     chosen_paint: RefCell<Option<MixedPaint<C>>>,
     current_target: RefCell<Option<Colour>>,
@@ -291,21 +290,11 @@ impl<A, C> MixedPaintCollectionViewInterface<A, C> for MixedPaintCollectionView<
         view.set_headers_visible(true);
         view.get_selection().set_mode(gtk::SelectionMode::None);
 
-        let menu = gtk::Menu::new();
-        let paint_info_item = gtk::MenuItem::new_with_label("Information");
-        menu.append(&paint_info_item.clone());
-        let add_paint_item = gtk::MenuItem::new_with_label("Add to Mixer");
-        add_paint_item.set_visible(false);
-        menu.append(&add_paint_item.clone());
-        menu.show_all();
-
         let mspl = Rc::new(
             MixedPaintCollectionViewCore::<A, C> {
                 scrolled_window: gtk::ScrolledWindow::new(None, None),
                 list_store: list_store,
-                menu: menu,
-                paint_info_item: paint_info_item.clone(),
-                add_paint_item: add_paint_item.clone(),
+                popup_menu: PopupMenu::new(&vec![]),
                 collection: collection.clone(),
                 view: view,
                 chosen_paint: RefCell::new(None),
@@ -332,38 +321,11 @@ impl<A, C> MixedPaintCollectionViewInterface<A, C> for MixedPaintCollectionView<
         mspl.scrolled_window.show_all();
 
         let mspl_c = mspl.clone();
-        mspl.view.connect_button_press_event(
-            move |_, event| {
-                if event.get_event_type() == gdk::EventType::ButtonPress {
-                    if event.get_button() == 3 {
-                        let o_paint = mspl_c.get_mixed_paint_at(event.get_position());
-                        mspl_c.paint_info_item.set_sensitive(o_paint.is_some());
-                        mspl_c.add_paint_item.set_sensitive(o_paint.is_some());
-                        let have_listeners = mspl_c.add_paint_callbacks.borrow().len() > 0;
-                        mspl_c.add_paint_item.set_visible(have_listeners);
-                        *mspl_c.chosen_paint.borrow_mut() = o_paint;
-                        // TODO: needs v3_22: mspl_c.menu.popup_at_pointer(None);
-                        mspl_c.menu.popup_easy(event.get_button(), event.get_time());
-                        return Inhibit(true)
-                    }
-                }
-                Inhibit(false)
-             }
-        );
-
-        let mspl_c = mspl.clone();
-        add_paint_item.connect_activate(
-            move |_| {
-                if let Some(ref paint) = *mspl_c.chosen_paint.borrow() {
-                    mspl_c.inform_add_paint(paint);
-                } else {
-                    panic!("File: {:?} Line: {:?} SHOULDN'T GET HERE", file!(), line!())
-                }
-            }
-        );
-
-        let mspl_c = mspl.clone();
-        paint_info_item.clone().connect_activate(
+        mspl.popup_menu.append_item(
+            "info",
+            "Paint Information",
+            "Display this paint's information",
+        ).connect_activate(
             move |_| {
                 if let Some(ref paint) = *mspl_c.chosen_paint.borrow() {
                     let target_colour = mspl_c.current_target.borrow().clone();
@@ -400,6 +362,40 @@ impl<A, C> MixedPaintCollectionViewInterface<A, C> for MixedPaintCollectionView<
                     dialog.show();
                 }
             }
+        );
+
+        let mspl_c = mspl.clone();
+        mspl.popup_menu.append_item(
+            "add",
+            "Add to Mixer",
+            "Add this paint to the mixer palette",
+        ).connect_activate(
+            move |_| {
+                if let Some(ref paint) = *mspl_c.chosen_paint.borrow() {
+                    mspl_c.inform_add_paint(paint);
+                } else {
+                    panic!("File: {:?} Line: {:?} SHOULDN'T GET HERE", file!(), line!())
+                }
+            }
+        );
+
+        let mspl_c = mspl.clone();
+        mspl.view.connect_button_press_event(
+            move |_, event| {
+                if event.get_event_type() == gdk::EventType::ButtonPress {
+                    if event.get_button() == 3 {
+                        let o_paint = mspl_c.get_mixed_paint_at(event.get_position());
+                        mspl_c.popup_menu.set_sensitivities(o_paint.is_some(), &["info"]);
+                        mspl_c.popup_menu.set_sensitivities(o_paint.is_some(), &["add"]);
+                        let have_listeners = mspl_c.add_paint_callbacks.borrow().len() > 0;
+                        mspl_c.popup_menu.set_visibilities(have_listeners, &["add"]);
+                        *mspl_c.chosen_paint.borrow_mut() = o_paint;
+                        mspl_c.popup_menu.popup_at_event(event);
+                        return Inhibit(true)
+                    }
+                }
+                Inhibit(false)
+             }
         );
 
         mspl

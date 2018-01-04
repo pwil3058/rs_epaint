@@ -23,6 +23,7 @@ use gtk::prelude::*;
 
 use pw_gix::colour::*;
 use pw_gix::gtkx::coloured::*;
+use pw_gix::gtkx::menu::*;
 use pw_gix::wrapper::*;
 
 use basic_paint::*;
@@ -52,8 +53,10 @@ pub struct PaintPartsSpinButtonCore<C: CharacteristicsInterface> {
     event_box: gtk::EventBox,
     entry: gtk::SpinButton,
     label: gtk::Label,
-    menu: gtk::Menu,
+    popup_menu: PopupMenu,
     paint: Paint<C>,
+// TODO: implement info dialog for PaintPartsSpinButton
+//    dialog: RefCell<Option<PaintDisplayDialog::<A, C>>>,
     parts_changed_callbacks: RefCell<Vec<Box<Fn(u32)>>>,
     remove_me_callbacks: RefCell<Vec<Box<Fn(&PaintPartsSpinButton<C>)>>>
 }
@@ -91,7 +94,7 @@ impl<C> PaintPartsSpinButtonInterface<C> for PaintPartsSpinButton<C>
                 event_box: gtk::EventBox::new(),
                 entry: gtk::SpinButton::new(Some(&adj), 0.0, 0),
                 label: gtk::Label::new(Some(label_text.as_str())),
-                menu: gtk::Menu::new(),
+                popup_menu: PopupMenu::new(&vec![]),
                 paint: paint.clone(),
                 parts_changed_callbacks: parts_changed_callbacks,
                 remove_me_callbacks: remove_me_callbacks
@@ -101,18 +104,46 @@ impl<C> PaintPartsSpinButtonInterface<C> for PaintPartsSpinButton<C>
         spin_button.event_box.set_tooltip_text(Some(paint.tooltip_text().as_str()));
         spin_button.event_box.add_events(events.bits() as i32);
         spin_button.label.set_widget_colour(&paint.colour());
-        //spin_button.entry.set_widget_colour(&paint.colour());
         spin_button.entry.set_numeric(true);
         spin_button.entry.set_adjustment(&adj);
         spin_button.entry.set_sensitive(sensitive);
         // Build menu
-        let remove_me_item = gtk::MenuItem::new_with_label("Remove Me");
+        //let spin_button_c = spin_button.clone();
+        //spin_button.popup_menu.append_item(
+            //"info",
+            //"Paint Information",
+            //"Display this paint's information",
+        //).connect_activate(
+            //move |_| {
+                //let target_colour = spin_button_c.current_target_colour().clone();
+                //let target = if let Some(ref colour) = target_colour {
+                    //Some(colour)
+                //} else {
+                    //None
+                //};
+                //let dialog = PaintDisplayDialog::<A, C>::create(
+                    //&spin_button_c.paint,
+                    //target,
+                    //None,
+                    //vec![]
+                //);
+                //let pin_button_c_c = pin_button_c.clone();
+                //dialog.connect_destroy(
+                    //move |id| { pin_button_c_c.paint_dialogs.borrow_mut().remove(&id); }
+                //);
+                //spin_button_c.paint_dialogs.borrow_mut().insert(dialog.id_no(), dialog.clone());
+                //dialog.show();
+            //}
+        //);
+
         let spin_button_c = spin_button.clone();
-        remove_me_item.connect_activate(
+        spin_button.popup_menu.append_item(
+            "remove",
+            "Remove Me",
+            "Remove this paint from the palette",
+        ).connect_activate(
             move |_| { spin_button_c.inform_remove_me(); }
         );
-        spin_button.menu.append(&remove_me_item.clone());
-        spin_button.menu.show_all();
         //
         let hbox = gtk::Box::new(gtk::Orientation::Horizontal, 1);
         hbox.pack_start(&spin_button.label.clone(), true, true, 0);
@@ -129,8 +160,7 @@ impl<C> PaintPartsSpinButtonInterface<C> for PaintPartsSpinButton<C>
             move |_, event| {
                 if event.get_event_type() == gdk::EventType::ButtonPress {
                     if event.get_button() == 3 {
-                        // TODO: needs v3_22: spin_button_c.menu.popup_at_pointer(None);
-                        spin_button_c.menu.popup_easy(event.get_button(), event.get_time());
+                        spin_button_c.popup_menu.popup_at_event(event);
                         return Inhibit(true)
                     }
                 }
@@ -138,7 +168,6 @@ impl<C> PaintPartsSpinButtonInterface<C> for PaintPartsSpinButton<C>
              }
         );
         spin_button
-        // TODO: add "display paint" to PaintPartsSpinButton<C> popup menu
     }
 
     fn get_parts(&self) -> u32 {
