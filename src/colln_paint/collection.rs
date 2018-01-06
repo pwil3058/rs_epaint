@@ -422,6 +422,10 @@ impl<A, C, CID> CollnPaintCollnWidgetCore<A, C, CID>
             C: CharacteristicsInterface + 'static,
             CID: CollnIdInterface + 'static,
 {
+    pub fn colln_id(&self) -> Rc<CID> {
+        self.paint_colln_view.colln_id()
+    }
+
     fn inform_paint_selected(&self, paint: &CollnPaint<C, CID>) {
         for callback in self.paint_selected_callbacks.borrow().iter() {
             callback(&paint);
