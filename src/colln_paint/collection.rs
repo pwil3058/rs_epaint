@@ -451,6 +451,9 @@ impl<A, C, CID> CollnPaintCollnWidgetCore<A, C, CID>
         for wheel in self.hue_attr_wheels.iter() {
             wheel.set_target_colour(o_colour);
         }
+        for dialog in self.paint_dialogs.borrow().values() {
+            dialog.set_current_target(o_colour);
+        }
         if let Some(colour) = o_colour {
             *self.current_target.borrow_mut() = Some(colour.clone())
         } else {

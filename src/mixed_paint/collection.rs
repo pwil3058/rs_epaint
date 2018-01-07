@@ -186,7 +186,7 @@ pub struct MixedPaintCollectionViewCore<A, C>
     chosen_paint: RefCell<Option<MixedPaint<C>>>,
     current_target: RefCell<Option<Colour>>,
     add_paint_callbacks: RefCell<Vec<Box<Fn(&MixedPaint<C>)>>>,
-    mixed_paint_dialogs: RefCell<HashMap<u32, PaintDisplayDialog<A, C>>>,
+    mixed_paint_dialogs: RefCell<HashMap<u32, MixedPaintDisplayDialog<A, C>>>,
     spec: PhantomData<A>
 }
 
@@ -348,7 +348,7 @@ impl<A, C> MixedPaintCollectionViewInterface<A, C> for MixedPaintCollectionView<
                     } else {
                         vec![]
                     };
-                    let dialog = PaintDisplayDialog::<A, C>::mixed_create(
+                    let dialog = MixedPaintDisplayDialog::<A, C>::create(
                         &paint,
                         target,
                         None,

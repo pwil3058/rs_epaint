@@ -27,6 +27,7 @@ use basic_paint::editor::*;
 use colln_paint::*;
 use colln_paint::binder::*;
 use colln_paint::collection::*;
+pub use colln_paint::display::*;
 use icons::series_paint_xpm::*;
 
 #[derive(Debug, PartialEq, PartialOrd, Eq, Ord, Clone, Default, Hash)]
@@ -83,6 +84,7 @@ pub type SeriesPaintColln<C> = CollnPaintColln<C, PaintSeriesId>;
 pub type SeriesPaintCollnSpec<C> = PaintCollnSpec<C, PaintSeriesId>;
 
 pub type SeriesPaintCollnBinder<A, C> = CollnPaintCollnBinder<A, C, PaintSeriesId>;
+pub type SeriesPaintDisplayDialog<A, C> = CollnPaintDisplayDialog<A, C, PaintSeriesId>;
 pub type SeriesPaintEditor<A, C> = BasicPaintEditor<A, C, PaintSeriesId>;
 
 const TOOLTIP_TEXT: &str =

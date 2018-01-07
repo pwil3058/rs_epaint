@@ -28,7 +28,6 @@ pub use pw_gix::wrapper::*;
 use basic_paint::*;
 use basic_paint::factory::*;
 use colln_paint::collection::*;
-use display::*;
 use error::*;
 use characteristics::*;
 use mixed_paint::*;

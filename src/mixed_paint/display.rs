@@ -30,17 +30,10 @@ use pw_gix::gtkx::tree_view_column::*;
 use pw_gix::wrapper::*;
 
 use basic_paint::*;
-use colln_paint::*;
+use display::*;
 use series_paint::*;
-use mixed_paint::*;
 
 use super::*;
-
-pub struct PaintDisplayButtonSpec {
-    pub label: String,
-    pub tooltip_text: String,
-    pub callback: Box<Fn()>
-}
 
 static mut NEXT_DIALOG_ID: u32 = 0;
 
@@ -53,20 +46,20 @@ fn get_id_for_dialog() -> u32 {
     id
 }
 
-pub struct PaintDisplayDialogCore<A, C>
+pub struct MixedPaintDisplayDialogCore<A, C>
     where   C: CharacteristicsInterface + 'static,
             A: ColourAttributesInterface + 'static
 {
     dialog: gtk::Dialog,
-    paint: Paint<C>,
+    paint: MixedPaint<C>,
     current_target_label: gtk::Label,
     cads: Rc<A>,
-    components_view: Option<PaintComponentListView<A, C>>,
+    components_view: PaintComponentListView<A, C>,
     id_no: u32,
     destroy_callbacks: RefCell<Vec<Box<Fn(u32)>>>
 }
 
-impl<A, C> PaintDisplayDialogCore<A, C>
+impl<A, C> MixedPaintDisplayDialogCore<A, C>
     where   C: CharacteristicsInterface + 'static,
             A: ColourAttributesInterface + 'static
 {
@@ -87,16 +80,12 @@ impl<A, C> PaintDisplayDialogCore<A, C>
             self.current_target_label.set_label("Current Target");
             self.current_target_label.set_widget_colour(&colour);
             self.cads.set_target_colour(Some(&colour));
-            if let Some(ref components_view) = self.components_view {
-                components_view.set_target_colour(Some(&colour))
-            }
+            self.components_view.set_target_colour(Some(&colour));
         } else {
             self.current_target_label.set_label("");
             self.current_target_label.set_widget_colour(&self.paint.colour());
             self.cads.set_target_colour(None);
-            if let Some(ref components_view) = self.components_view {
-                components_view.set_target_colour(None)
-            }
+            self.components_view.set_target_colour(None);
         };
     }
 
@@ -112,48 +101,30 @@ impl<A, C> PaintDisplayDialogCore<A, C>
 
 }
 
-pub type PaintDisplayDialog<A, C> = Rc<PaintDisplayDialogCore<A, C>>;
+pub type MixedPaintDisplayDialog<A, C> = Rc<MixedPaintDisplayDialogCore<A, C>>;
 
 pub trait PaintDisplayDialogInterface<A, C>
     where   C: CharacteristicsInterface + 'static,
             A: ColourAttributesInterface + 'static
 {
     fn create(
-        paint: &Paint<C>,
-        current_target: Option<&Colour>,
-        parent: Option<&gtk::Window>,
-        button_specs: Vec<PaintDisplayButtonSpec>,
-    ) -> PaintDisplayDialog<A, C>;
-
-    fn series_create(
-        paint: &SeriesPaint<C>,
-        current_target: Option<&Colour>,
-        parent: Option<&gtk::Window>,
-        button_specs: Vec<PaintDisplayButtonSpec>,
-    ) -> PaintDisplayDialog<A, C> {
-        Self::create(&Paint::Series(paint.clone()), current_target, parent, button_specs)
-    }
-
-    fn mixed_create(
         paint: &MixedPaint<C>,
         current_target: Option<&Colour>,
         parent: Option<&gtk::Window>,
         button_specs: Vec<PaintDisplayButtonSpec>,
-    ) -> PaintDisplayDialog<A, C> {
-        Self::create(&Paint::Mixed(paint.clone()), current_target, parent, button_specs)
-    }
+    ) -> MixedPaintDisplayDialog<A, C>;
 }
 
-impl<A, C> PaintDisplayDialogInterface<A, C> for PaintDisplayDialog<A, C>
+impl<A, C> PaintDisplayDialogInterface<A, C> for MixedPaintDisplayDialog<A, C>
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static,
 {
     fn create(
-        paint: &Paint<C>,
+        paint: &MixedPaint<C>,
         current_target: Option<&Colour>,
         parent: Option<&gtk::Window>,
         button_specs: Vec<PaintDisplayButtonSpec>,
-    ) -> PaintDisplayDialog<A, C> {
+    ) -> MixedPaintDisplayDialog<A, C> {
         let title = format!("mcmmtk: {}", paint.name());
         let dialog = gtk::Dialog::new_with_buttons(
             Some(title.as_str()),
@@ -161,11 +132,7 @@ impl<A, C> PaintDisplayDialogInterface<A, C> for PaintDisplayDialog<A, C>
             gtk::DialogFlags::USE_HEADER_BAR,
             &[]
         );
-        if paint.is_series() {
-            dialog.set_size_from_recollections("series_paint_display", (60, 330));
-        } else {
-            dialog.set_size_from_recollections("mixed_paint_display", (60, 330));
-        };
+        dialog.set_size_from_recollections("mixed_paint_display", (60, 330));
         let content_area = dialog.get_content_area();
         let vbox = gtk::Box::new(gtk::Orientation::Vertical, 0);
         let label = gtk::Label::new(paint.name().as_str());
@@ -174,25 +141,15 @@ impl<A, C> PaintDisplayDialogInterface<A, C> for PaintDisplayDialog<A, C>
         let label = gtk::Label::new(paint.notes().as_str());
         label.set_widget_colour(&paint.colour());
         vbox.pack_start(&label, false, false, 0);
-        if let Paint::Series(ref series_paint) = *paint {
-            let label = gtk::Label::new(series_paint.colln_id().series_name().as_str());
-            label.set_widget_colour(&paint.colour());
-            vbox.pack_start(&label, false, false, 0);
-            let label = gtk::Label::new(series_paint.colln_id().manufacturer().as_str());
-            label.set_widget_colour(&paint.colour());
-            vbox.pack_start(&label, false, false, 0);
-        }
         //
         let current_target_label = gtk::Label::new("");
         current_target_label.set_widget_colour(&paint.colour());
         vbox.pack_start(&current_target_label.clone(), true, true, 0);
         //
-        if let Paint::Mixed(ref mixed_paint) = *paint {
-            if let Some(colour) = mixed_paint.matched_colour() {
-                let current_target_label = gtk::Label::new("Target Colour");
-                current_target_label.set_widget_colour(&colour.clone());
-                vbox.pack_start(&current_target_label.clone(), true, true, 0);
-            }
+        if let Some(colour) = paint.matched_colour() {
+            let current_target_label = gtk::Label::new("Target Colour");
+            current_target_label.set_widget_colour(&colour.clone());
+            vbox.pack_start(&current_target_label.clone(), true, true, 0);
         }
         //
         content_area.pack_start(&vbox, true, true, 0);
@@ -201,13 +158,8 @@ impl<A, C> PaintDisplayDialogInterface<A, C> for PaintDisplayDialog<A, C>
         content_area.pack_start(&cads.pwo(), true, true, 1);
         let characteristics_display = paint.characteristics().gui_display_widget();
         content_area.pack_start(&characteristics_display, false, false, 0);
-        let components_view = if let Paint::Mixed(ref mixed_paint) = *paint {
-            let cv = PaintComponentListView::<A, C>::create(&mixed_paint.components(), current_target);
-            content_area.pack_start(&cv.pwo(), false, false, 0);
-            Some(cv)
-        } else {
-            None
-        };
+        let components_view = PaintComponentListView::<A, C>::create(&paint.components(), current_target);
+        content_area.pack_start(&components_view.pwo(), true, true, 0);
         content_area.show_all();
         for (response_id, spec) in button_specs.iter().enumerate() {
             let button = dialog.add_button(spec.label.as_str(), response_id as i32);
@@ -221,7 +173,7 @@ impl<A, C> PaintDisplayDialogInterface<A, C> for PaintDisplayDialog<A, C>
             }
         );
         let spd_dialog = Rc::new(
-            PaintDisplayDialogCore {
+            MixedPaintDisplayDialogCore {
                 dialog: dialog,
                 paint: paint.clone(),
                 current_target_label: current_target_label,
@@ -317,7 +269,8 @@ pub struct PaintComponentListViewCore<A, C>
     components: Rc<Vec<PaintComponent<C>>>,
     chosen_paint: RefCell<Option<Paint<C>>>,
     current_target: RefCell<Option<Colour>>,
-    paint_dialogs: RefCell<HashMap<u32, PaintDisplayDialog<A, C>>>,
+    series_paint_dialogs: RefCell<HashMap<u32, SeriesPaintDisplayDialog<A, C>>>,
+    mixed_paint_dialogs: RefCell<HashMap<u32, MixedPaintDisplayDialog<A, C>>>,
     spec: PhantomData<A>
 }
 
@@ -348,13 +301,19 @@ impl<A, C> PaintComponentListViewCore<A, C>
     pub fn set_target_colour(&self, ocolour: Option<&Colour>) {
         match ocolour {
             Some(colour) => {
-                for dialog in self.paint_dialogs.borrow().values() {
+                for dialog in self.series_paint_dialogs.borrow().values() {
+                    dialog.set_current_target(Some(colour));
+                };
+                for dialog in self.mixed_paint_dialogs.borrow().values() {
                     dialog.set_current_target(Some(colour));
                 };
                 *self.current_target.borrow_mut() = Some(colour.clone())
             },
             None => {
-                for dialog in self.paint_dialogs.borrow().values() {
+                for dialog in self.series_paint_dialogs.borrow().values() {
+                    dialog.set_current_target(None);
+                };
+                for dialog in self.mixed_paint_dialogs.borrow().values() {
                     dialog.set_current_target(None);
                 };
                 *self.current_target.borrow_mut() = None
@@ -416,7 +375,8 @@ impl<A, C> PaintComponentListViewInterface<A, C> for PaintComponentListView<A, C
                 view: view,
                 chosen_paint: RefCell::new(None),
                 current_target: RefCell::new(my_current_target),
-                paint_dialogs: RefCell::new(HashMap::new()),
+                series_paint_dialogs: RefCell::new(HashMap::new()),
+                mixed_paint_dialogs: RefCell::new(HashMap::new()),
                 spec: PhantomData,
             }
         );
@@ -450,18 +410,38 @@ impl<A, C> PaintComponentListViewInterface<A, C> for PaintComponentListView<A, C
                     } else {
                         None
                     };
-                    let dialog = PaintDisplayDialog::<A, C>::create(
-                        &paint,
-                        target,
-                        None,
-                        vec![]
-                    );
-                    let pclv_c_c = pclv_c.clone();
-                    dialog.connect_destroy(
-                        move |id| { pclv_c_c.paint_dialogs.borrow_mut().remove(&id); }
-                    );
-                    pclv_c.paint_dialogs.borrow_mut().insert(dialog.id_no(), dialog.clone());
-                    dialog.show();
+                    match paint {
+                        &Paint::Mixed(ref mixed_paint) => {
+                            let dialog = MixedPaintDisplayDialog::<A, C>::create(
+                                mixed_paint,
+                                target,
+                                None,
+                                vec![]
+                            );
+                            dialog.set_transient_for_from(&pclv_c.pwo());
+                            let pclv_c_c = pclv_c.clone();
+                            dialog.connect_destroy(
+                                move |id| { pclv_c_c.mixed_paint_dialogs.borrow_mut().remove(&id); }
+                            );
+                            pclv_c.mixed_paint_dialogs.borrow_mut().insert(dialog.id_no(), dialog.clone());
+                            dialog.show();
+                        },
+                        &Paint::Series(ref series_paint) => {
+                            let dialog = SeriesPaintDisplayDialog::<A, C>::create(
+                                series_paint,
+                                target,
+                                None,
+                                vec![]
+                            );
+                            dialog.set_transient_for_from(&pclv_c.pwo());
+                            let pclv_c_c = pclv_c.clone();
+                            dialog.connect_destroy(
+                                move |id| { pclv_c_c.series_paint_dialogs.borrow_mut().remove(&id); }
+                            );
+                            pclv_c.series_paint_dialogs.borrow_mut().insert(dialog.id_no(), dialog.clone());
+                            dialog.show();
+                        },
+                    }
                 }
             }
         );

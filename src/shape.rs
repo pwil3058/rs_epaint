@@ -23,9 +23,6 @@ use pw_gix::colour::*;
 use pw_gix::rgb_math::rgb::*;
 
 use basic_paint::*;
-use mixed_paint::*;
-use mixed_paint::target::*;
-use series_paint::*;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum ShapeType {

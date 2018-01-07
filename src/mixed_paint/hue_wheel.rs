@@ -203,8 +203,8 @@ pub struct MixerHueAttrWheelCore<A, C>
     graticule: Graticule,
     add_series_paint_callbacks: RefCell<Vec<Box<Fn(&SeriesPaint<C>)>>>,
     add_mixed_paint_callbacks: RefCell<Vec<Box<Fn(&MixedPaint<C>)>>>,
-    series_paint_dialogs: RefCell<HashMap<u32, PaintDisplayDialog<A, C>>>,
-    mixed_paint_dialogs: RefCell<HashMap<u32, PaintDisplayDialog<A, C>>>,
+    series_paint_dialogs: RefCell<HashMap<u32, SeriesPaintDisplayDialog<A, C>>>,
+    mixed_paint_dialogs: RefCell<HashMap<u32, MixedPaintDisplayDialog<A, C>>>,
 }
 
 impl<A, C> WidgetWrapper<gtk::DrawingArea> for MixerHueAttrWheelCore<A, C>
@@ -269,7 +269,7 @@ impl<A, C> MixerHueAttrWheelInterface<A, C> for MixerHueAttrWheel<A, C>
                                 tooltip_text: "Add this paint to the paint mixing area.".to_string(),
                                 callback:  Box::new(move || wheel_c_c.inform_add_series_paint(&paint_c))
                             };
-                            let dialog = PaintDisplayDialog::<A, C>::series_create(&paint, target, None, vec![spec]);
+                            let dialog = SeriesPaintDisplayDialog::<A, C>::create(&paint, target, None, vec![spec]);
                             dialog.set_transient_for_from(&wheel_c.pwo());
                             let wheel_c_c = wheel_c.clone();
                             dialog.connect_destroy(
@@ -278,7 +278,7 @@ impl<A, C> MixerHueAttrWheelInterface<A, C> for MixerHueAttrWheel<A, C>
                             wheel_c.series_paint_dialogs.borrow_mut().insert(dialog.id_no(), dialog.clone());
                             dialog.show();
                         } else {
-                            PaintDisplayDialog::<A, C>::series_create(&paint, None, None, vec![]).show();
+                            SeriesPaintDisplayDialog::<A, C>::create(&paint, target, None, vec![]).show();
                         }
                     },
                     ChosenItem::MixedPaint(ref paint) => {
@@ -291,7 +291,7 @@ impl<A, C> MixerHueAttrWheelInterface<A, C> for MixerHueAttrWheel<A, C>
                                 tooltip_text: "Add this paint to the paint mixing area.".to_string(),
                                 callback:  Box::new(move || wheel_c_c.inform_add_mixed_paint(&paint_c))
                             };
-                            let dialog = PaintDisplayDialog::<A, C>::mixed_create(&paint, target, None, vec![spec]);
+                            let dialog = MixedPaintDisplayDialog::<A, C>::create(&paint, target, None, vec![spec]);
                             dialog.set_transient_for_from(&wheel_c.pwo());
                             let wheel_c_c = wheel_c.clone();
                             dialog.connect_destroy(
@@ -300,7 +300,7 @@ impl<A, C> MixerHueAttrWheelInterface<A, C> for MixerHueAttrWheel<A, C>
                             wheel_c.mixed_paint_dialogs.borrow_mut().insert(dialog.id_no(), dialog.clone());
                             dialog.show();
                         } else {
-                            PaintDisplayDialog::<A, C>::mixed_create(&paint, None, None, vec![]).show();
+                            MixedPaintDisplayDialog::<A, C>::create(&paint, None, None, vec![]).show();
                         }
                     },
                     ChosenItem::TargetColour(ref colour) => {
