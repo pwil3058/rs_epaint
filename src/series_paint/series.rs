@@ -158,17 +158,10 @@ impl<C: CharacteristicsInterface> PaintSeriesCore<C> {
         match self.find_name(&spec.name) {
             Ok(_) => Err(PaintError::AlreadyExists(spec.name.clone())),
             Err(index) => {
-                let paint = Rc::new(
-                    SeriesPaintCore::<C> {
-                        name: spec.name.clone(),
-                        notes: spec.notes.clone(),
-                        colour: Colour::from(spec.rgb),
-                        characteristics: spec.characteristics.clone(),
-                        series_id: self.series_id.clone()
-                    }
-                );
-                self.paints.borrow_mut().insert(index, paint.clone());
-                Ok(paint)
+                let basic_paint = BasicPaint::<C>::from_spec(spec);
+                let series_paint = SeriesPaint::<C>::create(&basic_paint, &self.series_id);
+                self.paints.borrow_mut().insert(index, series_paint.clone());
+                Ok(series_paint)
             }
         }
     }

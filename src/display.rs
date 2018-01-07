@@ -30,6 +30,7 @@ use pw_gix::gtkx::tree_view_column::*;
 use pw_gix::wrapper::*;
 
 use basic_paint::*;
+use colln_paint::*;
 use paint::*;
 use series_paint::*;
 use mixed_paint::*;
@@ -173,10 +174,10 @@ impl<A, C> PaintDisplayDialogInterface<A, C> for PaintDisplayDialog<A, C>
         label.set_widget_colour(&paint.colour());
         vbox.pack_start(&label, false, false, 0);
         if let Paint::Series(ref series_paint) = *paint {
-            let label = gtk::Label::new(series_paint.series().series_name().as_str());
+            let label = gtk::Label::new(series_paint.colln_id().series_name().as_str());
             label.set_widget_colour(&paint.colour());
             vbox.pack_start(&label, false, false, 0);
-            let label = gtk::Label::new(series_paint.series().manufacturer().as_str());
+            let label = gtk::Label::new(series_paint.colln_id().manufacturer().as_str());
             label.set_widget_colour(&paint.colour());
             vbox.pack_start(&label, false, false, 0);
         }

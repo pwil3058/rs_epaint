@@ -80,106 +80,108 @@ pub type PaintSeriesIdentity = Rc<PaintSeriesIdentityData>;
 
 pub type PaintSeriesId = PaintSeriesIdentityData;
 
-pub trait SeriesPaintInterface<C>: BasicPaintInterface<C>
-    where   C: CharacteristicsInterface
-{
-    fn series(&self) -> PaintSeriesIdentity;
-}
+//pub trait SeriesPaintInterface<C>: BasicPaintInterface<C>
+    //where   C: CharacteristicsInterface
+//{
+    //fn series(&self) -> PaintSeriesIdentity;
+//}
 
-#[derive(Debug, Hash, Clone)]
-pub struct SeriesPaintCore<C: CharacteristicsInterface> {
-    colour: Colour,
-    name: String,
-    notes: String,
-    characteristics: C,
-    series_id: PaintSeriesIdentity
-}
+//#[derive(Debug, Hash, Clone)]
+//pub struct SeriesPaintCore<C: CharacteristicsInterface> {
+    //colour: Colour,
+    //name: String,
+    //notes: String,
+    //characteristics: C,
+    //series_id: PaintSeriesIdentity
+//}
 
-impl<C: CharacteristicsInterface> PartialEq for SeriesPaintCore<C> {
-    fn eq(&self, other: &SeriesPaintCore<C>) -> bool {
-        if self.series_id != other.series_id {
-            false
-        } else {
-            self.name == other.name
-        }
-    }
-}
+//impl<C: CharacteristicsInterface> PartialEq for SeriesPaintCore<C> {
+    //fn eq(&self, other: &SeriesPaintCore<C>) -> bool {
+        //if self.series_id != other.series_id {
+            //false
+        //} else {
+            //self.name == other.name
+        //}
+    //}
+//}
 
-impl<C: CharacteristicsInterface> Eq for SeriesPaintCore<C> {}
+//impl<C: CharacteristicsInterface> Eq for SeriesPaintCore<C> {}
 
-impl<C: CharacteristicsInterface> PartialOrd for SeriesPaintCore<C> {
-    fn partial_cmp(&self, other: &SeriesPaintCore<C>) -> Option<Ordering> {
-        if let Some(ordering) = self.series_id.partial_cmp(&other.series_id) {
-            if ordering == Ordering::Equal {
-                self.name.partial_cmp(&other.name)
-            } else {
-                Some(ordering)
-            }
-        } else {
-            //panic!("File: {:?} Line: {:?}", file!(), line!())
-            None
-        }
-    }
-}
+//impl<C: CharacteristicsInterface> PartialOrd for SeriesPaintCore<C> {
+    //fn partial_cmp(&self, other: &SeriesPaintCore<C>) -> Option<Ordering> {
+        //if let Some(ordering) = self.series_id.partial_cmp(&other.series_id) {
+            //if ordering == Ordering::Equal {
+                //self.name.partial_cmp(&other.name)
+            //} else {
+                //Some(ordering)
+            //}
+        //} else {
+            ////panic!("File: {:?} Line: {:?}", file!(), line!())
+            //None
+        //}
+    //}
+//}
 
-impl<C: CharacteristicsInterface> Ord for SeriesPaintCore<C> {
-    fn cmp(&self, other: &SeriesPaintCore<C>) -> Ordering {
-        let ordering = self.series_id.cmp(&other.series_id);
-        if ordering == Ordering::Equal {
-            self.name.cmp(&other.name)
-        } else {
-            ordering
-        }
-    }
-}
+//impl<C: CharacteristicsInterface> Ord for SeriesPaintCore<C> {
+    //fn cmp(&self, other: &SeriesPaintCore<C>) -> Ordering {
+        //let ordering = self.series_id.cmp(&other.series_id);
+        //if ordering == Ordering::Equal {
+            //self.name.cmp(&other.name)
+        //} else {
+            //ordering
+        //}
+    //}
+//}
 
-impl<C: CharacteristicsInterface> ColouredItemInterface for SeriesPaint<C> {
-    fn colour(&self) -> Colour {
-        self.colour.clone()
-    }
-}
+//impl<C: CharacteristicsInterface> ColouredItemInterface for SeriesPaint<C> {
+    //fn colour(&self) -> Colour {
+        //self.colour.clone()
+    //}
+//}
 
-pub type SeriesPaint<C> = Rc<SeriesPaintCore<C>>;
+pub type SeriesPaint<C> = CollnPaint<C, PaintSeriesIdentityData>;
 
-impl<C> BasicPaintInterface<C> for SeriesPaint<C>
-    where   C: CharacteristicsInterface
-{
-    fn name(&self) -> String {
-        self.name.clone()
-    }
+//pub type SeriesPaint<C> = Rc<SeriesPaintCore<C>>;
 
-    fn notes(&self) -> String {
-        self.notes.clone()
-    }
+//impl<C> BasicPaintInterface<C> for SeriesPaint<C>
+    //where   C: CharacteristicsInterface
+//{
+    //fn name(&self) -> String {
+        //self.name.clone()
+    //}
 
-    fn tooltip_text(&self) -> String {
-        if self.notes.len() > 0 {
-            format!(
-                "{} ({})\n{}\n{}",
-                self.series_id.series_name, self.series_id.manufacturer,
-                self.name, self.notes
-            )
-        } else {
-            format!(
-                "{}: {}\n{}",
-                self.series_id.manufacturer, self.series_id.series_name,
-                self.name
-            )
-        }
-    }
+    //fn notes(&self) -> String {
+        //self.notes.clone()
+    //}
 
-    fn characteristics(&self) -> C {
-        self.characteristics.clone()
-    }
-}
+    //fn tooltip_text(&self) -> String {
+        //if self.notes.len() > 0 {
+            //format!(
+                //"{} ({})\n{}\n{}",
+                //self.series_id.series_name, self.series_id.manufacturer,
+                //self.name, self.notes
+            //)
+        //} else {
+            //format!(
+                //"{}: {}\n{}",
+                //self.series_id.manufacturer, self.series_id.series_name,
+                //self.name
+            //)
+        //}
+    //}
 
-impl<C> SeriesPaintInterface<C> for SeriesPaint<C>
-    where   C: CharacteristicsInterface
-{
-    fn series(&self) -> PaintSeriesIdentity {
-        self.series_id.clone()
-    }
-}
+    //fn characteristics(&self) -> C {
+        //self.characteristics.clone()
+    //}
+//}
+
+//impl<C> SeriesPaintInterface<C> for SeriesPaint<C>
+    //where   C: CharacteristicsInterface
+//{
+    //fn series(&self) -> PaintSeriesIdentity {
+        //self.series_id.clone()
+    //}
+//}
 
 #[cfg(test)]
 mod tests {
