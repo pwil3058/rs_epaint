@@ -333,7 +333,7 @@ impl<C, CID> CollnPaintHueAttrWheelInterface<C, CID> for CollnPaintHueAttrWheel<
                 //let rectangle = gtk::Rectangle{x: x, y: y, width: 10, height: -10};
                 //println!("Rectangle: {:?}", rectangle);
                 //tooltip.set_tip_area(&rectangle);
-                match wheel_c.get_paint_at(Point(x as f64, y as f64)) {
+                match wheel_c.get_paint_at((x as f64, y as f64)) {
                     Some(paint) => {
                         tooltip.set_text(Some(paint.tooltip_text().as_str()));
                         true
@@ -369,14 +369,18 @@ impl<C, CID> CollnPaintHueAttrWheelCore<C, CID>
         self.graticule.attr()
     }
 
-    pub fn get_paint_at(&self, raw_point: Point) -> Option<CollnPaint<C, CID>> {
-        let point = self.graticule.reverse_transform(raw_point);
+    pub fn get_paint_at(&self, posn: (f64, f64)) -> Option<CollnPaint<C, CID>> {
+        let point = self.graticule.reverse_transform(Point::from(posn));
         let opr = self.paints.get_coloured_item_at(point);
         if let Some((paint, _)) = opr {
             Some(paint)
         } else {
             None
         }
+    }
+
+    pub fn connect_button_press_event<F: Fn(&gtk::DrawingArea, &gdk::EventButton) -> Inhibit + 'static>(&self, f: F) -> SignalHandlerId {
+        self.graticule.connect_button_press_event(f)
     }
 }
 
@@ -523,6 +527,8 @@ impl<A, C, CID> CollnPaintCollnWidgetInterface<A, C, CID> for CollnPaintCollnWid
                     } else {
                         CollnPaintDisplayDialog::<A, C, CID>::create_without_target(&paint, None, vec![select_btn_spec])
                     };
+                    dialog.set_transient_for_from(&cpcw_c.pwo());
+                    dialog.set_response_sensitive(0, cpcw_c.initiate_select_ok.get());
                     let cpcw_c_c = cpcw_c.clone();
                     dialog.connect_destroy(
                         move |id| { cpcw_c_c.paint_dialogs.borrow_mut().remove(&id); }
@@ -564,6 +570,28 @@ impl<A, C, CID> CollnPaintCollnWidgetInterface<A, C, CID> for CollnPaintCollnWid
                 Inhibit(false)
             }
         );
+
+        for wheel in cpcw.hue_attr_wheels.iter() {
+            let cpcw_c = cpcw.clone();
+            let wheel_c = wheel.clone();
+            wheel.connect_button_press_event(
+                move |_, event| {
+                    if event.get_button() == 3 {
+                        if let Some(paint) = wheel_c.get_paint_at(event.get_position()) {
+                            cpcw_c.popup_menu.set_sensitivities(cpcw_c.initiate_select_ok.get(), &["select"]);
+                            cpcw_c.popup_menu.set_sensitivities(true, &["info"]);
+                            *cpcw_c.chosen_paint.borrow_mut() = Some(paint);
+                        } else {
+                            cpcw_c.popup_menu.set_sensitivities(false, &["info", "select"]);
+                            *cpcw_c.chosen_paint.borrow_mut() = None;
+                        };
+                        cpcw_c.popup_menu.popup_at_event(event);
+                        return Inhibit(true)
+                    };
+                    Inhibit(false)
+                }
+            );
+        }
 
         cpcw
     }

@@ -26,9 +26,8 @@ use pw_gix::gtkx::tree_view_column::*;
 pub use pw_gix::wrapper::*;
 
 use basic_paint::*;
-use basic_paint::editor::*;
 use basic_paint::factory::*;
-use colln_paint::*;
+use colln_paint::collection::*;
 use display::*;
 use error::*;
 use paint::*;
@@ -39,7 +38,6 @@ use mixed_paint::components::*;
 use mixed_paint::mixer::*;
 use series_paint::*;
 pub use basic_paint::entry::*;
-pub use series_paint::manager::*;
 
 #[derive(Debug, PartialEq, Hash, Clone, Copy)]
 pub struct ModelPaintCharacteristics {
@@ -322,16 +320,14 @@ pub type ModelMixedPaint = MixedPaint<ModelPaintCharacteristics>;
 pub type ModelPaint = Paint<ModelPaintCharacteristics>;
 pub type BasicModelPaint = BasicPaint<ModelPaintCharacteristics>;
 pub type ModelPaintDisplayDialog = PaintDisplayDialog<ModelPaintAttributes, ModelPaintCharacteristics>;
-pub type ModelPaintSeries = PaintSeries<ModelPaintCharacteristics>;
+pub type ModelPaintSeries = SeriesPaintColln<ModelPaintCharacteristics>;
 pub type ModelPaintComponentsBox = PaintComponentsBox<ModelPaintCharacteristics>;
 pub type ModelPaintMixer = PaintMixer<ModelPaintAttributes, ModelPaintCharacteristics>;
 pub type ModelPaintHueAttrWheel = PaintHueAttrWheel<ModelPaintAttributes, ModelPaintCharacteristics>;
-pub type ModelPaintSeriesView = PaintSeriesView<ModelPaintAttributes, ModelPaintCharacteristics>;
 pub type ModelPaintSeriesManager = SeriesPaintManager<ModelPaintAttributes, ModelPaintCharacteristics>;
-//pub type ModelSeriesPaintEntry = BasicPaintEntry<ModelPaintAttributes, ModelPaintCharacteristics, ModelPaint>;
 pub type ModelPaintFactoryDisplay = BasicPaintFactoryDisplay<ModelPaintAttributes, ModelPaintCharacteristics>;
-pub type BasicModelPaintEditor = BasicPaintEditor<ModelPaintAttributes, ModelPaintCharacteristics, PaintSeriesId>;
-pub type ModelPaintSeriesSpec = PaintCollnSpec<ModelPaintCharacteristics, PaintSeriesId>;
+pub type BasicModelPaintEditor = SeriesPaintEditor<ModelPaintAttributes, ModelPaintCharacteristics>;
+pub type ModelPaintSeriesSpec = SeriesPaintCollnSpec<ModelPaintCharacteristics>;
 
 const IDEAL_PAINT_STR: &str =
 "Manufacturer: Imaginary
@@ -346,7 +342,8 @@ ModelPaint(name=\"White\", rgb=RGB16(red=0xFFFF, green=0xFFFF, blue=0xFFFF), tra
 ModelPaint(name=\"Yellow\", rgb=RGB16(red=0xFFFF, green=0xFFFF, blue=0x0), transparency=\"O\", finish=\"G\", metallic=\"NM\", fluorescence=\"NF\", notes=\"\")";
 
 pub fn create_ideal_model_paint_series() -> ModelPaintSeries {
-    ModelPaintSeries::from_str(IDEAL_PAINT_STR).unwrap()
+    let spec = ModelPaintSeriesSpec::from_str(IDEAL_PAINT_STR).unwrap();
+    ModelPaintSeries::from_spec(&spec)
 }
 
 #[cfg(test)]

@@ -12,28 +12,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::cmp::Ordering;
 use std::path::Path;
 use std::rc::Rc;
 
-use pw_gix::colour::*;
+use gtk;
+use gtk::prelude::*;
 
-pub mod hue_wheel;
-pub mod manager;
-pub mod series;
+use pw_gix::colour::*;
+use pw_gix::gtkx::window::*;
+use pw_gix::wrapper::*;
 
 use basic_paint::*;
+use basic_paint::editor::*;
 use colln_paint::*;
-
-pub use self::series::*;
+use colln_paint::binder::*;
+use colln_paint::collection::*;
+use icons::series_paint_xpm::*;
 
 #[derive(Debug, PartialEq, PartialOrd, Eq, Ord, Clone, Default, Hash)]
-pub struct PaintSeriesIdentityData {
+pub struct PaintSeriesId {
     manufacturer: String,
     series_name: String,
 }
 
-impl PaintSeriesIdentityData {
+impl PaintSeriesId {
     pub fn manufacturer(&self) -> String {
         self.manufacturer.clone()
     }
@@ -43,9 +45,9 @@ impl PaintSeriesIdentityData {
     }
 }
 
-impl CollnIdInterface for PaintSeriesIdentityData {
-    fn new(colln_name: &str, colln_owner: &str) -> PaintSeriesIdentityData {
-        PaintSeriesIdentityData{
+impl CollnIdInterface for PaintSeriesId {
+    fn new(colln_name: &str, colln_owner: &str) -> PaintSeriesId {
+        PaintSeriesId{
             manufacturer: colln_owner.to_string(),
             series_name: colln_name.to_string(),
         }
@@ -76,112 +78,98 @@ impl CollnIdInterface for PaintSeriesIdentityData {
     }
 }
 
-pub type PaintSeriesIdentity = Rc<PaintSeriesIdentityData>;
+pub type SeriesPaint<C> = CollnPaint<C, PaintSeriesId>;
+pub type SeriesPaintColln<C> = CollnPaintColln<C, PaintSeriesId>;
+pub type SeriesPaintCollnSpec<C> = PaintCollnSpec<C, PaintSeriesId>;
 
-pub type PaintSeriesId = PaintSeriesIdentityData;
+pub type SeriesPaintCollnBinder<A, C> = CollnPaintCollnBinder<A, C, PaintSeriesId>;
+pub type SeriesPaintEditor<A, C> = BasicPaintEditor<A, C, PaintSeriesId>;
 
-//pub trait SeriesPaintInterface<C>: BasicPaintInterface<C>
-    //where   C: CharacteristicsInterface
-//{
-    //fn series(&self) -> PaintSeriesIdentity;
-//}
+const TOOLTIP_TEXT: &str =
+"Open the Series Paint Manager.
+This enables paint to be added to the mixer.";
 
-//#[derive(Debug, Hash, Clone)]
-//pub struct SeriesPaintCore<C: CharacteristicsInterface> {
-    //colour: Colour,
-    //name: String,
-    //notes: String,
-    //characteristics: C,
-    //series_id: PaintSeriesIdentity
-//}
+pub struct SeriesPaintManagerCore<A, C>
+    where   A: ColourAttributesInterface + 'static,
+            C: CharacteristicsInterface + 'static,
+{
+    window: gtk::Window,
+    binder: SeriesPaintCollnBinder<A, C>,
+}
 
-//impl<C: CharacteristicsInterface> PartialEq for SeriesPaintCore<C> {
-    //fn eq(&self, other: &SeriesPaintCore<C>) -> bool {
-        //if self.series_id != other.series_id {
-            //false
-        //} else {
-            //self.name == other.name
-        //}
-    //}
-//}
+impl<A,C> SeriesPaintManagerCore<A, C>
+    where   A: ColourAttributesInterface + 'static,
+            C: CharacteristicsInterface + 'static,
+{
+    pub fn set_target_colour(&self, ocolour: Option<&Colour>) {
+        self.binder.set_target_colour(ocolour)
+    }
 
-//impl<C: CharacteristicsInterface> Eq for SeriesPaintCore<C> {}
+    pub fn set_initiate_select_ok(&self, value: bool) {
+        self.binder.set_initiate_select_ok(value);
+    }
 
-//impl<C: CharacteristicsInterface> PartialOrd for SeriesPaintCore<C> {
-    //fn partial_cmp(&self, other: &SeriesPaintCore<C>) -> Option<Ordering> {
-        //if let Some(ordering) = self.series_id.partial_cmp(&other.series_id) {
-            //if ordering == Ordering::Equal {
-                //self.name.partial_cmp(&other.name)
-            //} else {
-                //Some(ordering)
-            //}
-        //} else {
-            ////panic!("File: {:?} Line: {:?}", file!(), line!())
-            //None
-        //}
-    //}
-//}
+    pub fn connect_add_paint<F: 'static + Fn(&SeriesPaint<C>)>(&self, callback: F) {
+        self.binder.connect_paint_selected(callback)
+    }
+}
 
-//impl<C: CharacteristicsInterface> Ord for SeriesPaintCore<C> {
-    //fn cmp(&self, other: &SeriesPaintCore<C>) -> Ordering {
-        //let ordering = self.series_id.cmp(&other.series_id);
-        //if ordering == Ordering::Equal {
-            //self.name.cmp(&other.name)
-        //} else {
-            //ordering
-        //}
-    //}
-//}
+pub type SeriesPaintManager<A, C> = Rc<SeriesPaintManagerCore<A, C>>;
 
-//impl<C: CharacteristicsInterface> ColouredItemInterface for SeriesPaint<C> {
-    //fn colour(&self) -> Colour {
-        //self.colour.clone()
-    //}
-//}
+pub trait SeriesPaintManagerInterface<A, C>
+    where   A: ColourAttributesInterface + 'static,
+            C: CharacteristicsInterface + 'static,
+{
+    fn create(data_path: &Path) -> SeriesPaintManager<A, C>;
+    fn button(&self) -> gtk::Button;
+    fn tool_button(&self) -> gtk::ToolButton;
+}
 
-pub type SeriesPaint<C> = CollnPaint<C, PaintSeriesIdentityData>;
 
-//pub type SeriesPaint<C> = Rc<SeriesPaintCore<C>>;
+impl<A, C> SeriesPaintManagerInterface<A, C> for SeriesPaintManager<A, C>
+    where   A: ColourAttributesInterface + 'static,
+            C: CharacteristicsInterface + 'static,
+{
+    fn create(data_path: &Path) -> SeriesPaintManager<A, C> {
+        let window = gtk::Window::new(gtk::WindowType::Toplevel);
+        window.set_geometry_from_recollections("series_paint_manager", (600, 200));
+        window.set_destroy_with_parent(true);
+        window.set_title("Series Paint Manager");
+        window.connect_delete_event(
+            move |w,_| {w.hide_on_delete(); gtk::Inhibit(true)}
+        );
+        let binder = SeriesPaintCollnBinder::<A, C>::create(data_path);
+        binder.set_initiate_select_ok(true);
+        window.add(&binder.pwo());
 
-//impl<C> BasicPaintInterface<C> for SeriesPaint<C>
-    //where   C: CharacteristicsInterface
-//{
-    //fn name(&self) -> String {
-        //self.name.clone()
-    //}
+        let spm = Rc::new(
+            SeriesPaintManagerCore::<A, C>{window, binder}
+        );
 
-    //fn notes(&self) -> String {
-        //self.notes.clone()
-    //}
+        spm
+    }
 
-    //fn tooltip_text(&self) -> String {
-        //if self.notes.len() > 0 {
-            //format!(
-                //"{} ({})\n{}\n{}",
-                //self.series_id.series_name, self.series_id.manufacturer,
-                //self.name, self.notes
-            //)
-        //} else {
-            //format!(
-                //"{}: {}\n{}",
-                //self.series_id.manufacturer, self.series_id.series_name,
-                //self.name
-            //)
-        //}
-    //}
+    fn button(&self) -> gtk::Button {
+        let button = gtk::Button::new();
+        button.set_tooltip_text(Some(TOOLTIP_TEXT));
+        button.set_image(&series_paint_image(24));
+        let spm_c = self.clone();
+        button.connect_clicked(
+            move |_| spm_c.window.present()
+        );
+        button
+    }
 
-    //fn characteristics(&self) -> C {
-        //self.characteristics.clone()
-    //}
-//}
-
-//impl<C> SeriesPaintInterface<C> for SeriesPaint<C>
-    //where   C: CharacteristicsInterface
-//{
-    //fn series(&self) -> PaintSeriesIdentity {
-        //self.series_id.clone()
-    //}
-//}
+    fn tool_button(&self) -> gtk::ToolButton {
+        let tool_button = gtk::ToolButton::new(Some(&series_paint_image(24)), Some("Series Paint Manager"));
+        tool_button.set_tooltip_text(Some(TOOLTIP_TEXT));
+        let spm_c = self.clone();
+        tool_button.connect_clicked(
+            move |_| spm_c.window.present()
+        );
+        tool_button
+    }
+}
 
 #[cfg(test)]
 mod tests {

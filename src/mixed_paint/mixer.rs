@@ -34,7 +34,6 @@ use pw_gix::rgb_math::rgb::*;
 use basic_paint::*;
 use paint::*;
 use series_paint::*;
-use series_paint::manager::*;
 use super::collection::*;
 use super::components::*;
 use super::hue_wheel::*;

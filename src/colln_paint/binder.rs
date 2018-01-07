@@ -79,6 +79,12 @@ impl<A, C, CID> CollnPaintCollnBinderCore<A, C, CID>
         None
     }
 
+    pub fn set_initiate_select_ok(&self, value: bool) {
+        for selector in self.paint_collns.borrow().iter() {
+            selector.0.set_initiate_select_ok(value);
+        }
+    }
+
     fn inform_paint_selected(&self, paint: &CollnPaint<C, CID>) {
         for callback in self.paint_selected_callbacks.borrow().iter() {
             callback(&paint);
@@ -193,6 +199,7 @@ impl<A, C, CID> CollnPaintCollnBinderInterface<A, C, CID> for CollnPaintCollnBin
         cpcb.load_colln_button.connect_clicked(
             move |_| cpcb_c.load_paint_colln_from_file()
         );
+        cpcb.vbox.show_all();
 
         cpcb
     }
