@@ -22,14 +22,135 @@ use gtk::{StaticType, ToValue};
 use pw_gix::colour::*;
 
 use basic_paint::*;
-use paint::*;
 use series_paint::*;
 
 pub mod collection;
 pub mod components;
+pub mod display;
 pub mod hue_wheel;
 pub mod mixer;
 pub mod target;
+
+#[derive(Debug, Clone, Hash)]
+pub enum Paint<C: CharacteristicsInterface> {
+    Series(SeriesPaint<C>),
+    Mixed(MixedPaint<C>)
+}
+
+impl<C: CharacteristicsInterface> Paint<C> {
+    pub fn is_series(&self) ->bool {
+        match *self {
+            Paint::Series(_) => true,
+            Paint::Mixed(_) => false
+        }
+
+    }
+
+    pub fn is_mixed(&self) ->bool {
+        !self.is_series()
+    }
+}
+
+impl<C: CharacteristicsInterface> PartialEq for Paint<C> {
+    fn eq(&self, other: &Paint<C>) -> bool {
+        match *self {
+            Paint::Series(ref paint) => {
+                match *other {
+                    Paint::Series(ref opaint) => paint == opaint,
+                    Paint::Mixed(_) => false,
+                }
+            },
+            Paint::Mixed(ref paint) => {
+                match *other {
+                    Paint::Series(_) => false,
+                    Paint::Mixed(ref opaint) => paint == opaint,
+                }
+
+            }
+        }
+    }
+}
+
+impl<C: CharacteristicsInterface> Eq for Paint<C> {}
+
+impl<C: CharacteristicsInterface> PartialOrd for Paint<C> {
+    fn partial_cmp(&self, other: &Paint<C>) -> Option<Ordering> {
+        match *self {
+            Paint::Series(ref paint) => {
+                match *other {
+                    Paint::Series(ref opaint) => paint.partial_cmp(opaint),
+                    Paint::Mixed(_) => Some(Ordering::Less),
+                }
+            },
+            Paint::Mixed(ref paint) => {
+                match *other {
+                    Paint::Series(_) => Some(Ordering::Greater),
+                    Paint::Mixed(ref opaint) => paint.partial_cmp(opaint),
+                }
+
+            }
+        }
+    }
+}
+
+impl<C: CharacteristicsInterface> Ord for Paint<C> {
+    fn cmp(&self, other: &Paint<C>) -> Ordering {
+        match *self {
+            Paint::Series(ref paint) => {
+                match *other {
+                    Paint::Series(ref opaint) => paint.cmp(opaint),
+                    Paint::Mixed(_) => Ordering::Less,
+                }
+            },
+            Paint::Mixed(ref paint) => {
+                match *other {
+                    Paint::Series(_) => Ordering::Greater,
+                    Paint::Mixed(ref opaint) => paint.cmp(opaint),
+                }
+
+            }
+        }
+    }
+}
+
+impl<C: CharacteristicsInterface> ColouredItemInterface for Paint<C> {
+    fn colour(&self) -> Colour {
+        match *self {
+            Paint::Series(ref paint) => paint.colour(),
+            Paint::Mixed(ref paint) => paint.colour(),
+        }
+    }
+}
+
+impl<C: CharacteristicsInterface> BasicPaintInterface<C> for Paint<C> {
+    fn name(&self) -> String {
+        match *self {
+            Paint::Series(ref paint) => paint.name(),
+            Paint::Mixed(ref paint) => paint.name(),
+        }
+    }
+
+    fn notes(&self) -> String {
+        match *self {
+            Paint::Series(ref paint) => paint.notes(),
+            Paint::Mixed(ref paint) => paint.notes(),
+        }
+    }
+
+    fn tooltip_text(&self) -> String {
+        match *self {
+            Paint::Series(ref paint) => paint.tooltip_text(),
+            Paint::Mixed(ref paint) => paint.tooltip_text(),
+        }
+    }
+
+    fn characteristics(&self) -> C {
+        match *self {
+            Paint::Series(ref paint) => paint.characteristics(),
+            Paint::Mixed(ref paint) => paint.characteristics(),
+        }
+    }
+}
 
 #[derive(Debug, PartialEq, Hash, Clone)]
 pub struct PaintComponent<C: CharacteristicsInterface> {

@@ -64,18 +64,23 @@ pub mod error {
     }
 }
 
+pub mod display {
+    pub struct PaintDisplayButtonSpec {
+        pub label: String,
+        pub tooltip_text: String,
+        pub callback: Box<Fn()>
+    }
+}
+
 pub mod basic_paint;
 pub mod characteristics;
 pub mod colln_paint;
 pub mod colour_edit;
 pub mod colour_mix;
-pub mod display;
-pub mod hue_wheel;
 pub mod icons;
 pub mod graticule;
 pub mod mixed_paint;
 pub mod model_paint;
-pub mod paint;
 pub mod series_paint;
 pub mod shape;
 

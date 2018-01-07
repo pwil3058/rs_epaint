@@ -24,14 +24,16 @@ use gtk::prelude::*;
 use pw_gix::cairox::*;
 use pw_gix::colour::*;
 use pw_gix::gtkx::menu::*;
+use pw_gix::rgb_math::rgb::*;
 use pw_gix::wrapper::*;
 
 use basic_paint::*;
-use display::*;
 use graticule::*;
 use series_paint::*;
 use shape::*;
+
 use super::*;
+use super::display::*;
 use super::target::*;
 
 // CHOSEN_ITEM
@@ -71,6 +73,122 @@ impl<C: CharacteristicsInterface> ChosenItem<C> {
         }
     }
 }
+
+// SERIES PAINT SHAPE
+pub struct SeriesPaintShape<C: CharacteristicsInterface> {
+    paint: SeriesPaint<C>,
+    xy: Point,
+}
+
+impl<C: CharacteristicsInterface> ColourShapeInterface for SeriesPaintShape<C> {
+    fn xy(&self) -> Point {
+        self.xy
+    }
+
+    fn fill_rgb(&self) -> RGB {
+        self.paint.rgb()
+    }
+
+    fn shape_type(&self) -> ShapeType {
+        ShapeType::Square
+    }
+}
+
+impl<C> ColouredItemShapeInterface<SeriesPaint<C>> for SeriesPaintShape<C>
+    where   C: CharacteristicsInterface
+{
+    fn new(paint: &SeriesPaint<C>, attr: ScalarAttribute) -> SeriesPaintShape<C> {
+        let radius = paint.scalar_attribute(attr);
+        let angle = paint.hue().angle();
+        SeriesPaintShape::<C>{
+            paint: paint.clone(),
+            xy: Point::from((angle, radius)),
+        }
+    }
+
+    fn coloured_item(&self) -> SeriesPaint<C> {
+        self.paint.clone()
+    }
+}
+
+pub type SeriesPaintShapeList<C> = ColouredItemSpapeList<SeriesPaint<C>, SeriesPaintShape<C>>;
+
+// MIXED PAINT SHAPE
+pub struct MixedPaintShape<C: CharacteristicsInterface> {
+    paint: MixedPaint<C>,
+    xy: Point,
+}
+
+impl<C: CharacteristicsInterface> ColourShapeInterface for MixedPaintShape<C> {
+    fn xy(&self) -> Point {
+        self.xy
+    }
+
+    fn fill_rgb(&self) -> RGB {
+        self.paint.rgb()
+    }
+
+    fn shape_type(&self) -> ShapeType {
+        ShapeType::Diamond
+    }
+}
+
+impl<C> ColouredItemShapeInterface<MixedPaint<C>> for MixedPaintShape<C>
+    where   C: CharacteristicsInterface
+{
+    fn new(paint: &MixedPaint<C>, attr: ScalarAttribute) -> MixedPaintShape<C> {
+        let radius = paint.scalar_attribute(attr);
+        let angle = paint.hue().angle();
+        MixedPaintShape::<C>{
+            paint: paint.clone(),
+            xy: Point::from((angle, radius)),
+        }
+    }
+
+    fn coloured_item(&self) -> MixedPaint<C> {
+        self.paint.clone()
+    }
+}
+
+pub type MixedPaintShapeList<C> = ColouredItemSpapeList<MixedPaint<C>, MixedPaintShape<C>>;
+
+// TARGET COLOUR SHAPE
+
+pub struct TargetColourShape {
+    target_colour: TargetColour,
+    xy: Point,
+}
+
+impl ColourShapeInterface for TargetColourShape {
+    fn xy(&self) -> Point {
+        self.xy
+    }
+
+    fn fill_rgb(&self) -> RGB {
+        self.target_colour.rgb()
+    }
+
+    fn shape_type(&self) -> ShapeType {
+        ShapeType::Circle
+    }
+}
+
+impl ColouredItemShapeInterface<TargetColour> for TargetColourShape {
+    fn new(target_colour: &TargetColour, attr: ScalarAttribute) -> TargetColourShape {
+        let radius = target_colour.colour().scalar_attribute(attr);
+        let angle = target_colour.colour().hue().angle();
+        TargetColourShape{
+            target_colour: target_colour.clone(),
+            xy: Point::from((angle, radius)),
+        }
+    }
+
+    fn coloured_item(&self) -> TargetColour {
+        self.target_colour.clone()
+    }
+}
+
+pub type TargetColourShapeList = ColouredItemSpapeList<TargetColour, TargetColourShape>;
 
 // WHEEL
 pub struct MixerHueAttrWheelCore<A, C>

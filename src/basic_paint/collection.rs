@@ -23,7 +23,7 @@ use gtk::prelude::*;
 use pw_gix::gtkx::list_store::*;
 use pw_gix::gtkx::tree_view_column::*;
 
-use struct_traits::SimpleCreation;
+pub use struct_traits::SimpleCreation;
 
 use basic_paint::*;
 

@@ -19,7 +19,8 @@ use pw_gix::gtkx::paned::RememberPosition;
 pub use pw_gix::wrapper::WidgetWrapper;
 
 use colln_paint::*;
-use struct_traits::SimpleCreation;
+
+pub use struct_traits::SimpleCreation;
 
 use super::*;
 use super::factory::*;

@@ -31,9 +31,10 @@ use pw_gix::wrapper::*;
 
 use basic_paint::*;
 use colln_paint::*;
-use paint::*;
 use series_paint::*;
 use mixed_paint::*;
+
+use super::*;
 
 pub struct PaintDisplayButtonSpec {
     pub label: String,

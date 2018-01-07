@@ -36,7 +36,7 @@ pub mod display;
 
 use basic_paint::*;
 use error::*;
-use struct_traits::SimpleCreation;
+pub use struct_traits::SimpleCreation;
 
 pub trait CollnIdInterface:
     Debug + PartialEq + PartialOrd + Eq + Ord + Clone + Default + Hash

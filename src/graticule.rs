@@ -30,6 +30,42 @@ use pw_gix::rgb_math::rgb::*;
 
 use shape::*;
 
+// CURRENT TARGET SHAPE
+pub struct CurrentTargetShape {
+    colour: Colour,
+    xy: Point
+}
+
+impl ColourShapeInterface for CurrentTargetShape {
+    fn xy(&self) -> Point {
+        self.xy
+    }
+
+    fn fill_rgb(&self) -> RGB {
+        self.colour.rgb()
+    }
+
+    fn shape_type(&self) -> ShapeType {
+        ShapeType::BackSight
+    }
+}
+
+impl CurrentTargetShape {
+    pub fn create(colour: &Colour, attr: ScalarAttribute) -> CurrentTargetShape {
+        let radius = colour.scalar_attribute(attr);
+        let angle = colour.hue().angle();
+        CurrentTargetShape {
+            colour: colour.clone(),
+            xy: Point::from((angle, radius)),
+        }
+    }
+
+    pub fn colour(&self) -> Colour {
+        self.colour.clone()
+    }
+}
+
+// GRATICULE
 pub struct GraticuleCore {
     drawing_area: gtk::DrawingArea,
     attr: ScalarAttribute,

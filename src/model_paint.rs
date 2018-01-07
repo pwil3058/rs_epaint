@@ -30,13 +30,13 @@ use basic_paint::factory::*;
 use colln_paint::collection::*;
 use display::*;
 use error::*;
-use paint::*;
 use characteristics::*;
-use hue_wheel::*;
 use mixed_paint::*;
 use mixed_paint::components::*;
-use mixed_paint::mixer::*;
 use series_paint::*;
+
+pub use struct_traits::SimpleCreation;
+pub use mixed_paint::mixer::*;
 pub use basic_paint::entry::*;
 
 #[derive(Debug, PartialEq, Hash, Clone, Copy)]
@@ -319,11 +319,9 @@ pub type ModelSeriesPaintSpec = BasicPaintSpec<ModelPaintCharacteristics>;
 pub type ModelMixedPaint = MixedPaint<ModelPaintCharacteristics>;
 pub type ModelPaint = Paint<ModelPaintCharacteristics>;
 pub type BasicModelPaint = BasicPaint<ModelPaintCharacteristics>;
-pub type ModelPaintDisplayDialog = PaintDisplayDialog<ModelPaintAttributes, ModelPaintCharacteristics>;
 pub type ModelPaintSeries = SeriesPaintColln<ModelPaintCharacteristics>;
 pub type ModelPaintComponentsBox = PaintComponentsBox<ModelPaintCharacteristics>;
 pub type ModelPaintMixer = PaintMixer<ModelPaintAttributes, ModelPaintCharacteristics>;
-pub type ModelPaintHueAttrWheel = PaintHueAttrWheel<ModelPaintAttributes, ModelPaintCharacteristics>;
 pub type ModelPaintSeriesManager = SeriesPaintManager<ModelPaintAttributes, ModelPaintCharacteristics>;
 pub type ModelPaintFactoryDisplay = BasicPaintFactoryDisplay<ModelPaintAttributes, ModelPaintCharacteristics>;
 pub type BasicModelPaintEditor = SeriesPaintEditor<ModelPaintAttributes, ModelPaintCharacteristics>;

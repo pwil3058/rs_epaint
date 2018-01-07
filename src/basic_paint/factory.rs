@@ -27,7 +27,7 @@ use pw_gix::gtkx::tree_view_column::*;
 use pw_gix::wrapper::*;
 
 use basic_paint::*;
-use struct_traits::*;
+pub use struct_traits::SimpleCreation;
 
 use super::display::*;
 use super::hue_wheel::*;
