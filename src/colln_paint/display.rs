@@ -21,6 +21,7 @@ use gtk::prelude::*;
 use pw_gix::gtkx::coloured::*;
 use pw_gix::gtkx::dialog::*;
 
+use app_name;
 use super::*;
 pub use display::PaintDisplayButtonSpec;
 
@@ -59,6 +60,10 @@ impl<A, C, CID> CollnPaintDisplayDialogCore<A, C, CID>
 
     pub fn show(&self) {
         self.dialog.show()
+    }
+
+    pub fn present(&self) {
+        self.dialog.present()
     }
 
     pub fn close(&self) {
@@ -137,7 +142,7 @@ impl<A, C, CID> CollnPaintDisplayDialogInterface<A, C, CID> for CollnPaintDispla
         parent: Option<&gtk::Window>,
         button_specs: Vec<PaintDisplayButtonSpec>,
     ) -> CollnPaintDisplayDialog<A, C, CID> {
-        let title = format!("mcmmtk: {}", paint.name());
+        let title = format!("{}: {}", app_name(), paint.name());
         let dialog = gtk::Dialog::new_with_buttons(
             Some(title.as_str()),
             parent,

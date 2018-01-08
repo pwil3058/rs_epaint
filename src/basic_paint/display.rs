@@ -21,6 +21,7 @@ use gtk::prelude::*;
 use pw_gix::gtkx::coloured::*;
 use pw_gix::gtkx::dialog::*;
 
+use app_name;
 use basic_paint::*;
 pub use display::PaintDisplayButtonSpec;
 
@@ -108,7 +109,7 @@ impl<A, C> BasicPaintDisplayDialogInterface<A, C> for BasicPaintDisplayDialog<A,
         parent: Option<&gtk::Window>,
         button_specs: Vec<PaintDisplayButtonSpec>,
     ) -> BasicPaintDisplayDialog<A, C> {
-        let title = format!("mcmmtk: {}", paint.name());
+        let title = format!("{}: {}", app_name(), paint.name());
         let dialog = gtk::Dialog::new_with_buttons(
             Some(title.as_str()),
             parent,

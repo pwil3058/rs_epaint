@@ -84,6 +84,16 @@ pub mod model_paint;
 pub mod series_paint;
 pub mod shape;
 
+use std::env;
+
+pub fn app_name() -> String {
+    if let Some(ref text) = env::args().next() {
+        pw_pathux::split_path_text(text).1.to_string()
+    } else {
+        "unknown".to_string()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     #[test]

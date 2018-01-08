@@ -24,6 +24,7 @@ use pw_gix::colour::*;
 use pw_gix::gtkx::coloured::*;
 use pw_gix::gtkx::dialog::*;
 
+use app_name;
 use basic_paint::*;
 use colour_edit::*;
 
@@ -130,7 +131,7 @@ impl<A> TargetColourDisplayDialogInterface<A> for TargetColourDisplayDialog<A>
         colour: &TargetColour,
         parent: Option<&gtk::Window>,
     ) -> TargetColourDisplayDialog<A> {
-        let title = format!("mcmmtk: {}", colour.name());
+        let title = format!("{}: {}", app_name(), colour.name());
         let dialog = gtk::Dialog::new_with_buttons(
             Some(title.as_str()),
             parent,
@@ -181,8 +182,9 @@ impl<A> NewTargetColourDialogInterface<A> for NewTargetColourDialog<A>
     where   A: ColourAttributesInterface
 {
     fn create(parent: Option<&gtk::Window>) -> NewTargetColourDialog<A> {
+        let title = format!("{}: New Mixed Paint Target Colour", app_name());
         let dialog = gtk::Dialog::new_with_buttons(
-            Some("mcmmtk: New Mixed Paint Target Colour"),
+            Some(&title),
             parent,
             gtk::DialogFlags::DESTROY_WITH_PARENT,
             &[("gtk-cancel", gtk::ResponseType::Reject.into()), ("gtk-ok", gtk::ResponseType::Accept.into())]

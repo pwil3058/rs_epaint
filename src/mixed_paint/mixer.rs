@@ -173,7 +173,7 @@ pub struct PaintMixerCore<A, C>
     cads: Rc<A>,
     colour_match_area: ColourMatchArea,
     hue_attr_wheels: Vec<MixerHueAttrWheel<A, C>>,
-    paint_components: PaintComponentsBox<C>,
+    paint_components: PaintComponentsBox<A, C>,
     mixed_paints_view: MixedPaintCollectionView<A, C>,
     notes: gtk::Entry,
     next_name_label: gtk::Label,
@@ -234,6 +234,7 @@ impl<A, C> PaintMixerCore<A, C>
         self.cads.set_target_colour(o_colour);
         self.colour_match_area.set_target_colour(o_colour);
         self.series_paint_manager.set_target_colour(o_colour);
+        self.paint_components.set_current_target(o_colour);
         for wheel in self.hue_attr_wheels.iter() {
             wheel.set_target_colour(o_colour);
         }
@@ -368,7 +369,7 @@ impl<A, C> PaintMixerInterface<A, C> for PaintMixer<A, C>
                 cads: A::create(),
                 hue_attr_wheels: view_attr_wheels,
                 colour_match_area: ColourMatchArea::create(),
-                paint_components: PaintComponentsBox::<C>::create_with(4, true),
+                paint_components: PaintComponentsBox::<A, C>::create_with(4, true),
                 mixed_paints_view: MixedPaintCollectionView::<A, C>::create(&mixed_paints),
                 notes: gtk::Entry::new(),
                 next_name_label: gtk::Label::new(Some("#???:")),

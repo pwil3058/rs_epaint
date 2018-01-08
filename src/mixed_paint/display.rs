@@ -29,6 +29,7 @@ use pw_gix::gtkx::menu::*;
 use pw_gix::gtkx::tree_view_column::*;
 use pw_gix::wrapper::*;
 
+use app_name;
 use basic_paint::*;
 use display::*;
 use series_paint::*;
@@ -69,6 +70,14 @@ impl<A, C> MixedPaintDisplayDialogCore<A, C>
 
     pub fn show(&self) {
         self.dialog.show()
+    }
+
+    pub fn present(&self) {
+        self.dialog.present()
+    }
+
+    pub fn close(&self) {
+        self.dialog.close()
     }
 
     pub fn id_no(&self) -> u32 {
@@ -125,7 +134,7 @@ impl<A, C> PaintDisplayDialogInterface<A, C> for MixedPaintDisplayDialog<A, C>
         parent: Option<&gtk::Window>,
         button_specs: Vec<PaintDisplayButtonSpec>,
     ) -> MixedPaintDisplayDialog<A, C> {
-        let title = format!("mcmmtk: {}", paint.name());
+        let title = format!("{}: {}", app_name(), paint.name());
         let dialog = gtk::Dialog::new_with_buttons(
             Some(title.as_str()),
             parent,
