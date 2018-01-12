@@ -70,6 +70,10 @@ impl CollnIdInterface for PaintSeriesId {
         "Add this paint to the paint mixing area.".to_string()
     }
 
+    fn recollection_name_for(item_name: &str) -> String {
+        format!("series_paint::{}", item_name)
+    }
+
     fn colln_name(&self) -> String {
         self.series_name.clone()
     }

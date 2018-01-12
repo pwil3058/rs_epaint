@@ -41,13 +41,14 @@ pub mod factory;
 pub mod hue_wheel;
 
 pub trait CharacteristicsInterface:
-    Debug + Hash + PartialEq + Clone + Copy + FromStr + ToString
+    Debug + Hash + PartialEq + Clone + Copy + ToString
 {
     type Entry: CharacteristicsEntryInterface<Self>;
 
     fn tv_row_len() -> usize;
     fn tv_columns(start_col_id: i32) -> Vec<gtk::TreeViewColumn>;
     fn from_floats(floats: &Vec<f64>) -> Self;
+    fn from_str(string: &str) -> Result<Self, PaintError>;
 
     fn tv_rows(&self) -> Vec<gtk::Value>;
     fn gui_display_widget(&self) -> gtk::Box;
@@ -140,7 +141,7 @@ pub trait BasicPaintInterface<C>: Hash + Clone + PartialEq + Ord + Debug + Colou
         }
     }
 
-    fn matches_spec(&self, spec: BasicPaintSpec<C>) -> bool {
+    fn matches_spec(&self, spec: &BasicPaintSpec<C>) -> bool {
         if self.rgb() != spec.rgb {
             false
         } else if self.name() != spec.name {
@@ -295,12 +296,12 @@ impl<C: CharacteristicsInterface> FromStr for BasicPaintSpec<C> {
     type Err = PaintError;
 
     fn from_str(string: &str) -> Result<BasicPaintSpec<C>, PaintError> {
-        let captures = BASIC_PAINT_RE.captures(string).ok_or(PaintError::MalformedText(string.to_string()))?;
-        let c_match = captures.name("characteristics").ok_or(PaintError::MalformedText(string.to_string()))?;
-        let rgb_match = captures.name("rgb").ok_or(PaintError::MalformedText(string.to_string()))?;
-        let name_match = captures.name("name").ok_or(PaintError::MalformedText(string.to_string()))?;
-        let characteristics = C::from_str(c_match.as_str()).map_err(|_| PaintError::MalformedText(string.to_string()))?;
-        let rgb16 = RGB16::from_str(rgb_match.as_str()).map_err(|_| PaintError::MalformedText(string.to_string()))?;
+        let captures = BASIC_PAINT_RE.captures(string).ok_or(PaintError::from(PaintErrorType::MalformedText(string.to_string())))?;
+        let c_match = captures.name("characteristics").ok_or(PaintError::from(PaintErrorType::MalformedText(string.to_string())))?;
+        let rgb_match = captures.name("rgb").ok_or(PaintError::from(PaintErrorType::MalformedText(string.to_string())))?;
+        let name_match = captures.name("name").ok_or(PaintError::from(PaintErrorType::MalformedText(string.to_string())))?;
+        let characteristics = C::from_str(c_match.as_str())?;
+        let rgb16 = RGB16::from_str(rgb_match.as_str())?;
         let notes = match captures.name("notes") {
             Some(notes_match) => notes_match.as_str().to_string(),
             None => "".to_string()
@@ -318,7 +319,7 @@ impl<C: CharacteristicsInterface> FromStr for BasicPaintSpec<C> {
 
 impl<C: CharacteristicsInterface> fmt::Display for BasicPaintSpec<C> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "PaintSpec(name=\"{}\", rgb={}), {}, notes=\"{}\")",
+        write!(f, "PaintSpec(name=\"{}\", rgb={}, {}, notes=\"{}\")",
             self.name.replace("\"", "\\\""),
             RGB16::from(self.rgb).to_string(),
             self.characteristics.to_string(),

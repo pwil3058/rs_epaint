@@ -13,7 +13,7 @@
 // limitations under the License.
 
 use std::cell::RefCell;
-use std::cmp::{Ordering};
+use std::cmp::Ordering;
 use std::fmt;
 use std::fmt::Debug;
 use std::fs::File;
@@ -48,6 +48,8 @@ pub trait CollnIdInterface:
     fn paint_select_label() -> String;
     fn paint_select_tooltip_text() -> String;
 
+    fn recollection_name_for(item_name: &str) -> String;
+
     fn display_current_target() -> bool {
         true
     }
@@ -57,6 +59,10 @@ pub trait CollnIdInterface:
 
     fn tooltip_text(&self) -> String {
         format!("{}\n({})", self.colln_name(), self.colln_owner())
+    }
+
+    fn rc_new(colln_name: &str, colln_owner: &str) -> Rc<Self> {
+        Rc::new(Self::new(colln_name, colln_owner))
     }
 }
 
@@ -81,7 +87,7 @@ impl<CID> WidgetWrapper<gtk::Grid> for CollnIdEntryData<CID>
 pub type CollnIdEntry<CID> = Rc<CollnIdEntryData<CID>>;
 
 impl<CID> SimpleCreation for CollnIdEntry<CID>
-    where   CID: CollnIdInterface
+    where   CID: CollnIdInterface + 'static
 {
     fn create() -> CollnIdEntry<CID> {
         let psie = Rc::new(
@@ -104,6 +110,16 @@ impl<CID> SimpleCreation for CollnIdEntry<CID>
         psie.colln_owner_entry.set_hexpand(true);
         psie.grid.attach_next_to(&psie.colln_owner_entry.clone(), Some(&label), gtk::PositionType::Right, 1, 1);
 
+        let psie_c = psie.clone();
+        psie.colln_name_entry.connect_changed(
+            move |_| psie_c.inform_changed()
+        );
+
+        let psie_c = psie.clone();
+        psie.colln_owner_entry.connect_changed(
+            move |_| psie_c.inform_changed()
+        );
+
         psie
     }
 }
@@ -111,16 +127,20 @@ impl<CID> SimpleCreation for CollnIdEntry<CID>
 impl<CID> CollnIdEntryData<CID>
     where   CID: CollnIdInterface
 {
-    pub fn get_colln_id(&self) -> Option<CID> {
+    pub fn get_colln_id(&self) -> Option<Rc<CID>> {
         if let Some(colln_name) = self.colln_name_entry.get_text() {
-            if let Some(colln_owner) = self.colln_name_entry.get_text() {
-                return Some(CID::new(&colln_name, &colln_owner))
+            if colln_name.len() > 0 {
+                if let Some(colln_owner) = self.colln_owner_entry.get_text() {
+                    if colln_owner.len() > 0 {
+                        return Some(CID::rc_new(&colln_name, &colln_owner))
+                    }
+                }
             }
         };
         None
     }
 
-    pub fn set_colln_id(&self, o_cid: Option<&CID>) {
+    pub fn set_colln_id(&self, o_cid: Option<&Rc<CID>>) {
         if let Some(cid) = o_cid {
             self.colln_name_entry.set_text(&cid.colln_name());
             self.colln_owner_entry.set_text(&cid.colln_owner());
@@ -132,6 +152,12 @@ impl<CID> CollnIdEntryData<CID>
 
     pub fn connect_changed<F: 'static + Fn()>(&self, callback: F) {
         self.changed_callbacks.borrow_mut().push(Box::new(callback));
+    }
+
+    fn inform_changed(&self) {
+        for callback in self.changed_callbacks.borrow().iter() {
+            callback()
+        }
     }
 }
 
@@ -268,14 +294,10 @@ impl<C, CID> PaintCollnSpec<C, CID>
     where   C: CharacteristicsInterface,
             CID: CollnIdInterface
 {
-    fn from_file(path: &Path) -> Result<PaintCollnSpec<C, CID>, PaintError> {
-        let mut file = File::open(path).map_err(
-            |err| PaintError::IOError(err)
-        )?;
+    pub fn from_file(path: &Path) -> Result<PaintCollnSpec<C, CID>, PaintError> {
+        let mut file = File::open(path)?;
         let mut string = String::new();
-        file.read_to_string(&mut string).map_err(
-            |err| PaintError::IOError(err)
-        )?;
+        file.read_to_string(&mut string)?;
         PaintCollnSpec::<C, CID>::from_str(string.as_str())
     }
 
@@ -308,21 +330,21 @@ impl<C, CID> FromStr for PaintCollnSpec<C, CID>
                         colln_owner = tail.trim();
                     }
                 } else {
-                    return Err(PaintError::MalformedText(line.to_string()))
+                    return Err(PaintErrorType::MalformedText(line.to_string()).into())
                 }
             } else {
-                return Err(PaintError::MalformedText(string.to_string()))
+                return Err(PaintErrorType::MalformedText(string.to_string()).into())
             }
         }
         if colln_name.len() == 0 || colln_owner.len() == 0 {
-            return Err(PaintError::MalformedText(string.to_string()))
+            return Err(PaintErrorType::MalformedText(string.to_string()).into())
         };
         let colln_id = Rc::new(CID::new(colln_name, colln_owner));
         let mut paint_specs: Vec<BasicPaintSpec<C>> = Vec::new();
         for line in lines {
             let spec = BasicPaintSpec::<C>::from_str(line)?;
             match paint_specs.binary_search_by_key(&spec.name, |bps| bps.name.clone()) {
-                Ok(_) => return Err(PaintError::AlreadyExists(spec.name)),
+                Ok(_) => return Err(PaintErrorType::AlreadyExists(spec.name).into()),
                 Err(index) => paint_specs.insert(index, spec)
             }
         }

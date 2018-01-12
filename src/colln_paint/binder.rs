@@ -249,18 +249,18 @@ impl<A, C, CID> CollnPaintCollnBinderInterface<A, C, CID> for CollnPaintCollnBin
                 }
             },
             Err(err) => {
-                match err {
-                    PaintError::IOError(io_error) => {
+                match err.error_type() {
+                    &PaintErrorType::IOError(ref io_error) => {
                         let expln = format!("\"{:?}\" \"{}\"\n", path, io_error.description());
                         let msg = "I/O Error";
                         self.warn_user(msg, Some(expln.as_str()));
                     },
-                    PaintError::MalformedText(_) => {
+                    &PaintErrorType::MalformedText(_) => {
                         let expln = format!("Error parsing \"{:?}\"\n", path);
                         let msg = "Malformed Collection Specification Text";
                         self.warn_user(msg, Some(expln.as_str()));
                     },
-                    PaintError::AlreadyExists(text) => {
+                    &PaintErrorType::AlreadyExists(ref text) => {
                         let expln = format!("\"{:?}\" contains two paints named\"{}\"\n", path, text);
                         let msg = "Malformed Collection (Duplicate Paints)";
                         self.warn_user(msg, Some(expln.as_str()));

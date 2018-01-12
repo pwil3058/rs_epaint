@@ -31,6 +31,22 @@ pub enum EntryStatus {
     CreatingNotReadyUnnamed,
 }
 
+impl EntryStatus {
+    pub fn needs_saving(&self) -> bool {
+        match *self {
+            EntryStatus::EditingNoChange | EntryStatus::CreatingNotReadyUnnamed => false,
+            _ => true,
+        }
+    }
+
+    pub fn is_saveable(&self) -> bool {
+        match *self {
+            EntryStatus::EditingNoChange | EntryStatus::CreatingReady | EntryStatus::EditingReady => true,
+            _ => false,
+        }
+    }
+}
+
 pub trait CreateInterface {
     fn create(extra_buttons: &Vec<gtk::Button>) -> Self;
 }

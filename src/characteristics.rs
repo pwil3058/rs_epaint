@@ -21,7 +21,7 @@ use gtk::{ComboBoxExt, ComboBoxTextExt};
 
 use regex::*;
 
-use error::PaintError;
+use error::{PaintError, PaintErrorType};
 
 pub trait CharacteristicInterface: FromStr + PartialEq {
     fn name() -> &'static str;
@@ -159,7 +159,7 @@ impl FromStr for Finish {
             "SG" | "Semi-gloss" => Ok(Finish::SemiGloss),
             "SF" | "Semi-flat" => Ok(Finish::SemiFlat),
             "F" | "Flat" => Ok(Finish::Flat),
-            _ => Err(PaintError::MalformedText(string.to_string()))
+            _ => Err(PaintErrorType::MalformedText(string.to_string()).into())
         }
     }
 }
@@ -268,7 +268,7 @@ impl FromStr for Transparency {
             "ST" | "Semi-transparent" => Ok(Transparency::SemiTransparent),
             "T" | "Transparent" => Ok(Transparency::Transparent),
             "Cl" | "Clear" => Ok(Transparency::Clear),
-            _ => Err(PaintError::MalformedText(string.to_string()))
+            _ => Err(PaintErrorType::MalformedText(string.to_string()).into())
         }
     }
 }
@@ -374,7 +374,7 @@ impl FromStr for Fluorescence {
             "SF" | "Semi-fluorescent" => Ok(Fluorescence::SemiFluorescent),
             "SN" | "Semi-nonfluorescent" => Ok(Fluorescence::SemiNonfluorescent),
             "NF" | "Nonfluorescent" => Ok(Fluorescence::Nonfluorescent),
-            _ => Err(PaintError::MalformedText(string.to_string()))
+            _ => Err(PaintErrorType::MalformedText(string.to_string()).into())
         }
     }
 }
@@ -478,7 +478,7 @@ impl FromStr for Metallic {
             "Mc" | "Semi-metallic" => Ok(Metallic::Metallic),
             "SM" | "Semi-nonmetallic" => Ok(Metallic::SemiMetallic),
             "NM" | "Nonmetallic" => Ok(Metallic::Nonmetallic),
-            _ => Err(PaintError::MalformedText(string.to_string()))
+            _ => Err(PaintErrorType::MalformedText(string.to_string()).into())
         }
     }
 }

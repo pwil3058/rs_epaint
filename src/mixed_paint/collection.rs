@@ -105,7 +105,7 @@ impl<C: CharacteristicsInterface> MixedPaintCollectionCore<C> {
             total_parts += component.parts;
         }
         if gcd == 0 {
-            return Err(PaintError::NoSubstantiveComponents)
+            return Err(PaintErrorType::NoSubstantiveComponents.into())
         }
         total_parts /= gcd;
         let mut new_rgb: RGB = BLACK;

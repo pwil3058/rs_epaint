@@ -50,18 +50,90 @@ pub mod struct_traits {
 }
 
 pub mod error {
+    use std::convert::From;
+    use std::error::Error;
+    use std::fmt;
     use std::io;
 
+    use regex;
+
+    use pw_gix::rgb_math::rgb;
+
     #[derive(Debug)]
-    pub enum PaintError {
+    pub enum PaintErrorType {
         AlreadyExists(String),
         MalformedText(String),
-        PaintTypeMismatch,
         IOError(io::Error),
         NoSubstantiveComponents,
-        NotFound(String),
-        DifferentPaintSameName
+        NoCollectionId,
+        UserCancelled,
     }
+
+    #[derive(Debug)]
+    pub struct PaintError {
+        error_type: PaintErrorType,
+        msg: String,
+    }
+
+    impl PaintError {
+        pub fn error_type(&self) -> &PaintErrorType {
+            &self.error_type
+        }
+    }
+
+    impl From<PaintErrorType> for PaintError {
+        fn from(error_type: PaintErrorType) -> PaintError {
+            let msg = match error_type {
+                PaintErrorType::AlreadyExists(ref text) => format!("{}: already exists.", text),
+                PaintErrorType::MalformedText(ref text) => format!("{}: is (or contains) malformed text.", text),
+                PaintErrorType::IOError(ref io_error) => format!("I/O Error: {}", io_error.description()),
+                PaintErrorType::NoSubstantiveComponents => "Contains no nonzero components.".to_string(),
+                PaintErrorType::NoCollectionId => "Missing collection identifier.".to_string(),
+                PaintErrorType::UserCancelled => "Operation cancelled by the user.".to_string(),
+            };
+            PaintError{error_type, msg}
+        }
+    }
+
+    impl From<io::Error> for PaintError {
+        fn from(io_error: io::Error) -> PaintError {
+            PaintErrorType::IOError(io_error).into()
+        }
+    }
+
+    impl From<regex::Error> for PaintError {
+        fn from(regex_error: regex::Error) -> PaintError {
+            match regex_error {
+                regex::Error::Syntax(string) => PaintErrorType::MalformedText(string).into(),
+                _ => panic!("Unexpected regex error"),
+            }
+
+        }
+    }
+
+    impl From<rgb::RGBError> for PaintError {
+        fn from(rgb_error: rgb::RGBError) -> PaintError {
+            match rgb_error {
+                rgb::RGBError::MalformedText(string) => PaintErrorType::MalformedText(string).into(),
+            }
+
+        }
+    }
+
+    impl fmt::Display for PaintError {
+        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+            write!(f, "PaintError({:?}): {}.", self.error_type, self.msg)?;
+            Ok(())
+        }
+    }
+
+    impl Error for PaintError {
+        fn description(&self) -> &str {
+            &self.msg
+        }
+    }
+
+    pub type PaintResult<T> = Result<T, PaintError>;
 }
 
 pub mod display {

@@ -13,12 +13,20 @@
 // limitations under the License.
 
 use std::cell::RefCell;
+use std::fs::File;
+use std::io::Write;
+use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
+use pw_gix::gtkx::coloured::*;
 use pw_gix::gtkx::paned::RememberPosition;
+use pw_gix::recollections::{recall, remember};
 pub use pw_gix::wrapper::WidgetWrapper;
 
+use pw_pathux;
+
 use colln_paint::*;
+use icons::file_status_xpms::*;
 
 pub use struct_traits::SimpleCreation;
 
@@ -26,11 +34,47 @@ use super::*;
 use super::factory::*;
 use super::entry::*;
 
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub enum FileStatus {
+    NoFileNoData,
+    NoFileDataReady,
+    NoFileDataNotReady,
+    UpToDate,
+    NotUpToDateReady,
+    NotUpToDateNotReady,
+}
+
+impl FileStatus {
+    pub fn needs_saving(&self) -> bool {
+        match *self {
+            FileStatus::UpToDate | FileStatus::NoFileNoData => false,
+            _ => true
+        }
+    }
+
+    pub fn is_saveable(&self) -> bool {
+        match *self {
+            FileStatus::UpToDate | FileStatus::NoFileDataReady | FileStatus::NotUpToDateReady => true,
+            _ => false
+        }
+    }
+}
+
+#[derive(Debug)]
+struct FileData<C, CID>
+    where   C: CharacteristicsInterface + 'static,
+            CID: CollnIdInterface + 'static,
+{
+    pub path: PathBuf,
+    pub spec: PaintCollnSpec<C, CID>
+}
+
 pub struct BasicPaintEditorCore<A, C, CID>
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static,
             CID: CollnIdInterface + 'static,
 {
+    vbox: gtk::Box,
     h_paned: gtk::Paned,
     basic_paint_factory: BasicPaintFactoryDisplay<A, C>,
     paint_spec_entry: BasicPaintSpecEntry<A, C>,
@@ -38,7 +82,15 @@ pub struct BasicPaintEditorCore<A, C, CID>
     edited_paint: RefCell<Option<BasicPaint<C>>>,
     add_paint_btn: gtk::Button,
     accept_changes_btn: gtk::Button,
-    reset_btn: gtk::Button,
+    reset_entry_btn: gtk::Button,
+    // File control
+    file_data: RefCell<Option<FileData<C, CID>>>,
+    file_path_text: gtk::Label,
+    new_colln_btn: gtk::Button,
+    load_colln_btn: gtk::Button,
+    save_btn: gtk::Button,
+    save_as_btn: gtk::Button,
+    file_status_btn: gtk::Button,
 }
 
 impl<A, C, CID> BasicPaintEditorCore<A, C, CID>
@@ -46,8 +98,78 @@ impl<A, C, CID> BasicPaintEditorCore<A, C, CID>
             C: CharacteristicsInterface + 'static,
             CID: CollnIdInterface + 'static,
 {
+    fn saved_file_path(&self) -> Option<PathBuf> {
+        if let Some(ref file_data) = *self.file_data.borrow() {
+            Some(file_data.path.clone())
+        } else {
+            None
+        }
+    }
+
+    fn update_file_status_button(&self, file_status: FileStatus) {
+        match file_status {
+            FileStatus::NoFileNoData | FileStatus::UpToDate => {
+                self.file_status_btn.set_sensitive(false);
+                self.file_status_btn.set_image(&up_to_date_image(24));
+                self.file_status_btn.set_tooltip_text("File Status: Up To Date");
+            },
+            FileStatus::NoFileDataReady | FileStatus::NotUpToDateReady => {
+                self.file_status_btn.set_sensitive(true);
+                self.file_status_btn.set_image(&needs_save_ready_image(24));
+                self.file_status_btn.set_tooltip_text("File Status: Needs Save (Ready)\nClick to save data to file");
+            },
+            FileStatus::NoFileDataNotReady | FileStatus::NotUpToDateNotReady => {
+                self.file_status_btn.set_sensitive(false);
+                self.file_status_btn.set_image(&needs_save_not_ready_image(24));
+                self.file_status_btn.set_tooltip_text("File Status: Needs Save (NOT Ready)");
+            },
+        }
+    }
+
+    fn update_file_button_sensitivities_using(&self, file_status: FileStatus) {
+        match file_status {
+            FileStatus::NoFileNoData => {
+                self.new_colln_btn.set_sensitive(true);
+                self.load_colln_btn.set_sensitive(true);
+                self.save_btn.set_sensitive(false);
+                self.save_as_btn.set_sensitive(false);
+            },
+            FileStatus::NoFileDataReady => {
+                self.new_colln_btn.set_sensitive(true);
+                self.load_colln_btn.set_sensitive(false);
+                self.save_btn.set_sensitive(false);
+                self.save_as_btn.set_sensitive(true);
+            },
+            FileStatus::NoFileDataNotReady | FileStatus::NotUpToDateNotReady => {
+                self.new_colln_btn.set_sensitive(true);
+                self.load_colln_btn.set_sensitive(false);
+                self.save_btn.set_sensitive(false);
+                self.save_as_btn.set_sensitive(false);
+            },
+            FileStatus::UpToDate => {
+                self.new_colln_btn.set_sensitive(true);
+                self.load_colln_btn.set_sensitive(true);
+                self.save_btn.set_sensitive(false);
+                self.save_as_btn.set_sensitive(true);
+            },
+            FileStatus::NotUpToDateReady => {
+                self.new_colln_btn.set_sensitive(true);
+                self.load_colln_btn.set_sensitive(false);
+                self.save_btn.set_sensitive(true);
+                self.save_as_btn.set_sensitive(true);
+            },
+        };
+        self.update_file_status_button(file_status);
+    }
+
+    fn update_file_button_sensitivities(&self) {
+        let file_status = self.get_file_status();
+        self.update_file_button_sensitivities_using(file_status);
+    }
+
     fn update_button_sensitivities(&self) {
-        match self.paint_spec_entry.get_status() {
+        let status = self.paint_spec_entry.get_status();
+        match status {
             EntryStatus::EditingNoChange => {
                 self.basic_paint_factory.set_initiate_edit_ok(true);
                 self.add_paint_btn.set_sensitive(false);
@@ -78,7 +200,40 @@ impl<A, C, CID> BasicPaintEditorCore<A, C, CID>
                 self.add_paint_btn.set_sensitive(false);
                 self.accept_changes_btn.set_sensitive(false);
             },
+        };
+        let file_status = self.get_file_status_using(status);
+        self.update_file_button_sensitivities_using(file_status);
+    }
+
+    fn get_file_status_using(&self, entry_status: EntryStatus) -> FileStatus {
+        if let Some(ref file_data) = *self.file_data.borrow() {
+            if entry_status.needs_saving() {
+                FileStatus::NotUpToDateNotReady
+            } else if let Some(cid) = self.cid_entry.get_colln_id() {
+                if cid == file_data.spec.colln_id && self.basic_paint_factory.matches_paint_specs(&file_data.spec.paint_specs) {
+                    FileStatus::UpToDate
+                } else {
+                    FileStatus::NotUpToDateReady
+                }
+            } else {
+                FileStatus::NotUpToDateNotReady
+            }
+        } else if self.cid_entry.get_colln_id().is_some() {
+            if entry_status.needs_saving() {
+                FileStatus::NoFileDataNotReady
+            } else {
+                FileStatus::NoFileDataReady
+            }
+        } else if entry_status.needs_saving() || self.basic_paint_factory.len() > 0 {
+            FileStatus::NoFileDataNotReady
+        } else {
+            FileStatus::NoFileNoData
         }
+    }
+
+    pub fn get_file_status(&self) -> FileStatus {
+        let entry_status = self.paint_spec_entry.get_status();
+        self.get_file_status_using(entry_status)
     }
 
     fn ok_to_reset_entry(&self) -> bool {
@@ -137,15 +292,142 @@ impl<A, C, CID> BasicPaintEditorCore<A, C, CID>
         };
         self.update_button_sensitivities();
     }
+
+    fn set_file_data(&self, o_file_data: Option<FileData<C, CID>>) {
+        // TODO: update displayed file path
+        *self.file_data.borrow_mut() = o_file_data;
+        if let Some(ref file_path) = self.saved_file_path() {
+            let path_text = pw_pathux::path_to_string(file_path);
+            self.file_path_text.set_label(&path_text);
+            remember(&CID::recollection_name_for("last_colln_edited_file"), &path_text);
+        } else {
+            self.file_path_text.set_label("");
+        };
+        self.update_file_button_sensitivities();
+    }
+
+    fn write_to_file(&self, path: &Path) -> PaintResult<()> {
+        if let Some(colln_id) = self.cid_entry.get_colln_id() {
+            let spec = PaintCollnSpec::<C, CID> {
+                colln_id: colln_id,
+                paint_specs: self.basic_paint_factory.get_paint_specs()
+            };
+            let mut file = File::create(path)?;
+            let spec_text = spec.to_string();
+            match file.write(&spec_text.into_bytes()) {
+                Ok(_) => {
+                    let file_data = FileData::<C, CID> {
+                        path: path.to_path_buf(),
+                        spec: spec,
+                    };
+                    self.set_file_data(Some(file_data));
+                    Ok(())
+                },
+                Err(err) => {
+                    let o_current_file_data = self.file_data.borrow();
+                    if let Some(ref curr_file_data) = *o_current_file_data {
+                        if curr_file_data.path == path {
+                            // we've trashed the file
+                            self.set_file_data(None)
+                        }
+                    };
+                    Err(err.into())
+                }
+            }
+        } else {
+            panic!("cannot save without collection id")
+        }
+    }
+
+    fn save_as(&self) -> PaintResult<()> {
+        let o_last_file = recall(&CID::recollection_name_for("last_colln_edited_file"));
+        let last_file = if let Some(ref text) = o_last_file {
+            Some(text.as_str())
+        } else {
+            None
+        };
+        if let Some(path) = self.ask_file_path(Some("Save as:"), last_file, false) {
+            self.write_to_file(&path)
+        } else {
+            Err(PaintErrorType::UserCancelled.into())
+        }
+    }
+
+    pub fn ok_to_reset(&self) -> bool {
+        let status = self.get_file_status();
+        if status.needs_saving() {
+            if status.is_saveable() {
+                let buttons = &[("Cancel", 0), ("Save and Continue", 1), ("Continue Discarding Changes", 2)];
+                match self.ask_question("There are unsaved changes!", None, buttons) {
+                    0 => return false,
+                    1 => {
+                        if let Some(path) = self.saved_file_path() {
+                            if let Err(err) = self.write_to_file(&path) {
+                                self.report_error("Failed to save file", &err);
+                                return false
+                            }
+                        } else if let Err(err) = self.save_as() {
+                            self.report_error("Failed to save file", &err);
+                            return false
+                        };
+                        return true
+                    },
+                    _ => return true
+                }
+            } else {
+                let buttons = &[("Cancel", 0), ("Continue Discarding Changes", 1)];
+                return self.ask_question("There are unsaved changes!", None, buttons) == 1
+            }
+        };
+        true
+    }
+
+    pub fn reset(&self) {
+        if self.ok_to_reset() {
+            self.paint_spec_entry.set_edited_spec(None);
+            self.cid_entry.set_colln_id(None);
+            self.basic_paint_factory.clear();
+            self.set_file_data(None);
+        }
+    }
+
+    pub fn load_from_file(&self) {
+        if !self.ok_to_reset() { return };
+        let o_last_file = recall(&CID::recollection_name_for("last_colln_edited_file"));
+        let last_file = if let Some(ref text) = o_last_file {
+            Some(text.as_str())
+        } else {
+            None
+        };
+        if let Some(path) = self.ask_file_path(Some("Load from:"), last_file, true) {
+            match PaintCollnSpec::from_file(&path) {
+                Ok(spec) => {
+                    self.paint_spec_entry.set_edited_spec(None);
+                    self.cid_entry.set_colln_id(Some(&spec.colln_id));
+                    self.basic_paint_factory.clear();
+                    for paint_spec in spec.paint_specs.iter() {
+                        if let Err(err) = self.basic_paint_factory.add_paint(paint_spec) {
+                            self.report_error("Error", &err)
+                        }
+                    }
+                    self.set_file_data(Some(FileData{path, spec}));
+                },
+                Err(err) => {
+                    let msg = format!("{:?}: Failed to load", path);
+                    self.report_error(&msg, &err)
+                }
+            }
+        }
+    }
 }
 
-impl<A, C, CID> WidgetWrapper<gtk::Paned> for BasicPaintEditorCore<A, C, CID>
+impl<A, C, CID> WidgetWrapper<gtk::Box> for BasicPaintEditorCore<A, C, CID>
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static,
             CID: CollnIdInterface + 'static,
 {
-    fn pwo(&self) -> gtk::Paned {
-        self.h_paned.clone()
+    fn pwo(&self) -> gtk::Box {
+        self.vbox.clone()
     }
 }
 
@@ -161,12 +443,25 @@ impl<A, C, CID> SimpleCreation for BasicPaintEditor<A, C, CID>
         add_paint_btn.set_tooltip_text("Add the paint defined by this specification to the collection");
         let accept_changes_btn = gtk::Button::new_with_label("Accept");
         accept_changes_btn.set_tooltip_text("Accept the changes to the paint being edited");
-        let reset_btn = gtk::Button::new_with_label("Reset");
-        reset_btn.set_tooltip_text("Reset in preparation for defining a new paint");
-        let extra_buttons = vec![add_paint_btn.clone(), accept_changes_btn.clone(), reset_btn.clone()];
+        let reset_entry_btn = gtk::Button::new_with_label("Reset");
+        reset_entry_btn.set_tooltip_text("Reset in preparation for defining a new paint");
+        let extra_buttons = vec![add_paint_btn.clone(), accept_changes_btn.clone(), reset_entry_btn.clone()];
+
+        let new_colln_btn = gtk::Button::new_from_icon_name("gtk-new", gtk::IconSize::LargeToolbar.into());
+        new_colln_btn.set_tooltip_text("Clear the editor in preparation for creating a new collection");
+        let load_colln_btn = gtk::Button::new_from_icon_name("gtk-open", gtk::IconSize::LargeToolbar.into());
+        load_colln_btn.set_tooltip_text("Load a paint collection from a file for editing");
+        let save_btn = gtk::Button::new_from_icon_name("gtk-save", gtk::IconSize::LargeToolbar.into());
+        save_btn.set_tooltip_text("Save the current editor content to file.");
+        let save_as_btn = gtk::Button::new_from_icon_name("gtk-save-as", gtk::IconSize::LargeToolbar.into());
+        save_as_btn.set_tooltip_text("Save the current editor content to a nominated file.");
+
+        let file_status_btn = gtk::Button::new();
+        file_status_btn.set_image(&up_to_date_image(24));
 
         let bpe = Rc::new(
             BasicPaintEditorCore::<A, C, CID> {
+                vbox: gtk::Box::new(gtk::Orientation::Vertical, 1),
                 h_paned: gtk::Paned::new(gtk::Orientation::Horizontal),
                 basic_paint_factory: BasicPaintFactoryDisplay::<A, C>::create(),
                 paint_spec_entry: BasicPaintSpecEntry::<A, C>::create(&extra_buttons),
@@ -174,15 +469,36 @@ impl<A, C, CID> SimpleCreation for BasicPaintEditor<A, C, CID>
                 edited_paint: RefCell::new(None),
                 add_paint_btn: add_paint_btn,
                 accept_changes_btn: accept_changes_btn,
-                reset_btn: reset_btn,
+                reset_entry_btn: reset_entry_btn,
+                file_data: RefCell::new(None),
+                new_colln_btn: new_colln_btn,
+                load_colln_btn: load_colln_btn,
+                save_btn: save_btn,
+                save_as_btn: save_as_btn,
+                file_path_text: gtk::Label::new(None),
+                file_status_btn: file_status_btn,
             }
         );
+        bpe.file_path_text.set_justify(gtk::Justification::Left);
+        bpe.file_path_text.set_xalign(0.01);
+        bpe.file_path_text.set_widget_colour_rgb(WHITE);
+        let hbox = gtk::Box::new(gtk::Orientation::Horizontal, 2);
+        hbox.pack_start(&bpe.new_colln_btn, false, false, 0);
+        hbox.pack_start(&bpe.load_colln_btn, false, false, 0);
+        hbox.pack_start(&bpe.save_btn, false, false, 0);
+        hbox.pack_start(&bpe.save_as_btn, false, false, 0);
+        hbox.pack_start(&gtk::Label::new(Some("Current File:")), false, false, 0);
+        hbox.pack_start(&bpe.file_path_text, true, true, 0);
+        hbox.pack_start(&bpe.file_status_btn, false, false, 0);
+        bpe.vbox.pack_start(&hbox, false, false, 0);
+
         let vbox = gtk::Box::new(gtk::Orientation::Vertical, 1);
         vbox.pack_start(&bpe.cid_entry.pwo(), false, false, 0);
         vbox.pack_start(&bpe.basic_paint_factory.pwo(), true, true, 0);
         bpe.h_paned.add1(&vbox);
         bpe.h_paned.add2(&bpe.paint_spec_entry.pwo());
         bpe.h_paned.set_position_from_recollections("basic_paint_editor", 400);
+        bpe.vbox.pack_start(&bpe.h_paned, true, true, 0);
 
         let bpe_c = bpe.clone();
         bpe.basic_paint_factory.connect_paint_removed(
@@ -233,10 +549,60 @@ impl<A, C, CID> SimpleCreation for BasicPaintEditor<A, C, CID>
         );
 
         let bpe_c = bpe.clone();
-        bpe.reset_btn.connect_clicked(
+        bpe.reset_entry_btn.connect_clicked(
             move |_| {
                 if bpe_c.ok_to_reset_entry(){
                     bpe_c.set_edited_paint(None)
+                }
+            }
+        );
+
+        let bpe_c = bpe.clone();
+        bpe.new_colln_btn.connect_clicked(
+            move |_| bpe_c.reset()
+        );
+
+        let bpe_c = bpe.clone();
+        bpe.load_colln_btn.connect_clicked(
+            move |_| bpe_c.load_from_file()
+        );
+
+        let bpe_c = bpe.clone();
+        bpe.save_btn.connect_clicked(
+            move |_| {
+                let path = bpe_c.saved_file_path().expect("Save requires a saved file path");
+                if let Err(err) = bpe_c.write_to_file(&path) {
+                    bpe_c.report_error("Problem saving file", &err)
+                }
+            }
+        );
+
+        let bpe_c = bpe.clone();
+        bpe.save_as_btn.connect_clicked(
+            move |_| {
+                if let Err(err) = bpe_c.save_as() {
+                    bpe_c.report_error("Problem saving file", &err)
+                }
+            }
+        );
+
+        let bpe_c = bpe.clone();
+        bpe.cid_entry.connect_changed(
+            move || bpe_c.update_file_button_sensitivities()
+        );
+
+        let bpe_c = bpe.clone();
+        bpe.file_status_btn.connect_clicked(
+            move |_| {
+                let o_path = bpe_c.saved_file_path();
+                if let Some(path) = o_path {
+                    if let Err(err) = bpe_c.write_to_file(&path) {
+                        bpe_c.report_error("Problem saving file", &err)
+                    }
+                } else {
+                    if let Err(err) = bpe_c.save_as() {
+                        bpe_c.report_error("Problem saving file", &err)
+                    }
                 }
             }
         );

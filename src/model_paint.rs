@@ -103,10 +103,6 @@ impl CharacteristicsInterface for ModelPaintCharacteristics {
             self.metallic.into(),
         ]
     }
-}
-
-impl FromStr for ModelPaintCharacteristics {
-    type Err = PaintError;
 
     fn from_str(string: &str) -> Result<ModelPaintCharacteristics, PaintError> {
         let finish = Finish::from_str(string)?;

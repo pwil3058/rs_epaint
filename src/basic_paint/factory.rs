@@ -80,13 +80,31 @@ impl<C> BasicPaintFactoryCore<C>
         v
     }
 
+    pub fn matches_paint_specs(&self, specs: &Vec<BasicPaintSpec<C>>) -> bool {
+        let paints = self.paints.borrow();
+        if paints.len() != specs.len() {
+            false
+        } else {
+            for spec in specs.iter() {
+                if let Ok(index) = self.find_name(&spec.name) {
+                    if !(paints[index].matches_spec(spec)) {
+                        return false;
+                    }
+                } else {
+                    return false;
+                }
+            }
+            true
+        }
+    }
+
     pub fn has_paint_named(&self, name: &str) -> bool {
         self.find_name(name).is_ok()
     }
 
     pub fn add_paint(&self, spec: &BasicPaintSpec<C>) -> Result<BasicPaint<C>, PaintError> {
         match self.find_name(&spec.name) {
-            Ok(_) => Err(PaintError::AlreadyExists(spec.name.clone())),
+            Ok(_) => Err(PaintErrorType::AlreadyExists(spec.name.clone()).into()),
             Err(index) => {
                 let paint = BasicPaint::<C>::from_spec(spec);
                 self.paints.borrow_mut().insert(index, paint.clone());
@@ -108,7 +126,7 @@ impl<C> BasicPaintFactoryCore<C>
 
     pub fn replace_paint(&self, paint: &BasicPaint<C>, spec: &BasicPaintSpec<C>) -> Result<BasicPaint<C>, PaintError> {
         if paint.name() != spec.name && self.has_paint_named(&spec.name) {
-            return Err(PaintError::AlreadyExists(spec.name.clone()))
+            return Err(PaintErrorType::AlreadyExists(spec.name.clone()).into())
         };
         self.remove_paint(paint);
         self.add_paint(spec)
@@ -192,6 +210,10 @@ impl<A, C> BasicPaintFactoryViewCore<A, C>
 
     pub fn get_paint_specs(&self) -> Vec<BasicPaintSpec<C>> {
         self.paint_factory.get_paint_specs()
+    }
+
+    pub fn matches_paint_specs(&self, specs: &Vec<BasicPaintSpec<C>>) -> bool {
+        self.paint_factory.matches_paint_specs(specs)
     }
 
     pub fn has_paint_named(&self, name: &str) -> bool {
@@ -317,6 +339,10 @@ impl<A, C> BasicPaintFactoryDisplayCore<A, C>
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static,
 {
+    pub fn len(&self) -> usize {
+        self.paint_factory_view.len()
+    }
+
     pub fn clear(&self) {
         for dialog in self.paint_dialogs.borrow().values() {
             dialog.close();
@@ -378,6 +404,10 @@ impl<A, C> BasicPaintFactoryDisplayCore<A, C>
 
     pub fn get_paint_specs(&self) -> Vec<BasicPaintSpec<C>> {
         self.paint_factory_view.get_paint_specs()
+    }
+
+    pub fn matches_paint_specs(&self, specs: &Vec<BasicPaintSpec<C>>) -> bool {
+        self.paint_factory_view.matches_paint_specs(specs)
     }
 
     pub fn connect_edit_paint<F: 'static + Fn(&BasicPaint<C>)>(&self, callback: F) {

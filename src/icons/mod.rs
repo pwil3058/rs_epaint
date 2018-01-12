@@ -13,6 +13,7 @@
 // limitations under the License.
 
 pub mod series_paint_xpm;
+pub mod file_status_xpms;
 
 #[cfg(test)]
 mod tests {
