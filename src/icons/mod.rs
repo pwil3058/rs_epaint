@@ -14,6 +14,7 @@
 
 pub mod series_paint_xpm;
 pub mod file_status_xpms;
+pub mod paint_standard_xpms;
 
 #[cfg(test)]
 mod tests {

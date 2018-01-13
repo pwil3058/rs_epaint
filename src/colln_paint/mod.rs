@@ -50,6 +50,8 @@ pub trait CollnIdInterface:
 
     fn recollection_name_for(item_name: &str) -> String;
 
+    fn colln_load_image(size: i32) -> gtk::Image;
+
     fn display_current_target() -> bool {
         true
     }

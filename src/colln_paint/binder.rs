@@ -181,7 +181,7 @@ impl<A, C, CID> CollnPaintCollnBinderInterface<A, C, CID> for CollnPaintCollnBin
         cpcb.notebook.popup_enable();
 
         cpcb.load_colln_button.set_tooltip_text(Some("Load collection from file."));
-        cpcb.load_colln_button.set_image(&series_paint_load_image(24));
+        cpcb.load_colln_button.set_image(&CID::colln_load_image(24));
 
         let hbox = gtk::Box::new(gtk::Orientation::Horizontal, 0);
         hbox.pack_start(&cpcb.load_colln_button, false, true, 2);

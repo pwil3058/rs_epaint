@@ -33,6 +33,7 @@ use characteristics::*;
 use mixed_paint::*;
 use mixed_paint::components::*;
 use series_paint::*;
+use standards::*;
 
 pub use struct_traits::SimpleCreation;
 pub use mixed_paint::mixer::*;
@@ -321,6 +322,8 @@ pub type ModelPaintSeriesManager = SeriesPaintManager<ModelPaintAttributes, Mode
 pub type ModelPaintFactoryDisplay = BasicPaintFactoryDisplay<ModelPaintAttributes, ModelPaintCharacteristics>;
 pub type BasicModelPaintEditor = SeriesPaintEditor<ModelPaintAttributes, ModelPaintCharacteristics>;
 pub type ModelPaintSeriesSpec = SeriesPaintCollnSpec<ModelPaintCharacteristics>;
+
+pub type ModelPaintStandardEditor = PaintStandardEditor<ModelPaintAttributes, ModelPaintCharacteristics>;
 
 const IDEAL_PAINT_STR: &str =
 "Manufacturer: Imaginary

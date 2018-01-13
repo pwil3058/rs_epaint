@@ -155,6 +155,7 @@ pub mod mixed_paint;
 pub mod model_paint;
 pub mod series_paint;
 pub mod shape;
+pub mod standards;
 
 use std::env;
 

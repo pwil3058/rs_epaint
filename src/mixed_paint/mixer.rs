@@ -32,7 +32,9 @@ use pw_gix::printer::*;
 use pw_gix::rgb_math::rgb::*;
 
 use basic_paint::*;
+use colln_paint::*;
 use series_paint::*;
+use standards::*;
 
 use super::*;
 use super::collection::*;
@@ -162,7 +164,7 @@ pub trait PaintMixerInterface<A, C>
 {
     type PaintMixerType;
 
-    fn create(series_paint_data_path: &Path) -> Self::PaintMixerType;
+    fn create(series_paint_data_path: &Path, paint_standards_data_path: Option<&Path>) -> Self::PaintMixerType;
 }
 
 pub struct PaintMixerCore<A, C>
@@ -188,6 +190,7 @@ pub struct PaintMixerCore<A, C>
     cancel_btn: gtk::Button,
     // Managers
     series_paint_manager: SeriesPaintManager<A, C>,
+    o_paint_standards_manager: Option<PaintStandardManager<A, C>>,
 }
 
 impl<A, C> PaintMixerCore<A, C>
@@ -223,11 +226,17 @@ impl<A, C> PaintMixerCore<A, C>
             self.new_mixture_btn.set_sensitive(false);
             self.cancel_btn.set_sensitive(true);
             self.accept_mixture_btn.set_sensitive(has_colour && self.has_notes());
+            if let Some(ref paint_standards_manager) = self.o_paint_standards_manager {
+                paint_standards_manager.set_initiate_select_ok(false)
+            };
         } else {
             self.new_mixture_btn.set_sensitive(true);
             self.accept_mixture_btn.set_sensitive(false);
             self.cancel_btn.set_sensitive(false);
-        }
+            if let Some(ref paint_standards_manager) = self.o_paint_standards_manager {
+                paint_standards_manager.set_initiate_select_ok(true)
+            };
+        };
     }
 
     fn set_target_colour(&self, o_colour: Option<&Colour>) {
@@ -357,12 +366,17 @@ impl<A, C> PaintMixerInterface<A, C> for PaintMixer<A, C>
 {
     type PaintMixerType = PaintMixer<A, C>;
 
-    fn create(series_paint_data_path: &Path) -> PaintMixer<A, C> {
+    fn create(series_paint_data_path: &Path, paint_standards_data_path: Option<&Path>) -> PaintMixer<A, C> {
         let mut view_attr_wheels:Vec<MixerHueAttrWheel<A, C>> = Vec::new();
         for attr in A::scalar_attributes().iter() {
             view_attr_wheels.push(MixerHueAttrWheel::<A, C>::create(*attr));
         }
         let mixed_paints = MixedPaintCollection::<C>::create();
+        let o_paint_standards_manager = if let Some(path) = paint_standards_data_path {
+            Some(PaintStandardManager::<A, C>::create(path))
+        } else {
+            None
+        };
         let paint_mixer = Rc::new(
             PaintMixerCore::<A, C> {
                 vbox: gtk::Box::new(gtk::Orientation::Vertical, 1),
@@ -384,6 +398,7 @@ impl<A, C> PaintMixerInterface<A, C> for PaintMixer<A, C>
                 simplify_parts_btn: gtk::Button::new_with_label("Simplify Parts"),
                 // Managers
                 series_paint_manager: SeriesPaintManager::<A, C>::create(series_paint_data_path),
+                o_paint_standards_manager: o_paint_standards_manager,
             }
         );
 
@@ -398,6 +413,9 @@ impl<A, C> PaintMixerInterface<A, C> for PaintMixer<A, C>
         let hbox = gtk::Box::new(gtk::Orientation::Horizontal, 0);
         hbox.pack_start(&paint_mixer.print_report_btn.clone(), false, true, 2);
         hbox.pack_start(&paint_mixer.series_paint_manager.button(), false, true, 2);
+        if let Some(ref paint_standards_manager) = paint_mixer.o_paint_standards_manager {
+            hbox.pack_start(&paint_standards_manager.button(), false, true, 2);
+        };
         paint_mixer.vbox.pack_start(&hbox, false, false, 2);
 
         let hbox = gtk::Box::new(gtk::Orientation::Horizontal, 0);
@@ -517,6 +535,22 @@ impl<A, C> PaintMixerInterface<A, C> for PaintMixer<A, C>
         paint_mixer.series_paint_manager.connect_add_paint(
             move |paint| paint_mixer_c.add_series_paint(paint)
         );
+
+        if let Some(ref paint_standards_manager) = paint_mixer.o_paint_standards_manager {
+            let paint_mixer_c = paint_mixer.clone();
+            paint_standards_manager.connect_set_target_from(
+                move |paint| {
+                    let paint_notes = paint.notes();
+                    let notes = if paint_notes.len() > 0 {
+                        format!("{} ({})", paint.name(), paint_notes)
+                    } else {
+                        paint.name()
+                    };
+                    let colour = paint.colour();
+                    paint_mixer_c.start_new_mixture(Some(&notes), Some(&colour));
+                }
+            );
+        };
 
         paint_mixer.set_button_sensitivities();
 
