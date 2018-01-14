@@ -353,6 +353,13 @@ impl<A, C, CID> BasicPaintEditorCore<A, C, CID>
         }
     }
 
+    fn report_save_as_failed(&self, error: &PaintError) {
+        match error.error_type() {
+            &PaintErrorType::UserCancelled => (),
+            _ => self.report_error("Failed to save file", error),
+        }
+    }
+
     pub fn ok_to_reset(&self) -> bool {
         let status = self.get_file_status();
         if status.needs_saving() {
@@ -367,7 +374,7 @@ impl<A, C, CID> BasicPaintEditorCore<A, C, CID>
                                 return false
                             }
                         } else if let Err(err) = self.save_as() {
-                            self.report_error("Failed to save file", &err);
+                            self.report_save_as_failed(&err);
                             return false
                         };
                         return true
@@ -581,7 +588,7 @@ impl<A, C, CID> SimpleCreation for BasicPaintEditor<A, C, CID>
         bpe.save_as_btn.connect_clicked(
             move |_| {
                 if let Err(err) = bpe_c.save_as() {
-                    bpe_c.report_error("Problem saving file", &err)
+                    bpe_c.report_save_as_failed(&err)
                 }
             }
         );
@@ -601,7 +608,7 @@ impl<A, C, CID> SimpleCreation for BasicPaintEditor<A, C, CID>
                     }
                 } else {
                     if let Err(err) = bpe_c.save_as() {
-                        bpe_c.report_error("Problem saving file", &err)
+                        bpe_c.report_save_as_failed(&err)
                     }
                 }
             }
