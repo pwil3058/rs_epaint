@@ -12,8 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::cell::RefCell;
-//use std::collections::HashMap;
+use std::cell::{Cell, RefCell};
 use std::error::Error;
 use std::fs::File;
 use std::io::{Read, Write};
@@ -25,6 +24,7 @@ use gtk::prelude::*;
 
 use pw_gix::colour::*;
 use pw_gix::gtkx::notebook::*;
+use pw_gix::recollections::{recall, remember};
 use pw_gix::wrapper::*;
 
 use pw_pathux;
@@ -43,6 +43,7 @@ pub struct CollnPaintCollnBinderCore<A, C, CID>
     vbox: gtk::Box,
     notebook: gtk::Notebook,
     load_colln_button: gtk::Button,
+    initiate_select_ok: Cell<bool>,
     paint_selected_callbacks: RefCell<Vec<Box<Fn(&CollnPaint<C, CID>)>>>,
     paint_collns: RefCell<Vec<(CollnPaintCollnWidget<A, C, CID>, PathBuf)>>,
     paint_colln_files_data_path: PathBuf,
@@ -80,6 +81,7 @@ impl<A, C, CID> CollnPaintCollnBinderCore<A, C, CID>
     }
 
     pub fn set_initiate_select_ok(&self, value: bool) {
+        self.initiate_select_ok.set(value);
         for selector in self.paint_collns.borrow().iter() {
             selector.0.set_initiate_select_ok(value);
         }
@@ -172,6 +174,7 @@ impl<A, C, CID> CollnPaintCollnBinderInterface<A, C, CID> for CollnPaintCollnBin
                 vbox: gtk::Box::new(gtk::Orientation::Vertical, 0),
                 notebook: gtk:: Notebook::new(),
                 load_colln_button: gtk::Button::new(),
+                initiate_select_ok: Cell::new(false),
                 paint_selected_callbacks: RefCell::new(Vec::new()),
                 paint_collns: RefCell::new(Vec::new()),
                 paint_colln_files_data_path: data_path.to_path_buf(),
@@ -207,6 +210,7 @@ impl<A, C, CID> CollnPaintCollnBinderInterface<A, C, CID> for CollnPaintCollnBin
     fn _insert_paint_colln(&self, colln_spec: &PaintCollnSpec<C, CID>, path: &Path, index: usize) {
         let mut paint_collns = self.paint_collns.borrow_mut();
         let paint_colln = CollnPaintCollnWidget::<A, C, CID>::create(&colln_spec);
+        paint_colln.set_initiate_select_ok(self.initiate_select_ok.get());
         paint_collns.insert(index, (paint_colln.clone(), path.to_path_buf()));
         let cpcb_c = self.clone();
         paint_colln.connect_paint_selected(
@@ -241,10 +245,14 @@ impl<A, C, CID> CollnPaintCollnBinderInterface<A, C, CID> for CollnPaintCollnBin
                         if self.ask_question("Duplicate Collection", Some(expln.as_str()), buttons) == 1 {
                             self.remove_paint_colln_at_index(index);
                             self._insert_paint_colln(&colln_spec, path, index);
+                            self.notebook.show_all();
+                            self.write_colln_file_paths();
                         }
                     },
                     Err(index) => {
                         self._insert_paint_colln(&colln_spec, path, index);
+                        self.notebook.show_all();
+                        self.write_colln_file_paths();
                     }
                 }
             },
@@ -274,10 +282,16 @@ impl<A, C, CID> CollnPaintCollnBinderInterface<A, C, CID> for CollnPaintCollnBin
     }
 
     fn load_paint_colln_from_file(&self) {
-        if let Some(path) = self.ask_file_path(Some("Collection File Name:"), None, true) {
+        let o_last_file = recall(&CID::recollection_name_for("last_colln_loaded_file"));
+        let last_file = if let Some(ref text) = o_last_file {
+            Some(text.as_str())
+        } else {
+            None
+        };
+        if let Some(path) = self.ask_file_path(Some("Collection File Name:"), last_file, true) {
             match pw_pathux::expand_home_dir_or_mine(&path).canonicalize() {
-                Ok(abs_dir_path) => {
-                    if let Some(index) = self.find_file_path(&abs_dir_path) {
+                Ok(abs_file_path) => {
+                    if let Some(index) = self.find_file_path(&abs_file_path) {
                         let colln_id = &self.paint_collns.borrow()[index].0.colln_id();
                         let expln = format!(
                             "\"{:?}\": already loaded providing \"{}\" ({}).",
@@ -292,7 +306,9 @@ impl<A, C, CID> CollnPaintCollnBinderInterface<A, C, CID> for CollnPaintCollnBin
                             return
                         }
                     };
-                    self._add_paint_colln_from_file(&abs_dir_path);
+                    self._add_paint_colln_from_file(&abs_file_path);
+                    let path_text = pw_pathux::path_to_string(&abs_file_path);
+                    remember(&CID::recollection_name_for("last_colln_loaded_file"), &path_text);
                 },
                 Err(err) => {
                     let expln = format!("\"{:?}\" \"{}\"\n", path, err.description());
