@@ -515,7 +515,8 @@ impl<A, C, CID> SimpleCreation for BasicPaintEditor<A, C, CID>
                     if *edited_paint == *removed_paint {
                         bpe_c.set_edited_paint(None)
                     }
-                }
+                };
+                bpe_c.update_file_button_sensitivities();
             }
         );
 
