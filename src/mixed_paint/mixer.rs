@@ -349,10 +349,12 @@ impl<A, C> PaintMixerCore<A, C>
     }
 }
 
-impl<A, C> WidgetWrapper<gtk::Box> for PaintMixerCore<A, C>
+impl<A, C> WidgetWrapper for PaintMixerCore<A, C>
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static
 {
+    type PWT = gtk::Box;
+
     fn pwo(&self) -> gtk::Box {
         self.vbox.clone()
     }

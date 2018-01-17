@@ -49,11 +49,13 @@ pub struct CollnPaintCollnBinderCore<A, C, CID>
     paint_colln_files_data_path: PathBuf,
 }
 
-impl<A, C, CID> WidgetWrapper<gtk::Box> for CollnPaintCollnBinderCore<A, C, CID>
+impl<A, C, CID> WidgetWrapper for CollnPaintCollnBinderCore<A, C, CID>
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static,
             CID: CollnIdInterface + 'static,
 {
+    type PWT = gtk::Box;
+
     fn pwo(&self) -> gtk::Box {
         self.vbox.clone()
     }

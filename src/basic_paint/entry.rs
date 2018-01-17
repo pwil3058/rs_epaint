@@ -64,10 +64,12 @@ pub struct BasicPaintSpecEntryCore<A, C>
     status_changed_callbacks: RefCell<Vec<Box<Fn(EntryStatus)>>>,
 }
 
-impl<A, C> WidgetWrapper<gtk::Box> for BasicPaintSpecEntryCore<A, C>
+impl<A, C> WidgetWrapper for BasicPaintSpecEntryCore<A, C>
     where   C: CharacteristicsInterface + 'static,
             A: ColourAttributesInterface + 'static
 {
+    type PWT = gtk::Box;
+
     fn pwo(&self) -> gtk::Box {
         self.vbox.clone()
     }

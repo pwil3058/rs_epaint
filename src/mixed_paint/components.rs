@@ -121,10 +121,12 @@ impl<A, C> PartialEq for PaintPartsSpinButtonCore<A, C>
     }
 }
 
-impl<A, C> WidgetWrapper<gtk::EventBox> for PaintPartsSpinButtonCore<A, C>
+impl<A, C> WidgetWrapper for PaintPartsSpinButtonCore<A, C>
     where   C: CharacteristicsInterface + 'static,
             A: ColourAttributesInterface + 'static,
 {
+    type PWT = gtk::EventBox;
+
     fn pwo(&self) -> gtk::EventBox {
         self.event_box.clone()
     }
@@ -341,10 +343,12 @@ pub struct PaintComponentsBoxCore<A, C>
     paint_removed_callbacks: RefCell<Vec<Box<Fn(&Paint<C>)>>>
 }
 
-impl<A, C> WidgetWrapper<gtk::Box> for PaintComponentsBoxCore<A, C>
+impl<A, C> WidgetWrapper for PaintComponentsBoxCore<A, C>
     where   C: CharacteristicsInterface + 'static,
             A: ColourAttributesInterface + 'static,
 {
+    type PWT = gtk::Box;
+
     fn pwo(&self) -> gtk::Box {
         self.vbox.clone()
     }

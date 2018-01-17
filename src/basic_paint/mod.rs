@@ -63,7 +63,7 @@ pub trait CharacteristicsEntryInterface<C: CharacteristicsInterface> {
     fn connect_changed<F: 'static + Fn()>(&self, callback: F);
 }
 
-pub trait ColourAttributesInterface: WidgetWrapper<gtk::Box> {
+pub trait ColourAttributesInterface: WidgetWrapper {
     fn create() -> Rc<Self>;
     fn tv_columns() -> Vec<gtk::TreeViewColumn>;
     fn scalar_attributes() -> Vec<ScalarAttribute>;

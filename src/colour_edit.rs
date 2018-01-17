@@ -102,9 +102,11 @@ pub struct ColourEditorCore<A>
     colour_changed_callbacks: RefCell<Vec<Box<Fn(&Colour)>>>,
 }
 
-impl<A> WidgetWrapper<gtk::Box> for ColourEditorCore<A>
+impl<A> WidgetWrapper for ColourEditorCore<A>
     where   A: ColourAttributesInterface + 'static,
 {
+    type PWT = gtk::Box;
+
     fn pwo(&self) -> gtk::Box {
         self.vbox.clone()
     }

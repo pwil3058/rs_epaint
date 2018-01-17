@@ -258,7 +258,9 @@ pub struct ModelPaintAttributes {
     value_cad: ValueCAD,
 }
 
-impl WidgetWrapper<gtk::Box> for ModelPaintAttributes {
+impl WidgetWrapper for ModelPaintAttributes {
+    type PWT = gtk::Box;
+
     fn pwo(&self) -> gtk::Box {
         self.vbox.clone()
     }

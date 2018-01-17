@@ -428,11 +428,13 @@ impl<A, C, CID> BasicPaintEditorCore<A, C, CID>
     }
 }
 
-impl<A, C, CID> WidgetWrapper<gtk::Box> for BasicPaintEditorCore<A, C, CID>
+impl<A, C, CID> WidgetWrapper for BasicPaintEditorCore<A, C, CID>
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static,
             CID: CollnIdInterface + 'static,
 {
+    type PWT = gtk::Box;
+
     fn pwo(&self) -> gtk::Box {
         self.vbox.clone()
     }

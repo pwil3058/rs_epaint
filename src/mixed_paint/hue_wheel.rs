@@ -207,10 +207,12 @@ pub struct MixerHueAttrWheelCore<A, C>
     mixed_paint_dialogs: RefCell<HashMap<u32, MixedPaintDisplayDialog<A, C>>>,
 }
 
-impl<A, C> WidgetWrapper<gtk::DrawingArea> for MixerHueAttrWheelCore<A, C>
+impl<A, C> WidgetWrapper for MixerHueAttrWheelCore<A, C>
     where   C: CharacteristicsInterface + 'static,
             A: ColourAttributesInterface + 'static
 {
+    type PWT = gtk::DrawingArea;
+
     fn pwo(&self) -> gtk::DrawingArea {
         self.graticule.drawing_area()
     }

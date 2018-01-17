@@ -84,9 +84,11 @@ pub struct BasicPaintHueAttrWheelCore<C>
     graticule: Graticule,
 }
 
-impl<C> WidgetWrapper<gtk::DrawingArea> for BasicPaintHueAttrWheelCore<C>
+impl<C> WidgetWrapper for BasicPaintHueAttrWheelCore<C>
     where   C: CharacteristicsInterface + 'static,
 {
+    type PWT = gtk::DrawingArea;
+
     fn pwo(&self) -> gtk::DrawingArea {
         self.graticule.drawing_area()
     }
