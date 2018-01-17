@@ -182,8 +182,7 @@ impl<A, C> PaintPartsSpinButtonInterface<A, C> for PaintPartsSpinButton<A, C>
                     };
                     match spin_button_c.paint {
                         Paint::Series(ref paint) => {
-                            let dialog = SeriesPaintDisplayDialog::<A, C>::create(paint, target, None, vec![]);
-                            dialog.set_transient_for_from(&spin_button_c.pwo());
+                            let dialog = SeriesPaintDisplayDialog::<A, C>::create(paint, target, &spin_button_c, vec![]);
                             let spin_button_c_c = spin_button_c.clone();
                             dialog.connect_destroy(
                                 move |_| { *spin_button_c_c.dialog.borrow_mut() = DialogOption::None; }
@@ -192,8 +191,7 @@ impl<A, C> PaintPartsSpinButtonInterface<A, C> for PaintPartsSpinButton<A, C>
                             dialog.show();
                         },
                         Paint::Mixed(ref paint) => {
-                            let dialog = MixedPaintDisplayDialog::<A, C>::create(paint, target, None, vec![]);
-                            dialog.set_transient_for_from(&spin_button_c.pwo());
+                            let dialog = MixedPaintDisplayDialog::<A, C>::create(paint, target, &spin_button_c, vec![]);
                             let spin_button_c_c = spin_button_c.clone();
                             dialog.connect_destroy(
                                 move |_| { *spin_button_c_c.dialog.borrow_mut() = DialogOption::None; }

@@ -271,8 +271,7 @@ impl<A, C> MixerHueAttrWheelInterface<A, C> for MixerHueAttrWheel<A, C>
                                 tooltip_text: "Add this paint to the paint mixing area.".to_string(),
                                 callback:  Box::new(move || wheel_c_c.inform_add_series_paint(&paint_c))
                             };
-                            let dialog = SeriesPaintDisplayDialog::<A, C>::create(&paint, target, None, vec![spec]);
-                            dialog.set_transient_for_from(&wheel_c.pwo());
+                            let dialog = SeriesPaintDisplayDialog::<A, C>::create(&paint, target, &wheel_c, vec![spec]);
                             let wheel_c_c = wheel_c.clone();
                             dialog.connect_destroy(
                                 move |id| { wheel_c_c.series_paint_dialogs.borrow_mut().remove(&id); }
@@ -280,7 +279,7 @@ impl<A, C> MixerHueAttrWheelInterface<A, C> for MixerHueAttrWheel<A, C>
                             wheel_c.series_paint_dialogs.borrow_mut().insert(dialog.id_no(), dialog.clone());
                             dialog.show();
                         } else {
-                            SeriesPaintDisplayDialog::<A, C>::create(&paint, target, None, vec![]).show();
+                            SeriesPaintDisplayDialog::<A, C>::create(&paint, target, &wheel_c, vec![]).show();
                         }
                     },
                     ChosenItem::MixedPaint(ref paint) => {
@@ -293,8 +292,7 @@ impl<A, C> MixerHueAttrWheelInterface<A, C> for MixerHueAttrWheel<A, C>
                                 tooltip_text: "Add this paint to the paint mixing area.".to_string(),
                                 callback:  Box::new(move || wheel_c_c.inform_add_mixed_paint(&paint_c))
                             };
-                            let dialog = MixedPaintDisplayDialog::<A, C>::create(&paint, target, None, vec![spec]);
-                            dialog.set_transient_for_from(&wheel_c.pwo());
+                            let dialog = MixedPaintDisplayDialog::<A, C>::create(&paint, target, &wheel_c, vec![spec]);
                             let wheel_c_c = wheel_c.clone();
                             dialog.connect_destroy(
                                 move |id| { wheel_c_c.mixed_paint_dialogs.borrow_mut().remove(&id); }
@@ -302,12 +300,11 @@ impl<A, C> MixerHueAttrWheelInterface<A, C> for MixerHueAttrWheel<A, C>
                             wheel_c.mixed_paint_dialogs.borrow_mut().insert(dialog.id_no(), dialog.clone());
                             dialog.show();
                         } else {
-                            MixedPaintDisplayDialog::<A, C>::create(&paint, None, None, vec![]).show();
+                            MixedPaintDisplayDialog::<A, C>::create(&paint, None, &wheel_c, vec![]).show();
                         }
                     },
                     ChosenItem::TargetColour(ref colour) => {
-                        let dialog = TargetColourDisplayDialog::<A>::create(&colour, None);
-                        dialog.set_transient_for_from(&wheel_c.pwo());
+                        let dialog = TargetColourDisplayDialog::<A>::create(&colour, &wheel_c);
                         dialog.show();
                     },
                     ChosenItem::None => panic!("File: {:?} Line: {:?} SHOULDN'T GET HERE", file!(), line!())

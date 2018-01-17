@@ -29,8 +29,6 @@ use pw_gix::wrapper::*;
 
 use pw_pathux;
 
-use icons::series_paint_xpm::*;
-
 use basic_paint::*;
 use super::*;
 use super::collection::*;

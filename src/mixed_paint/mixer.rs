@@ -28,11 +28,9 @@ use pw_gix::cairox::*;
 pub use pw_gix::wrapper::*;
 use pw_gix::colour::*;
 use pw_gix::gtkx::paned::*;
-use pw_gix::printer::*;
 use pw_gix::rgb_math::rgb::*;
 
 use basic_paint::*;
-use colln_paint::*;
 use series_paint::*;
 use standards::*;
 
@@ -465,8 +463,9 @@ impl<A, C> PaintMixerInterface<A, C> for PaintMixer<A, C>
         let paint_mixer_c = paint_mixer.clone();
         paint_mixer.print_report_btn.connect_clicked(
             move |_| {
-                let dummy: Option<&gtk::Window> = None;
-                print_markup_chunks(paint_mixer_c.pango_markup_chunks(), dummy);
+                if let Err(ref err) = paint_mixer_c.print_markup_chunks(paint_mixer_c.pango_markup_chunks()) {
+                    paint_mixer_c.report_error("Failure", err);
+                };
             }
         );
 
@@ -474,8 +473,7 @@ impl<A, C> PaintMixerInterface<A, C> for PaintMixer<A, C>
         let paint_mixer_c = paint_mixer.clone();
         paint_mixer.new_mixture_btn.connect_clicked(
             move |_| {
-                let dialog = NewTargetColourDialog::<A>::create(None);
-                dialog.set_transient_for_from(&paint_mixer_c.pwo());
+                let dialog = NewTargetColourDialog::<A>::create(&paint_mixer_c);
                 if let Some((ref notes, ref colour)) = dialog.get_new_target() {
                     paint_mixer_c.start_new_mixture(Some(&notes), Some(&colour))
                 }

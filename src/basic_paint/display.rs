@@ -21,9 +21,8 @@ use gtk::prelude::*;
 use pw_gix::gtkx::coloured::*;
 use pw_gix::gtkx::dialog::*;
 
-use app_name;
 use basic_paint::*;
-pub use display::PaintDisplayButtonSpec;
+pub use display::{PaintDisplayButtonSpec, new_display_dialog};
 
 static mut NEXT_DIALOG_ID: u32 = 0;
 
@@ -51,10 +50,6 @@ impl<A, C> BasicPaintDisplayDialogCore<A, C>
     where   C: CharacteristicsInterface + 'static,
             A: ColourAttributesInterface + 'static,
 {
-    pub fn set_transient_for_from<W: gtk::WidgetExt>(&self, widget: &W) {
-        self.dialog.set_transient_for_from(widget)
-    }
-
     pub fn show(&self) {
         self.dialog.show()
     }
@@ -93,9 +88,9 @@ pub trait BasicPaintDisplayDialogInterface<A, C>
     where   C: CharacteristicsInterface + 'static,
             A: ColourAttributesInterface + 'static,
 {
-    fn create(
+    fn create<W: WidgetWrapper>(
         paint: &BasicPaint<C>,
-        parent: Option<&gtk::Window>,
+        caller: &Rc<W>,
         button_specs: Vec<PaintDisplayButtonSpec>,
     ) -> BasicPaintDisplayDialog<A, C>;
 }
@@ -104,18 +99,12 @@ impl<A, C> BasicPaintDisplayDialogInterface<A, C> for BasicPaintDisplayDialog<A,
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static,
 {
-    fn create(
+    fn create<W: WidgetWrapper>(
         paint: &BasicPaint<C>,
-        parent: Option<&gtk::Window>,
+        caller: &Rc<W>,
         button_specs: Vec<PaintDisplayButtonSpec>,
     ) -> BasicPaintDisplayDialog<A, C> {
-        let title = format!("{}: {}", app_name(), paint.name());
-        let dialog = gtk::Dialog::new_with_buttons(
-            Some(title.as_str()),
-            parent,
-            gtk::DialogFlags::USE_HEADER_BAR,
-            &[]
-        );
+        let dialog = new_display_dialog(&paint.name(), caller, &[]);
         dialog.set_size_from_recollections("basic_paint_display", (60, 330));
         let content_area = dialog.get_content_area();
         let vbox = gtk::Box::new(gtk::Orientation::Vertical, 0);

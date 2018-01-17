@@ -18,7 +18,6 @@ use std::rc::Rc;
 use gtk;
 use gtk::prelude::*;
 
-use pw_gix::colour::*;
 use pw_gix::gtkx::window::*;
 use pw_gix::wrapper::*;
 

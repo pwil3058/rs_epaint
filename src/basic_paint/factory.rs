@@ -513,8 +513,7 @@ impl<A, C> SimpleCreation for BasicPaintFactoryDisplay<A, C>
                         tooltip_text: "Remove this paint from the collection.".to_string(),
                         callback:  Box::new(move || bpf_c_c.remove_paint_after_confirmation(&paint_c))
                     };
-                    let dialog = BasicPaintDisplayDialog::<A, C>::create(&paint, None, vec![edit_btn_spec, remove_btn_spec]);
-                    dialog.set_transient_for_from(&bpf_c.pwo());
+                    let dialog = BasicPaintDisplayDialog::<A, C>::create(&paint, &bpf_c, vec![edit_btn_spec, remove_btn_spec]);
                     let bpf_c_c = bpf_c.clone();
                     dialog.connect_destroy(
                         move |id| { bpf_c_c.paint_dialogs.borrow_mut().remove(&id); }

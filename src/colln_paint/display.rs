@@ -21,9 +21,8 @@ use gtk::prelude::*;
 use pw_gix::gtkx::coloured::*;
 use pw_gix::gtkx::dialog::*;
 
-use app_name;
 use super::*;
-pub use display::PaintDisplayButtonSpec;
+pub use display::{PaintDisplayButtonSpec, new_display_dialog};
 
 static mut NEXT_DIALOG_ID: u32 = 0;
 
@@ -54,10 +53,6 @@ impl<A, C, CID> CollnPaintDisplayDialogCore<A, C, CID>
             A: ColourAttributesInterface + 'static,
             CID: CollnIdInterface + 'static,
 {
-    pub fn set_transient_for_from<W: gtk::WidgetExt>(&self, widget: &W) {
-        self.dialog.set_transient_for_from(widget)
-    }
-
     pub fn show(&self) {
         self.dialog.show()
     }
@@ -115,19 +110,19 @@ pub trait CollnPaintDisplayDialogInterface<A, C, CID>
             A: ColourAttributesInterface + 'static,
             CID: CollnIdInterface + 'static,
 {
-    fn create(
+    fn create<W: WidgetWrapper>(
         paint: &CollnPaint<C, CID>,
         current_target: Option<&Colour>,
-        parent: Option<&gtk::Window>,
+        caller: &Rc<W>,
         button_specs: Vec<PaintDisplayButtonSpec>,
     ) -> CollnPaintDisplayDialog<A, C, CID>;
 
-    fn create_without_target(
+    fn create_without_target<W: WidgetWrapper>(
         paint: &CollnPaint<C, CID>,
-        parent: Option<&gtk::Window>,
+        caller: &Rc<W>,
         button_specs: Vec<PaintDisplayButtonSpec>,
     ) -> CollnPaintDisplayDialog<A, C, CID> {
-        Self::create(paint, None, parent, button_specs)
+        Self::create(paint, None, caller, button_specs)
     }
 }
 
@@ -136,19 +131,13 @@ impl<A, C, CID> CollnPaintDisplayDialogInterface<A, C, CID> for CollnPaintDispla
             C: CharacteristicsInterface + 'static,
             CID: CollnIdInterface + 'static,
 {
-    fn create(
+    fn create<W: WidgetWrapper>(
         paint: &CollnPaint<C, CID>,
         current_target: Option<&Colour>,
-        parent: Option<&gtk::Window>,
+        caller: &Rc<W>,
         button_specs: Vec<PaintDisplayButtonSpec>,
     ) -> CollnPaintDisplayDialog<A, C, CID> {
-        let title = format!("{}: {}", app_name(), paint.name());
-        let dialog = gtk::Dialog::new_with_buttons(
-            Some(title.as_str()),
-            parent,
-            gtk::DialogFlags::USE_HEADER_BAR,
-            &[]
-        );
+        let dialog = new_display_dialog(&paint.name(), caller, &[]);
         if CID::display_current_target() {
             dialog.set_size_from_recollections("colln_paint_display", (60, 330));
         } else {

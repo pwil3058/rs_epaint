@@ -353,10 +353,9 @@ impl<A, C> MixedPaintCollectionViewInterface<A, C> for MixedPaintCollectionView<
                     let dialog = MixedPaintDisplayDialog::<A, C>::create(
                         &paint,
                         target,
-                        None,
+                        &mspl_c,
                         buttons
                     );
-                    dialog.set_transient_for_from(&mspl_c.pwo());
                     let mspl_c_c = mspl_c.clone();
                     dialog.connect_destroy(
                         move |id| { mspl_c_c.mixed_paint_dialogs.borrow_mut().remove(&id); }

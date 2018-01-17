@@ -29,7 +29,6 @@ use pw_gix::gtkx::menu::*;
 use pw_gix::gtkx::tree_view_column::*;
 use pw_gix::wrapper::*;
 
-use app_name;
 use basic_paint::*;
 use display::*;
 use series_paint::*;
@@ -64,10 +63,6 @@ impl<A, C> MixedPaintDisplayDialogCore<A, C>
     where   C: CharacteristicsInterface + 'static,
             A: ColourAttributesInterface + 'static
 {
-    pub fn set_transient_for_from<W: gtk::WidgetExt>(&self, widget: &W) {
-        self.dialog.set_transient_for_from(widget)
-    }
-
     pub fn show(&self) {
         self.dialog.show()
     }
@@ -116,10 +111,10 @@ pub trait PaintDisplayDialogInterface<A, C>
     where   C: CharacteristicsInterface + 'static,
             A: ColourAttributesInterface + 'static
 {
-    fn create(
+    fn create<W: WidgetWrapper>(
         paint: &MixedPaint<C>,
         current_target: Option<&Colour>,
-        parent: Option<&gtk::Window>,
+        caller: &Rc<W>,
         button_specs: Vec<PaintDisplayButtonSpec>,
     ) -> MixedPaintDisplayDialog<A, C>;
 }
@@ -128,19 +123,13 @@ impl<A, C> PaintDisplayDialogInterface<A, C> for MixedPaintDisplayDialog<A, C>
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static,
 {
-    fn create(
+    fn create<W: WidgetWrapper>(
         paint: &MixedPaint<C>,
         current_target: Option<&Colour>,
-        parent: Option<&gtk::Window>,
+        caller: &Rc<W>,
         button_specs: Vec<PaintDisplayButtonSpec>,
     ) -> MixedPaintDisplayDialog<A, C> {
-        let title = format!("{}: {}", app_name(), paint.name());
-        let dialog = gtk::Dialog::new_with_buttons(
-            Some(title.as_str()),
-            parent,
-            gtk::DialogFlags::USE_HEADER_BAR,
-            &[]
-        );
+        let dialog = new_display_dialog(&paint.name(), caller, &[]);
         dialog.set_size_from_recollections("mixed_paint_display", (60, 330));
         let content_area = dialog.get_content_area();
         let vbox = gtk::Box::new(gtk::Orientation::Vertical, 0);
@@ -426,10 +415,9 @@ impl<A, C> PaintComponentListViewInterface<A, C> for PaintComponentListView<A, C
                             let dialog = MixedPaintDisplayDialog::<A, C>::create(
                                 mixed_paint,
                                 target,
-                                None,
+                                &pclv_c,
                                 vec![]
                             );
-                            dialog.set_transient_for_from(&pclv_c.pwo());
                             let pclv_c_c = pclv_c.clone();
                             dialog.connect_destroy(
                                 move |id| { pclv_c_c.mixed_paint_dialogs.borrow_mut().remove(&id); }
@@ -441,10 +429,9 @@ impl<A, C> PaintComponentListViewInterface<A, C> for PaintComponentListView<A, C
                             let dialog = SeriesPaintDisplayDialog::<A, C>::create(
                                 series_paint,
                                 target,
-                                None,
+                                &pclv_c,
                                 vec![]
                             );
-                            dialog.set_transient_for_from(&pclv_c.pwo());
                             let pclv_c_c = pclv_c.clone();
                             dialog.connect_destroy(
                                 move |id| { pclv_c_c.series_paint_dialogs.borrow_mut().remove(&id); }

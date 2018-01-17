@@ -532,11 +532,10 @@ impl<A, C, CID> CollnPaintCollnWidgetInterface<A, C, CID> for CollnPaintCollnWid
                         } else {
                             None
                         };
-                        CollnPaintDisplayDialog::<A, C, CID>::create(&paint, target, None, vec![select_btn_spec])
+                        CollnPaintDisplayDialog::<A, C, CID>::create(&paint, target, &cpcw_c, vec![select_btn_spec])
                     } else {
-                        CollnPaintDisplayDialog::<A, C, CID>::create_without_target(&paint, None, vec![select_btn_spec])
+                        CollnPaintDisplayDialog::<A, C, CID>::create_without_target(&paint, &cpcw_c, vec![select_btn_spec])
                     };
-                    dialog.set_transient_for_from(&cpcw_c.pwo());
                     dialog.set_response_sensitive(0, cpcw_c.initiate_select_ok.get());
                     let cpcw_c_c = cpcw_c.clone();
                     dialog.connect_destroy(

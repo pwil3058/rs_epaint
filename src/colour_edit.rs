@@ -271,9 +271,15 @@ impl<A> ColourEditorInterface for  Rc<ColourEditorCore<A>>
             bbox.pack_start(&button.clone(), true, true, 0);
         }
         if sample::screen_sampling_available() {
-            let btn = sample::new_screen_sample_button(
-                "Take Sample",
-                "Take a sample of a portion of the screen"
+            let btn = gtk::Button::new_with_label("Take Sample");
+            btn.set_tooltip_text("Take a sample of a portion of the screen");
+            let ced_c = ced.clone();
+            btn.connect_clicked(
+                move |_| {
+                    if let Err(err) = sample::take_screen_sample() {
+                        ced_c.report_error("Failure", &err);
+                    }
+                }
             );
             bbox.pack_start(&btn, true, true, 0);
         }

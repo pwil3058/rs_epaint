@@ -27,6 +27,7 @@ use pw_gix::gtkx::dialog::*;
 use app_name;
 use basic_paint::*;
 use colour_edit::*;
+use display::new_display_dialog;
 
 #[derive(Debug)]
 pub struct TargetColourCore {
@@ -104,10 +105,6 @@ pub struct TargetColourDisplayDialogCore<A>
 impl<A> TargetColourDisplayDialogCore<A>
     where   A: ColourAttributesInterface
 {
-    pub fn set_transient_for_from<W: gtk::WidgetExt>(&self, widget: &W) {
-        self.dialog.set_transient_for_from(widget)
-    }
-
     pub fn show(&self) {
         self.dialog.show()
     }
@@ -118,26 +115,20 @@ pub type TargetColourDisplayDialog<A> = Rc<TargetColourDisplayDialogCore<A>>;
 pub trait TargetColourDisplayDialogInterface<A>
     where   A: ColourAttributesInterface
 {
-    fn create(
+    fn create<W: WidgetWrapper>(
         colour: &TargetColour,
-        parent: Option<&gtk::Window>,
+        caller: &Rc<W>,
     ) -> TargetColourDisplayDialog<A>;
 }
 
 impl<A> TargetColourDisplayDialogInterface<A> for TargetColourDisplayDialog<A>
     where   A: ColourAttributesInterface + 'static
 {
-    fn create(
+    fn create<W: WidgetWrapper>(
         colour: &TargetColour,
-        parent: Option<&gtk::Window>,
+        caller: &Rc<W>,
     ) -> TargetColourDisplayDialog<A> {
-        let title = format!("{}: {}", app_name(), colour.name());
-        let dialog = gtk::Dialog::new_with_buttons(
-            Some(title.as_str()),
-            parent,
-            gtk::DialogFlags::USE_HEADER_BAR,
-            &[]
-        );
+        let dialog = new_display_dialog(&colour.name(), caller, &[]);
         dialog.set_size_from_recollections("target_colour_display", (60, 180));
         let content_area = dialog.get_content_area();
         let vbox = gtk::Box::new(gtk::Orientation::Vertical, 0);
@@ -175,21 +166,29 @@ pub type NewTargetColourDialog<A> = Rc<NewTargetColourDialogCore<A>>;
 pub trait NewTargetColourDialogInterface<A>
     where   A: ColourAttributesInterface
 {
-    fn create(parent: Option<&gtk::Window>) -> NewTargetColourDialog<A>;
+    fn create<W: WidgetWrapper>(caller: &Rc<W>) -> NewTargetColourDialog<A>;
 }
 
 impl<A> NewTargetColourDialogInterface<A> for NewTargetColourDialog<A>
     where   A: ColourAttributesInterface
 {
-    fn create(parent: Option<&gtk::Window>) -> NewTargetColourDialog<A> {
+    fn create<W: WidgetWrapper>(caller: &Rc<W>) -> NewTargetColourDialog<A> {
+        //let title = format!("{}: New Mixed Paint Target Colour", app_name());
+        //let dialog = gtk::Dialog::new_with_buttons(
+            //Some(&title),
+            //parent_none(),
+            //gtk::DialogFlags::DESTROY_WITH_PARENT,
+            //&[("gtk-cancel", gtk::ResponseType::Reject.into()), ("gtk-ok", gtk::ResponseType::Accept.into())]
+        //);
+        //if let Some(tlw) = caller.get_toplevel_gtk_window() {
+            //dialog.set_transient_for(Some(&tlw));
+            //if let Some(ref icon) = tlw.get_icon() {
+                //dialog.set_icon(Some(icon));
+            //}
+        //};
+        //let buttons = &[("gtk-cancel", gtk::ResponseType::Reject.into()), ("gtk-ok", gtk::ResponseType::Accept.into())];
         let title = format!("{}: New Mixed Paint Target Colour", app_name());
-        let dialog = gtk::Dialog::new_with_buttons(
-            Some(&title),
-            parent,
-            gtk::DialogFlags::DESTROY_WITH_PARENT,
-            &[("gtk-cancel", gtk::ResponseType::Reject.into()), ("gtk-ok", gtk::ResponseType::Accept.into())]
-        );
-        dialog.set_response_sensitive(gtk::ResponseType::Accept.into(), false);
+        let dialog = caller.new_dialog_with_buttons(Some(&title), gtk::DialogFlags::DESTROY_WITH_PARENT, CANCEL_OK_BUTTONS);
         let colour_editor = ColourEditor::<A>::create(&vec![]);
         let notes = gtk::Entry::new();
 
@@ -222,12 +221,8 @@ impl<A> NewTargetColourDialogInterface<A> for NewTargetColourDialog<A>
 impl <A> NewTargetColourDialogCore<A>
     where   A: ColourAttributesInterface
 {
-    pub fn set_transient_for_from<W: gtk::WidgetExt>(&self, widget: &W) {
-        self.dialog.set_transient_for_from(widget)
-    }
-
     pub fn get_new_target(&self) -> Option<(String, Colour)> {
-        let ok: i32 = gtk::ResponseType::Accept.into();
+        let ok: i32 = CANCEL_OK_BUTTONS[1].1;
         if self.dialog.run() == ok {
             if let Some(notes) = self.notes.get_text() {
                 let colour = self.colour_editor.get_colour();

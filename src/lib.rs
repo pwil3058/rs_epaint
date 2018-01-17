@@ -137,10 +137,38 @@ pub mod error {
 }
 
 pub mod display {
+    use std::rc::Rc;
+
+    use gtk;
+    use gtk::GtkWindowExt;
+
+    use pw_gix::wrapper::{parent_none, WidgetWrapper};
+
+    use super::app_name;
+
     pub struct PaintDisplayButtonSpec {
         pub label: String,
         pub tooltip_text: String,
         pub callback: Box<Fn()>
+    }
+
+    pub fn new_display_dialog<W>(title: &str, caller: &Rc<W>, buttons: &[(&str, i32)]) -> gtk::Dialog
+        where   W: WidgetWrapper
+    {
+        let title = format!("{}: {}", app_name(), title);
+        let dialog = gtk::Dialog::new_with_buttons(
+            Some(title.as_str()),
+            parent_none(),
+            gtk::DialogFlags::USE_HEADER_BAR,
+            buttons
+        );
+        if let Some(tlw) = caller.get_toplevel_gtk_window() {
+            dialog.set_transient_for(Some(&tlw));
+            if let Some(ref icon) = tlw.get_icon() {
+                dialog.set_icon(Some(icon));
+            }
+        };
+        dialog
     }
 }
 
