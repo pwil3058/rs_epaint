@@ -15,6 +15,7 @@
 use std::path::Path;
 use std::rc::Rc;
 
+use gdk_pixbuf::Pixbuf;
 use gtk;
 use gtk::prelude::*;
 
@@ -111,12 +112,16 @@ impl<A,C> SeriesPaintManagerCore<A, C>
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static,
 {
-    pub fn set_target_colour(&self, ocolour: Option<&Colour>) {
-        self.binder.set_target_colour(ocolour)
+    pub fn set_icon(&self, icon: &Pixbuf) {
+        self.window.set_icon(Some(icon))
     }
 
     pub fn set_initiate_select_ok(&self, value: bool) {
         self.binder.set_initiate_select_ok(value);
+    }
+
+    pub fn set_target_colour(&self, ocolour: Option<&Colour>) {
+        self.binder.set_target_colour(ocolour)
     }
 
     pub fn connect_add_paint<F: 'static + Fn(&SeriesPaint<C>)>(&self, callback: F) {

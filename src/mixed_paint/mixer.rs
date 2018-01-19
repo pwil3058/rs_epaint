@@ -20,6 +20,7 @@ use chrono::prelude::*;
 use xml::escape::*;
 
 use cairo;
+use gdk_pixbuf::Pixbuf;
 use gtk;
 use gtk::prelude::*;
 
@@ -195,6 +196,13 @@ impl<A, C> PaintMixerCore<A, C>
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static
 {
+    pub fn set_manager_icons(&self, icon: &Pixbuf) {
+        self.series_paint_manager.set_icon(icon);
+        if let Some(ref saint_standards_manager) = self.o_paint_standards_manager {
+            saint_standards_manager.set_icon(icon);
+        }
+    }
+
     fn has_notes(&self) -> bool {
         if let Some(text) = self.mixed_paint_notes.get_text() {
             text.len() > 0
@@ -255,8 +263,6 @@ impl<A, C> PaintMixerCore<A, C>
         }
         self.set_target_colour(o_target_colour);
         self.paint_components.reset_all_parts_to_zero();
-        //if self.standards_manager:
-        //    self.standards_manager.set_target_setable(False);
         let name_text = format!("#{:03}:", self.mixed_paints_view.next_mixture_id());
         self.next_name_label.set_text(name_text.as_str());
         self.set_button_sensitivities();
@@ -283,8 +289,6 @@ impl<A, C> PaintMixerCore<A, C>
     fn cancel_current_mixture(&self) {
         self.mixed_paint_notes.set_text("");
         self.set_target_colour(None);
-        //if self.standards_manager:
-        //    self.standards_manager.set_target_setable(False);
         self.next_name_label.set_text("#00?:");
         self.paint_components.reset_all_parts_to_zero();
         self.set_button_sensitivities();
