@@ -453,6 +453,8 @@ impl<A, C> SimpleCreation for BasicPaintFactoryDisplay<A, C>
 {
     fn create() -> BasicPaintFactoryDisplay<A, C> {
         let notebook = gtk::Notebook::new();
+        notebook.set_scrollable(true);
+        notebook.popup_enable();
         let paint_factory_view = BasicPaintFactoryView::<A, C>::create();
         notebook.append_page(&paint_factory_view.pwo(), Some(&gtk::Label::new("Paint List")));
         let mut hue_attr_wheels = Vec::new();

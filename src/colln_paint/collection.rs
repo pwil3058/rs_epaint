@@ -504,6 +504,8 @@ impl<A, C, CID> CollnPaintCollnWidgetInterface<A, C, CID> for CollnPaintCollnWid
             let label = gtk::Label::new(Some(label_text.as_str()));
             notebook.append_page(&wheel.pwo(), Some(&label));
         }
+        notebook.set_scrollable(true);
+        notebook.popup_enable();
         let hpaned = gtk::Paned::new(gtk::Orientation::Horizontal);
         hpaned.pack1(&notebook, true, true);
         hpaned.pack2(&cpcw.paint_colln_view.pwo() , true, true);

@@ -437,6 +437,8 @@ impl<A, C> PaintMixerInterface<A, C> for PaintMixer<A, C>
             let label = gtk::Label::new(Some(label_text.as_str()));
             notebook.append_page(&wheel.pwo(), Some(&label));
         }
+        notebook.set_scrollable(true);
+        notebook.popup_enable();
 
         let hpaned = gtk::Paned::new(gtk::Orientation::Horizontal);
         hpaned.pack1(&notebook, true, true);
