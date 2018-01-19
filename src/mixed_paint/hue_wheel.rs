@@ -406,18 +406,16 @@ impl<A, C> MixerHueAttrWheelCore<A, C>
 
     pub fn add_mixed_paint(&self, paint: &MixedPaint<C>) {
         self.mixed_paints.add_coloured_item(paint);
+        if let Some(ref target_colour) = paint.target_colour() {
+            self.target_colours.add_coloured_item(target_colour);
+        }
     }
 
     pub fn remove_mixed_paint(&self, paint: &MixedPaint<C>) {
         self.mixed_paints.remove_coloured_item(paint);
-    }
-
-    pub fn add_target_colour(&self, target_colour: &TargetColour) {
-        self.target_colours.add_coloured_item(target_colour);
-    }
-
-    pub fn remove_target_colour(&self, target_colour: &TargetColour) {
-        self.target_colours.remove_coloured_item(target_colour);
+        if let Some(ref target_colour) = paint.target_colour() {
+            self.target_colours.remove_coloured_item(target_colour);
+        }
     }
 
     pub fn set_target_colour(&self, o_colour: Option<&Colour>) {

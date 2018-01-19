@@ -31,6 +31,14 @@ pub mod hue_wheel;
 pub mod mixer;
 pub mod target;
 
+use self::target::{TargetColour, TargetColourInterface};
+
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub enum MixingMode {
+    MatchTarget,
+    MatchSamples
+}
+
 #[derive(Debug, Clone, Hash)]
 pub enum Paint<C: CharacteristicsInterface> {
     Series(SeriesPaint<C>),
@@ -205,20 +213,13 @@ lazy_static! {
         ];
 }
 
-pub trait MixedPaintInterface<C>: BasicPaintInterface<C>
-    where   C: CharacteristicsInterface
-{
-    fn matched_colour(&self) -> Option<Colour>;
-    fn components(&self) -> Rc<Vec<PaintComponent<C>>>;
-}
-
 #[derive(Debug, Clone, Hash)]
 pub struct MixedPaintCore<C: CharacteristicsInterface> {
     colour: Colour,
     name: String,
     notes: String,
     characteristics: C,
-    matched_colour: Option<Colour>,
+    target_colour: Option<TargetColour>,
     components: Rc<Vec<PaintComponent<C>>>
 }
 
@@ -289,8 +290,16 @@ impl<C: CharacteristicsInterface> MixedPaintCore<C> {
     }
 
     pub fn matched_colour(&self) -> Option<Colour> {
-        if let Some(ref matched_colour) = self.matched_colour {
-            Some(matched_colour.clone())
+        if let Some(ref target_colour) = self.target_colour {
+            Some(target_colour.colour())
+        } else {
+            None
+        }
+    }
+
+    pub fn target_colour(&self) -> Option<TargetColour> {
+        if let Some(ref target_colour) = self.target_colour {
+            Some(target_colour.clone())
         } else {
             None
         }
@@ -372,21 +381,6 @@ impl<C> BasicPaintInterface<C> for MixedPaint<C>
             rows.push(row.clone());
         };
         rows
-    }
-}
-
-impl<C> MixedPaintInterface<C> for MixedPaint<C>
-    where   C: CharacteristicsInterface
-{
-    fn matched_colour(&self) -> Option<Colour> {
-        match self.matched_colour {
-            Some(ref colour) => Some(colour.clone()),
-            None => None
-        }
-    }
-
-    fn components(&self) -> Rc<Vec<PaintComponent<C>>> {
-        self.components.clone()
     }
 }
 

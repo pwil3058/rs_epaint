@@ -128,6 +128,12 @@ impl<C: CharacteristicsInterface> MixedPaintCollectionCore<C> {
             }
         }
         let name_num = self.last_mixture_id.get() + 1;
+        let target_colour = if let Some(ref colour) = matched_colour {
+            let name = format!("Target #{:03}", name_num);
+            Some(TargetColour::create(colour, &name, notes))
+        } else {
+            None
+        };
         self.last_mixture_id.set(name_num);
         let mixed_paint = Rc::new(
             MixedPaintCore::<C> {
@@ -135,7 +141,7 @@ impl<C: CharacteristicsInterface> MixedPaintCollectionCore<C> {
                 name: format!("Mix #{:03}", name_num),
                 notes: notes.to_string(),
                 characteristics: C::from_floats(&new_c_floats),
-                matched_colour: matched_colour.clone(),
+                target_colour: target_colour,
                 components: Rc::new(subst_components)
             }
         );
@@ -275,7 +281,7 @@ pub trait MixedPaintCollectionViewInterface<A, C>
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static,
 {
-    fn create(collection: &MixedPaintCollection<C>) -> MixedPaintCollectionView<A, C>;
+    fn create(collection: &MixedPaintCollection<C>, mixing_mode: MixingMode) -> MixedPaintCollectionView<A, C>;
     fn connect_add_paint<F: 'static + Fn(&MixedPaint<C>)>(&self, callback: F);
 }
 
@@ -283,7 +289,7 @@ impl<A, C> MixedPaintCollectionViewInterface<A, C> for MixedPaintCollectionView<
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static,
 {
-    fn create(collection: &MixedPaintCollection<C>) -> MixedPaintCollectionView<A, C> {
+    fn create(collection: &MixedPaintCollection<C>, mixing_mode: MixingMode) -> MixedPaintCollectionView<A, C> {
         let len = MixedPaint::<C>::tv_row_len();
         let list_store = gtk::ListStore::new(&MIXED_PAINT_ROW_SPEC[0..len]);
         for paint in collection.get_mixed_paints().iter() {
@@ -309,7 +315,9 @@ impl<A, C> MixedPaintCollectionViewInterface<A, C> for MixedPaintCollectionView<
         );
 
         mspl.view.append_column(&simple_text_column("Name", MP_NAME, MP_NAME, MP_RGB, MP_RGB_FG, -1, true));
-        mspl.view.append_column(&simple_text_column("Match?", -1, MP_MATCHED_ANGLE, MP_MATCHED_RGB, -1, 50, true));
+        if mixing_mode == MixingMode::MatchTarget {
+            mspl.view.append_column(&simple_text_column("Match?", -1, MP_MATCHED_ANGLE, MP_MATCHED_RGB, -1, 50, true));
+        };
         mspl.view.append_column(&simple_text_column("Notes", MP_NOTES, MP_NOTES, MP_RGB, MP_RGB_FG, -1, true));
         for col in A::tv_columns() {
             mspl.view.append_column(&col);

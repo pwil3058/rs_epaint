@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::path::Path;
 use std::rc::Rc;
 
@@ -28,8 +28,10 @@ use pw_gix::cairox::*;
 
 pub use pw_gix::wrapper::*;
 use pw_gix::colour::*;
+use pw_gix::gtkx::menu::*;
 use pw_gix::gtkx::paned::*;
 use pw_gix::rgb_math::rgb::*;
+use pw_gix::sample;
 
 use basic_paint::*;
 use series_paint::*;
@@ -41,25 +43,19 @@ use super::components::*;
 use super::hue_wheel::*;
 use super::target::*;
 
-trait ColourMatchAreaInterface {
-    type ColourMatchAreaType;
-
-    fn create() -> Self::ColourMatchAreaType;
-    fn clear(&self);
-
-    fn get_mixed_colour(&self) -> Option<Colour>;
-    fn get_target_colour(&self) -> Option<Colour>;
-
-    fn has_target_colour(&self) -> bool;
-
-    fn set_mixed_colour(&self, colour: Option<&Colour>);
-    fn set_target_colour(&self, colour: Option<&Colour>);
+struct Sample {
+    pix_buf: Pixbuf,
+    position: Point,
 }
 
 struct ColourMatchAreaCore {
     drawing_area: gtk::DrawingArea,
     mixed_colour: RefCell<Option<Colour>>,
     target_colour: RefCell<Option<Colour>>,
+    popup_menu: WrappedMenu,
+    samples: RefCell<Vec<Sample>>,
+    popup_menu_position: Cell<Point>,
+    mixing_mode: MixingMode,
 }
 
 impl ColourMatchAreaCore {
@@ -83,46 +79,9 @@ impl ColourMatchAreaCore {
             );
             cairo_context.fill();
         }
-    }
-}
-
-type ColourMatchArea = Rc<ColourMatchAreaCore>;
-
-impl_widget_wrapper!(ColourMatchAreaCore, drawing_area, gtk::DrawingArea);
-
-impl ColourMatchAreaInterface for ColourMatchArea {
-    type ColourMatchAreaType = ColourMatchArea;
-
-    fn create() -> ColourMatchArea {
-        let colour_match_area = Rc::new(
-            ColourMatchAreaCore {
-                drawing_area: gtk::DrawingArea::new(),
-                mixed_colour: RefCell::new(None),
-                target_colour: RefCell::new(None)
-            }
-        );
-        let colour_match_area_c = colour_match_area.clone();
-        colour_match_area.drawing_area.connect_draw(
-            move |da, ctxt|
-            {
-                colour_match_area_c.draw(da, ctxt);
-                Inhibit(false)
-            }
-        );
-        colour_match_area
-    }
-
-    fn clear(&self) {
-        *self.mixed_colour.borrow_mut() = None;
-        *self.target_colour.borrow_mut() = None;
-        self.drawing_area.queue_draw();
-    }
-
-    fn get_mixed_colour(&self) -> Option<Colour> {
-        if let Some(ref colour) = *self.mixed_colour.borrow() {
-            Some(colour.clone())
-        } else {
-            None
+        for sample in self.samples.borrow().iter() {
+            cairo_context.set_source_pixbuf_at(&sample.pix_buf, sample.position, false);
+            cairo_context.paint();
         }
     }
 
@@ -148,12 +107,88 @@ impl ColourMatchAreaInterface for ColourMatchArea {
     }
 
     fn set_target_colour(&self, colour: Option<&Colour>) {
+        assert!(colour.is_none() || self.mixing_mode == MixingMode::MatchTarget);
         if let Some(colour) = colour {
             *self.target_colour.borrow_mut() = Some(colour.clone())
         } else {
             *self.target_colour.borrow_mut() = None
         };
         self.drawing_area.queue_draw();
+    }
+
+    pub fn remove_samples(&self) {
+        self.samples.borrow_mut().clear();
+        self.drawing_area.queue_draw();
+    }
+
+}
+
+type ColourMatchArea = Rc<ColourMatchAreaCore>;
+
+impl_widget_wrapper!(ColourMatchAreaCore, drawing_area, gtk::DrawingArea);
+
+trait ColourMatchAreaInterface {
+    type ColourMatchAreaType;
+
+    fn create(mixing_mode: MixingMode) -> Self::ColourMatchAreaType;
+}
+
+impl ColourMatchAreaInterface for ColourMatchArea {
+    type ColourMatchAreaType = ColourMatchArea;
+
+    fn create(mixing_mode: MixingMode) -> ColourMatchArea {
+        let colour_match_area = Rc::new(
+            ColourMatchAreaCore {
+                drawing_area: gtk::DrawingArea::new(),
+                mixed_colour: RefCell::new(None),
+                target_colour: RefCell::new(None),
+                popup_menu: WrappedMenu::new(&vec![]),
+                samples: RefCell::new(Vec::new()),
+                popup_menu_position: Cell::new(Point(0.0, 0.0)),
+                mixing_mode: mixing_mode
+            }
+        );
+
+        if mixing_mode == MixingMode::MatchSamples {
+            let colour_match_area_c = colour_match_area.clone();
+            colour_match_area.popup_menu.append_item(
+                "paste",
+                "Paste Sample",
+                "Paste image sample from the clipboard at this position",
+            ).connect_activate(
+                move |_| {
+                    let cbd = gtk::Clipboard::get(&gdk::SELECTION_CLIPBOARD);
+                    if let Some(pixbuf) = cbd.wait_for_image() {
+                        let sample = Sample{pix_buf: pixbuf, position: colour_match_area_c.popup_menu_position.get()};
+                        colour_match_area_c.samples.borrow_mut().push(sample);
+                        colour_match_area_c.drawing_area.queue_draw();
+                    } else {
+                        colour_match_area_c.inform_user("No image data on clipboard.", None);
+                    }
+                }
+            );
+
+            let colour_match_area_c = colour_match_area.clone();
+            colour_match_area.popup_menu.append_item(
+                "remove",
+                "Remove Sample(s)",
+                "Remove all image samples from the sample area",
+            ).connect_activate(
+                move |_| {
+                    colour_match_area_c.remove_samples();
+                }
+            );
+        };
+
+        let colour_match_area_c = colour_match_area.clone();
+        colour_match_area.drawing_area.connect_draw(
+            move |da, ctxt|
+            {
+                colour_match_area_c.draw(da, ctxt);
+                Inhibit(false)
+            }
+        );
+        colour_match_area
     }
 }
 
@@ -163,7 +198,7 @@ pub trait PaintMixerInterface<A, C>
 {
     type PaintMixerType;
 
-    fn create(series_paint_data_path: &Path, paint_standards_data_path: Option<&Path>) -> Self::PaintMixerType;
+    fn create(mixing_mode: MixingMode, series_paint_data_path: &Path, paint_standards_data_path: Option<&Path>) -> Self::PaintMixerType;
 }
 
 pub struct PaintMixerCore<A, C>
@@ -196,6 +231,10 @@ impl<A, C> PaintMixerCore<A, C>
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static
 {
+    pub fn mixing_mode(&self) -> MixingMode {
+        self.colour_match_area.mixing_mode
+    }
+
     pub fn set_manager_icons(&self, icon: &Pixbuf) {
         self.series_paint_manager.set_icon(icon);
         if let Some(ref saint_standards_manager) = self.o_paint_standards_manager {
@@ -228,7 +267,9 @@ impl<A, C> PaintMixerCore<A, C>
         let has_colour = self.paint_components.has_colour();
         self.simplify_parts_btn.set_sensitive(has_colour);
         self.reset_parts_btn.set_sensitive(has_colour);
-        if self.colour_match_area.has_target_colour() {
+        if self.mixing_mode() == MixingMode::MatchSamples {
+            self.accept_mixture_btn.set_sensitive(has_colour && self.has_notes());
+        } else if self.colour_match_area.has_target_colour() {
             self.new_mixture_btn.set_sensitive(false);
             self.cancel_btn.set_sensitive(true);
             self.accept_mixture_btn.set_sensitive(has_colour && self.has_notes());
@@ -274,9 +315,9 @@ impl<A, C> PaintMixerCore<A, C>
         } else {
             "".to_string()
         };
-        let matched_colour = self.colour_match_area.get_target_colour();
+        let o_matched_colour = self.colour_match_area.get_target_colour();
         let components = self.paint_components.get_paint_components();
-        if let Ok(mixed_paint) = self.mixed_paints_view.add_paint(&notes, &components, matched_colour) {
+        if let Ok(mixed_paint) = self.mixed_paints_view.add_paint(&notes, &components, o_matched_colour) {
             for wheel in self.hue_attr_wheels.iter() {
                 wheel.add_mixed_paint(&mixed_paint);
             }
@@ -370,7 +411,8 @@ impl<A, C> PaintMixerInterface<A, C> for PaintMixer<A, C>
 {
     type PaintMixerType = PaintMixer<A, C>;
 
-    fn create(series_paint_data_path: &Path, paint_standards_data_path: Option<&Path>) -> PaintMixer<A, C> {
+    fn create(mixing_mode: MixingMode, series_paint_data_path: &Path, paint_standards_data_path: Option<&Path>) -> PaintMixer<A, C> {
+        assert!(paint_standards_data_path.is_none() || mixing_mode == MixingMode::MatchTarget);
         let mut view_attr_wheels:Vec<MixerHueAttrWheel<A, C>> = Vec::new();
         for attr in A::scalar_attributes().iter() {
             view_attr_wheels.push(MixerHueAttrWheel::<A, C>::create(*attr));
@@ -386,9 +428,9 @@ impl<A, C> PaintMixerInterface<A, C> for PaintMixer<A, C>
                 vbox: gtk::Box::new(gtk::Orientation::Vertical, 1),
                 cads: A::create(),
                 hue_attr_wheels: view_attr_wheels,
-                colour_match_area: ColourMatchArea::create(),
+                colour_match_area: ColourMatchArea::create(mixing_mode),
                 paint_components: PaintComponentsBox::<A, C>::create_with(4, true),
-                mixed_paints_view: MixedPaintCollectionView::<A, C>::create(&mixed_paints),
+                mixed_paints_view: MixedPaintCollectionView::<A, C>::create(&mixed_paints, mixing_mode),
                 notes: gtk::Entry::new(),
                 next_name_label: gtk::Label::new(Some("#???:")),
                 mixed_paint_notes: gtk::Entry::new(),
@@ -455,13 +497,30 @@ impl<A, C> PaintMixerInterface<A, C> for PaintMixer<A, C>
         paint_mixer.vbox.pack_start(&frame, true, true, 0);
 
         let button_box = gtk::Box::new(gtk::Orientation::Horizontal, 2);
-        paint_mixer.vbox.pack_start(&button_box.clone(), false, false, 0);
-        button_box.pack_start(&paint_mixer.new_mixture_btn.clone(), true, true, 0);
-        button_box.pack_start(&paint_mixer.accept_mixture_btn.clone(), true, true, 0);
-        button_box.pack_start(&paint_mixer.cancel_btn.clone(), true, true, 0);
-        button_box.pack_start(&paint_mixer.simplify_parts_btn.clone(), true, true, 0);
-        button_box.pack_start(&paint_mixer.reset_parts_btn.clone(), true, true, 0);
-        button_box.pack_start(&paint_mixer.remove_unused_btn.clone(), true, true, 0);
+        paint_mixer.vbox.pack_start(&button_box, false, false, 0);
+        if mixing_mode == MixingMode::MatchTarget {
+            button_box.pack_start(&paint_mixer.new_mixture_btn, true, true, 0);
+            button_box.pack_start(&paint_mixer.accept_mixture_btn, true, true, 0);
+            button_box.pack_start(&paint_mixer.cancel_btn, true, true, 0);
+        } else {
+            button_box.pack_start(&paint_mixer.accept_mixture_btn, true, true, 0);
+            if sample::screen_sampling_available() {
+                let btn = gtk::Button::new_with_label("Take Sample");
+                btn.set_tooltip_text("Take a sample of a portion of the screen");
+                let paint_mixer_c = paint_mixer.clone();
+                btn.connect_clicked(
+                    move |_| {
+                        if let Err(err) = sample::take_screen_sample() {
+                            paint_mixer_c.report_error("Failure", &err);
+                        }
+                    }
+                );
+                button_box.pack_start(&btn, true, true, 0);
+            }
+        };
+        button_box.pack_start(&paint_mixer.simplify_parts_btn, true, true, 0);
+        button_box.pack_start(&paint_mixer.reset_parts_btn, true, true, 0);
+        button_box.pack_start(&paint_mixer.remove_unused_btn, true, true, 0);
 
         paint_mixer.vbox.pack_start(&paint_mixer.mixed_paints_view.pwo(), true, true, 0);
 
@@ -475,27 +534,29 @@ impl<A, C> PaintMixerInterface<A, C> for PaintMixer<A, C>
             }
         );
 
-        paint_mixer.new_mixture_btn.set_tooltip_text("Start mixing a new colour.");
-        let paint_mixer_c = paint_mixer.clone();
-        paint_mixer.new_mixture_btn.connect_clicked(
-            move |_| {
-                let dialog = NewTargetColourDialog::<A>::create(&paint_mixer_c);
-                if let Some((ref notes, ref colour)) = dialog.get_new_target() {
-                    paint_mixer_c.start_new_mixture(Some(&notes), Some(&colour))
+        if mixing_mode == MixingMode::MatchTarget {
+            paint_mixer.new_mixture_btn.set_tooltip_text("Start mixing a new colour.");
+            let paint_mixer_c = paint_mixer.clone();
+            paint_mixer.new_mixture_btn.connect_clicked(
+                move |_| {
+                    let dialog = NewTargetColourDialog::<A>::create(&paint_mixer_c);
+                    if let Some((ref notes, ref colour)) = dialog.get_new_target() {
+                        paint_mixer_c.start_new_mixture(Some(&notes), Some(&colour))
+                    }
                 }
-            }
-        );
+            );
+
+            paint_mixer.cancel_btn.set_tooltip_text("Cancel the current mixture.");
+            let paint_mixer_c = paint_mixer.clone();
+            paint_mixer.cancel_btn.connect_clicked(
+                move |_| paint_mixer_c.cancel_current_mixture()
+            );
+        };
 
         paint_mixer.accept_mixture_btn.set_tooltip_text("Accept the current mixture and add it to the list of mixed colours.");
         let paint_mixer_c = paint_mixer.clone();
         paint_mixer.accept_mixture_btn.connect_clicked(
             move |_| paint_mixer_c.accept_new_mixture()
-        );
-
-        paint_mixer.cancel_btn.set_tooltip_text("Cancel the current mixture.");
-        let paint_mixer_c = paint_mixer.clone();
-        paint_mixer.cancel_btn.connect_clicked(
-            move |_| paint_mixer_c.cancel_current_mixture()
         );
 
         paint_mixer.simplify_parts_btn.set_tooltip_text("Divide all paints' parts by their greatest common denominator.");

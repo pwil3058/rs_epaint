@@ -29,7 +29,7 @@ use basic_paint::*;
 use colour_edit::*;
 use display::new_display_dialog;
 
-#[derive(Debug)]
+#[derive(Debug, Hash)]
 pub struct TargetColourCore {
     name: String,
     notes: String,
