@@ -295,7 +295,7 @@ impl ColourAttributesInterface for ModelPaintAttributes {
     }
 
     fn scalar_attributes() -> Vec<ScalarAttribute> {
-        vec![ScalarAttribute::Value, ScalarAttribute::Greyness]
+        vec![ScalarAttribute::Value, ScalarAttribute::Greyness, ScalarAttribute::Chroma]
     }
 
 
