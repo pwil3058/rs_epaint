@@ -263,6 +263,20 @@ impl<A, C> PaintMixerCore<A, C>
         }
     }
 
+    fn remove_mixed_paint(&self, paint: &MixedPaint<C>) {
+        let message = format!("Confirm remove {}: {}", paint.name(), paint.notes());
+        if self.ask_confirm_action(&message, None) {
+            if let Err(err) = self.mixed_paints_view.remove_paint(paint) {
+                let message = format!("Error: {}: {}", paint.name(), paint.notes());
+                self.report_error(&message, &err);
+            } else {
+                for wheel in self.hue_attr_wheels.iter() {
+                    wheel.remove_mixed_paint(paint);
+                }
+            }
+        }
+    }
+
     fn set_button_sensitivities(&self) {
         let has_colour = self.paint_components.has_colour();
         self.simplify_parts_btn.set_sensitive(has_colour);
@@ -601,6 +615,11 @@ impl<A, C> PaintMixerInterface<A, C> for PaintMixer<A, C>
         let paint_mixer_c = paint_mixer.clone();
         paint_mixer.series_paint_manager.connect_add_paint(
             move |paint| paint_mixer_c.add_series_paint(paint)
+        );
+
+        let paint_mixer_c = paint_mixer.clone();
+        paint_mixer.mixed_paints_view.connect_remove_paint(
+            move |paint| paint_mixer_c.remove_mixed_paint(paint)
         );
 
         if let Some(ref paint_standards_manager) = paint_mixer.o_paint_standards_manager {

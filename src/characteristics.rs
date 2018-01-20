@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::error::Error;
 use std::fmt;
 use std::rc::Rc;
 use std::str::FromStr;
@@ -21,7 +22,29 @@ use gtk::{ComboBoxExt, ComboBoxTextExt};
 
 use regex::*;
 
-use error::{PaintError, PaintErrorType};
+#[derive(Debug)]
+pub struct CharacteristicError {
+    msg: String,
+}
+
+impl CharacteristicError {
+    pub fn new(text: &str) -> CharacteristicError {
+        CharacteristicError{msg: format!("{}: is a malformed characteristic value.", text)}
+    }
+}
+
+impl fmt::Display for CharacteristicError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "CharacteristicError({}).", self.description())?;
+        Ok(())
+    }
+}
+
+impl Error for CharacteristicError {
+    fn description(&self) -> &str {
+        &self.msg
+    }
+}
 
 pub trait CharacteristicInterface: FromStr + PartialEq {
     fn name() -> &'static str;
@@ -145,9 +168,9 @@ lazy_static! {
 }
 
 impl FromStr for Finish {
-    type Err = PaintError;
+    type Err = CharacteristicError;
 
-    fn from_str(string: &str) -> Result<Finish, PaintError> {
+    fn from_str(string: &str) -> Result<Finish, CharacteristicError> {
         let mut mstr = string;
         if let Some(c) = FINISH_RE.captures(string) {
             if let Some(m) = c.name("finish") {
@@ -159,7 +182,7 @@ impl FromStr for Finish {
             "SG" | "Semi-gloss" => Ok(Finish::SemiGloss),
             "SF" | "Semi-flat" => Ok(Finish::SemiFlat),
             "F" | "Flat" => Ok(Finish::Flat),
-            _ => Err(PaintErrorType::MalformedText(string.to_string()).into())
+            _ => Err(CharacteristicError::new(string))
         }
     }
 }
@@ -253,9 +276,9 @@ lazy_static! {
 }
 
 impl FromStr for Transparency {
-    type Err = PaintError;
+    type Err = CharacteristicError;
 
-    fn from_str(string: &str) -> Result<Transparency, PaintError> {
+    fn from_str(string: &str) -> Result<Transparency, CharacteristicError> {
         let mut mstr = string;
         if let Some(c) = TRANSPARENCY_RE.captures(string) {
             if let Some(m) = c.name("transparency") {
@@ -268,7 +291,7 @@ impl FromStr for Transparency {
             "ST" | "Semi-transparent" => Ok(Transparency::SemiTransparent),
             "T" | "Transparent" => Ok(Transparency::Transparent),
             "Cl" | "Clear" => Ok(Transparency::Clear),
-            _ => Err(PaintErrorType::MalformedText(string.to_string()).into())
+            _ => Err(CharacteristicError::new(string))
         }
     }
 }
@@ -360,9 +383,9 @@ lazy_static! {
 }
 
 impl FromStr for Fluorescence {
-    type Err = PaintError;
+    type Err = CharacteristicError;
 
-    fn from_str(string: &str) -> Result<Fluorescence, PaintError> {
+    fn from_str(string: &str) -> Result<Fluorescence, CharacteristicError> {
         let mut mstr = string;
         if let Some(c) = FLUORESCENCE_RE.captures(string) {
             if let Some(m) = c.name("fluorescence") {
@@ -374,7 +397,7 @@ impl FromStr for Fluorescence {
             "SF" | "Semi-fluorescent" => Ok(Fluorescence::SemiFluorescent),
             "SN" | "Semi-nonfluorescent" => Ok(Fluorescence::SemiNonfluorescent),
             "NF" | "Nonfluorescent" => Ok(Fluorescence::Nonfluorescent),
-            _ => Err(PaintErrorType::MalformedText(string.to_string()).into())
+            _ => Err(CharacteristicError::new(string))
         }
     }
 }
@@ -464,9 +487,9 @@ lazy_static! {
 }
 
 impl FromStr for Metallic {
-    type Err = PaintError;
+    type Err = CharacteristicError;
 
-    fn from_str(string: &str) -> Result<Metallic, PaintError> {
+    fn from_str(string: &str) -> Result<Metallic, CharacteristicError> {
         let mut mstr = string;
         if let Some(c) = METALLIC_RE.captures(string) {
             if let Some(m) = c.name("metallic") {
@@ -478,7 +501,7 @@ impl FromStr for Metallic {
             "Mc" | "Semi-metallic" => Ok(Metallic::Metallic),
             "SM" | "Semi-nonmetallic" => Ok(Metallic::SemiMetallic),
             "NM" | "Nonmetallic" => Ok(Metallic::Nonmetallic),
-            _ => Err(PaintErrorType::MalformedText(string.to_string()).into())
+            _ => Err(CharacteristicError::new(string))
         }
     }
 }

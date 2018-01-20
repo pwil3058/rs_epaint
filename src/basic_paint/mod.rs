@@ -48,7 +48,7 @@ pub trait CharacteristicsInterface:
     fn tv_row_len() -> usize;
     fn tv_columns(start_col_id: i32) -> Vec<gtk::TreeViewColumn>;
     fn from_floats(floats: &Vec<f64>) -> Self;
-    fn from_str(string: &str) -> Result<Self, PaintError>;
+    fn from_str(string: &str) -> Result<Self, PaintError<Self>>;
 
     fn tv_rows(&self) -> Vec<gtk::Value>;
     fn gui_display_widget(&self) -> gtk::Box;
@@ -293,9 +293,9 @@ lazy_static! {
 }
 
 impl<C: CharacteristicsInterface> FromStr for BasicPaintSpec<C> {
-    type Err = PaintError;
+    type Err = PaintError<C>;
 
-    fn from_str(string: &str) -> Result<BasicPaintSpec<C>, PaintError> {
+    fn from_str(string: &str) -> Result<BasicPaintSpec<C>, PaintError<C>> {
         let captures = BASIC_PAINT_RE.captures(string).ok_or(PaintError::from(PaintErrorType::MalformedText(string.to_string())))?;
         let c_match = captures.name("characteristics").ok_or(PaintError::from(PaintErrorType::MalformedText(string.to_string())))?;
         let rgb_match = captures.name("rgb").ok_or(PaintError::from(PaintErrorType::MalformedText(string.to_string())))?;

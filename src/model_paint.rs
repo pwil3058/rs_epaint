@@ -105,7 +105,7 @@ impl CharacteristicsInterface for ModelPaintCharacteristics {
         ]
     }
 
-    fn from_str(string: &str) -> Result<ModelPaintCharacteristics, PaintError> {
+    fn from_str(string: &str) -> Result<ModelPaintCharacteristics, PaintError<ModelPaintCharacteristics>> {
         let finish = Finish::from_str(string)?;
         let transparency = Transparency::from_str(string)?;
         // NB: cope with older definitions that don't include

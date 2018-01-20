@@ -31,7 +31,7 @@ pub mod hue_wheel;
 pub mod mixer;
 pub mod target;
 
-use self::target::{TargetColour, TargetColourInterface};
+use self::target::TargetColour;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum MixingMode {

@@ -59,50 +59,65 @@ pub mod error {
 
     use pw_gix::rgb_math::rgb;
 
+    use basic_paint::CharacteristicsInterface;
+    use characteristics::CharacteristicError;
+    use mixed_paint::MixedPaint;
+
     #[derive(Debug)]
-    pub enum PaintErrorType {
+    pub enum PaintErrorType<C: CharacteristicsInterface> {
         AlreadyExists(String),
         MalformedText(String),
+        NotFound(String),
         IOError(io::Error),
         NoSubstantiveComponents,
         NoCollectionId,
         UserCancelled,
+        BeingUsedBy(Vec<MixedPaint<C>>),
     }
 
     #[derive(Debug)]
-    pub struct PaintError {
-        error_type: PaintErrorType,
+    pub struct PaintError<C: CharacteristicsInterface> {
+        error_type: PaintErrorType<C>,
         msg: String,
     }
 
-    impl PaintError {
-        pub fn error_type(&self) -> &PaintErrorType {
+    impl<C: CharacteristicsInterface> PaintError<C> {
+        pub fn error_type(&self) -> &PaintErrorType<C> {
             &self.error_type
         }
     }
 
-    impl From<PaintErrorType> for PaintError {
-        fn from(error_type: PaintErrorType) -> PaintError {
+    impl<C: CharacteristicsInterface> From<PaintErrorType<C>> for PaintError<C> {
+        fn from(error_type: PaintErrorType<C>) -> PaintError<C> {
             let msg = match error_type {
                 PaintErrorType::AlreadyExists(ref text) => format!("{}: already exists.", text),
                 PaintErrorType::MalformedText(ref text) => format!("{}: is (or contains) malformed text.", text),
+                PaintErrorType::NotFound(ref text) => format!("{}: not found.", text),
                 PaintErrorType::IOError(ref io_error) => format!("I/O Error: {}", io_error.description()),
                 PaintErrorType::NoSubstantiveComponents => "Contains no nonzero components.".to_string(),
                 PaintErrorType::NoCollectionId => "Missing collection identifier.".to_string(),
                 PaintErrorType::UserCancelled => "Operation cancelled by the user.".to_string(),
+                PaintErrorType::BeingUsedBy(_) => "Is being used as a component by one or more paints.".to_string(),
             };
             PaintError{error_type, msg}
         }
     }
 
-    impl From<io::Error> for PaintError {
-        fn from(io_error: io::Error) -> PaintError {
+    impl<C: CharacteristicsInterface> From<CharacteristicError> for PaintError<C> {
+        fn from(ch_error: CharacteristicError) -> PaintError<C> {
+            let text = ch_error.description().to_string();
+            PaintError{error_type: PaintErrorType::MalformedText(text.clone()), msg: text}
+        }
+    }
+
+    impl<C: CharacteristicsInterface> From<io::Error> for PaintError<C> {
+        fn from(io_error: io::Error) -> PaintError<C> {
             PaintErrorType::IOError(io_error).into()
         }
     }
 
-    impl From<regex::Error> for PaintError {
-        fn from(regex_error: regex::Error) -> PaintError {
+    impl<C: CharacteristicsInterface> From<regex::Error> for PaintError<C> {
+        fn from(regex_error: regex::Error) -> PaintError<C> {
             match regex_error {
                 regex::Error::Syntax(string) => PaintErrorType::MalformedText(string).into(),
                 _ => panic!("Unexpected regex error"),
@@ -111,8 +126,8 @@ pub mod error {
         }
     }
 
-    impl From<rgb::RGBError> for PaintError {
-        fn from(rgb_error: rgb::RGBError) -> PaintError {
+    impl<C: CharacteristicsInterface> From<rgb::RGBError> for PaintError<C> {
+        fn from(rgb_error: rgb::RGBError) -> PaintError<C> {
             match rgb_error {
                 rgb::RGBError::MalformedText(string) => PaintErrorType::MalformedText(string).into(),
             }
@@ -120,20 +135,20 @@ pub mod error {
         }
     }
 
-    impl fmt::Display for PaintError {
+    impl<C: CharacteristicsInterface> fmt::Display for PaintError<C> {
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
             write!(f, "PaintError({:?}): {}.", self.error_type, self.msg)?;
             Ok(())
         }
     }
 
-    impl Error for PaintError {
+    impl<C: CharacteristicsInterface> Error for PaintError<C> {
         fn description(&self) -> &str {
             &self.msg
         }
     }
 
-    pub type PaintResult<T> = Result<T, PaintError>;
+    pub type PaintResult<T, C> = Result<T, PaintError<C>>;
 }
 
 pub mod display {

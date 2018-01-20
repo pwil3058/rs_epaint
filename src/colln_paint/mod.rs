@@ -298,7 +298,7 @@ impl<C, CID> PaintCollnSpec<C, CID>
     where   C: CharacteristicsInterface,
             CID: CollnIdInterface
 {
-    pub fn from_file(path: &Path) -> Result<PaintCollnSpec<C, CID>, PaintError> {
+    pub fn from_file(path: &Path) -> Result<PaintCollnSpec<C, CID>, PaintError<C>> {
         let mut file = File::open(path)?;
         let mut string = String::new();
         file.read_to_string(&mut string)?;
@@ -317,9 +317,9 @@ impl<C, CID> FromStr for PaintCollnSpec<C, CID>
     where   C: CharacteristicsInterface,
             CID: CollnIdInterface
 {
-    type Err = PaintError;
+    type Err = PaintError<C>;
 
-    fn from_str(string: &str) -> Result<PaintCollnSpec<C, CID>, PaintError> {
+    fn from_str(string: &str) -> Result<PaintCollnSpec<C, CID>, PaintError<C>> {
         let mut lines = string.lines();
         let mut colln_name = "";
         let mut colln_owner = "";

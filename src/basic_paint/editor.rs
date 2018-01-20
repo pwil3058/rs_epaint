@@ -306,7 +306,7 @@ impl<A, C, CID> BasicPaintEditorCore<A, C, CID>
         self.update_file_button_sensitivities();
     }
 
-    fn write_to_file(&self, path: &Path) -> PaintResult<()> {
+    fn write_to_file(&self, path: &Path) -> Result<(), PaintError<C>> {
         if let Some(colln_id) = self.cid_entry.get_colln_id() {
             let spec = PaintCollnSpec::<C, CID> {
                 colln_id: colln_id,
@@ -339,7 +339,7 @@ impl<A, C, CID> BasicPaintEditorCore<A, C, CID>
         }
     }
 
-    fn save_as(&self) -> PaintResult<()> {
+    fn save_as(&self) -> Result<(), PaintError<C>> {
         let o_last_file = recall(&CID::recollection_name_for("last_colln_edited_file"));
         let last_file = if let Some(ref text) = o_last_file {
             Some(text.as_str())
@@ -353,7 +353,7 @@ impl<A, C, CID> BasicPaintEditorCore<A, C, CID>
         }
     }
 
-    fn report_save_as_failed(&self, error: &PaintError) {
+    fn report_save_as_failed(&self, error: &PaintError<C>) {
         match error.error_type() {
             &PaintErrorType::UserCancelled => (),
             _ => self.report_error("Failed to save file", error),

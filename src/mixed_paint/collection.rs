@@ -35,6 +35,7 @@ use error::*;
 
 use super::*;
 use super::display::*;
+use super::target::TargetColourInterface;
 
 pub struct MixedPaintCollectionCore<C: CharacteristicsInterface> {
     last_mixture_id: Cell<u32>,
@@ -97,7 +98,7 @@ impl<C: CharacteristicsInterface> MixedPaintCollectionCore<C> {
         notes: &str,
         components: &Vec<PaintComponent<C>>,
         matched_colour: Option<Colour>
-    ) -> Result<MixedPaint<C>, PaintError> {
+    ) -> Result<MixedPaint<C>, PaintError<C>> {
         let mut total_parts: u32 = 0;
         let mut gcd: u32 = 0;
         for component in components.iter() {
@@ -149,6 +150,22 @@ impl<C: CharacteristicsInterface> MixedPaintCollectionCore<C> {
         Ok(mixed_paint)
     }
 
+    pub fn remove_paint(&self, paint: &MixedPaint<C>) -> Result<(), PaintError<C>> {
+        let users = self.mixed_paints_using(&Paint::Mixed(paint.clone()));
+        if users.len() > 0 {
+            return Err(PaintErrorType::BeingUsedBy(users).into())
+        }
+        if let Ok(index) = self.find_name(&paint.name()) {
+            let old_paint = self.paints.borrow_mut().remove(index);
+            if old_paint != *paint {
+                panic!("File: {} Line: {}", file!(), line!())
+            }
+        } else {
+            return Err(PaintErrorType::NotFound(paint.name()).into())
+        }
+        Ok(())
+    }
+
     pub fn series_paints_used(&self) -> Vec<SeriesPaint<C>> {
         let mut spu: Vec<SeriesPaint<C>> = Vec::new();
         for mixed_paint in self.paints.borrow().iter() {
@@ -161,6 +178,17 @@ impl<C: CharacteristicsInterface> MixedPaintCollectionCore<C> {
         }
 
         spu
+    }
+
+    pub fn mixed_paints_using(&self, paint: &Paint<C>) -> Vec<MixedPaint<C>> {
+        let mut mpu = Vec::new();
+        for mixed_paint in self.paints.borrow().iter() {
+            if mixed_paint.uses_paint(paint) {
+                mpu.push(mixed_paint.clone())
+            }
+        }
+
+        mpu
     }
 }
 
@@ -192,6 +220,7 @@ pub struct MixedPaintCollectionViewCore<A, C>
     chosen_paint: RefCell<Option<MixedPaint<C>>>,
     current_target: RefCell<Option<Colour>>,
     add_paint_callbacks: RefCell<Vec<Box<Fn(&MixedPaint<C>)>>>,
+    remove_paint_callbacks: RefCell<Vec<Box<Fn(&MixedPaint<C>)>>>,
     mixed_paint_dialogs: RefCell<HashMap<u32, MixedPaintDisplayDialog<A, C>>>,
     spec: PhantomData<A>
 }
@@ -223,8 +252,22 @@ impl<A, C> MixedPaintCollectionViewCore<A, C>
         None
     }
 
+    pub fn connect_add_paint<F: 'static + Fn(&MixedPaint<C>)>(&self, callback: F) {
+        self.add_paint_callbacks.borrow_mut().push(Box::new(callback))
+    }
+
     fn inform_add_paint(&self, paint: &MixedPaint<C>) {
         for callback in self.add_paint_callbacks.borrow().iter() {
+            callback(&paint);
+        }
+    }
+
+    pub fn connect_remove_paint<F: 'static + Fn(&MixedPaint<C>)>(&self, callback: F) {
+        self.remove_paint_callbacks.borrow_mut().push(Box::new(callback))
+    }
+
+    fn inform_remove_paint(&self, paint: &MixedPaint<C>) {
+        for callback in self.remove_paint_callbacks.borrow().iter() {
             callback(&paint);
         }
     }
@@ -245,7 +288,7 @@ impl<A, C> MixedPaintCollectionViewCore<A, C>
         notes: &str,
         components: &Vec<PaintComponent<C>>,
         matched_colour: Option<Colour>
-    ) -> Result<MixedPaint<C>, PaintError> {
+    ) -> Result<MixedPaint<C>, PaintError<C>> {
         match self.collection.add_paint(notes, components, matched_colour) {
             Ok(mixed_paint) => {
                 self.list_store.append_row(&mixed_paint.tv_rows());
@@ -253,6 +296,22 @@ impl<A, C> MixedPaintCollectionViewCore<A, C>
             },
             Err(err) => Err(err)
         }
+    }
+
+    fn find_paint_named(&self, name: &str) -> Option<(i32, gtk::TreeIter)> {
+        self.list_store.find_row_where(
+            |list_store, iter| list_store.get_value(iter, 0).get() == Some(name)
+        )
+    }
+
+    pub fn remove_paint(&self, paint: &MixedPaint<C> ) -> Result<(), PaintError<C>> {
+        self.collection.remove_paint(paint)?;
+        if let Some((_, iter)) = self.find_paint_named(&paint.name()) {
+            self.list_store.remove(&iter);
+        } else {
+            panic!("File: {} Line: {}", file!(), line!())
+        };
+        Ok(())
     }
 
     pub fn series_paints_used(&self) -> Vec<SeriesPaint<C>> {
@@ -282,7 +341,6 @@ pub trait MixedPaintCollectionViewInterface<A, C>
             C: CharacteristicsInterface + 'static,
 {
     fn create(collection: &MixedPaintCollection<C>, mixing_mode: MixingMode) -> MixedPaintCollectionView<A, C>;
-    fn connect_add_paint<F: 'static + Fn(&MixedPaint<C>)>(&self, callback: F);
 }
 
 impl<A, C> MixedPaintCollectionViewInterface<A, C> for MixedPaintCollectionView<A, C>
@@ -309,6 +367,7 @@ impl<A, C> MixedPaintCollectionViewInterface<A, C> for MixedPaintCollectionView<
                 chosen_paint: RefCell::new(None),
                 current_target: RefCell::new(None),
                 add_paint_callbacks: RefCell::new(Vec::new()),
+                remove_paint_callbacks: RefCell::new(Vec::new()),
                 mixed_paint_dialogs: RefCell::new(HashMap::new()),
                 spec: PhantomData,
             }
@@ -390,15 +449,32 @@ impl<A, C> MixedPaintCollectionViewInterface<A, C> for MixedPaintCollectionView<
         );
 
         let mspl_c = mspl.clone();
+        mspl.popup_menu.append_item(
+            "remove",
+            "Remove from Mixer",
+            "Remove this paint from the mixer",
+        ).connect_activate(
+            move |_| {
+                if let Some(ref paint) = *mspl_c.chosen_paint.borrow() {
+                    mspl_c.inform_remove_paint(paint);
+                } else {
+                    panic!("File: {:?} Line: {:?} SHOULDN'T GET HERE", file!(), line!())
+                }
+            }
+        );
+
+        let mspl_c = mspl.clone();
         mspl.view.connect_button_press_event(
             move |_, event| {
                 if event.get_event_type() == gdk::EventType::ButtonPress {
                     if event.get_button() == 3 {
                         let o_paint = mspl_c.get_mixed_paint_at(event.get_position());
                         mspl_c.popup_menu.set_sensitivities(o_paint.is_some(), &["info"]);
-                        mspl_c.popup_menu.set_sensitivities(o_paint.is_some(), &["add"]);
+                        mspl_c.popup_menu.set_sensitivities(o_paint.is_some(), &["add", "remove"]);
                         let have_listeners = mspl_c.add_paint_callbacks.borrow().len() > 0;
                         mspl_c.popup_menu.set_visibilities(have_listeners, &["add"]);
+                        let have_listeners = mspl_c.remove_paint_callbacks.borrow().len() > 0;
+                        mspl_c.popup_menu.set_visibilities(have_listeners, &["remove"]);
                         *mspl_c.chosen_paint.borrow_mut() = o_paint;
                         mspl_c.popup_menu.popup_at_event(event);
                         return Inhibit(true)
@@ -409,10 +485,6 @@ impl<A, C> MixedPaintCollectionViewInterface<A, C> for MixedPaintCollectionView<
         );
 
         mspl
-    }
-
-    fn connect_add_paint<F: 'static + Fn(&MixedPaint<C>)>(&self, callback: F) {
-        self.add_paint_callbacks.borrow_mut().push(Box::new(callback))
     }
 }
 

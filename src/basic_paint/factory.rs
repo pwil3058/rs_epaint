@@ -102,7 +102,7 @@ impl<C> BasicPaintFactoryCore<C>
         self.find_name(name).is_ok()
     }
 
-    pub fn add_paint(&self, spec: &BasicPaintSpec<C>) -> Result<BasicPaint<C>, PaintError> {
+    pub fn add_paint(&self, spec: &BasicPaintSpec<C>) -> Result<BasicPaint<C>, PaintError<C>> {
         match self.find_name(&spec.name) {
             Ok(_) => Err(PaintErrorType::AlreadyExists(spec.name.clone()).into()),
             Err(index) => {
@@ -124,7 +124,7 @@ impl<C> BasicPaintFactoryCore<C>
         }
     }
 
-    pub fn replace_paint(&self, paint: &BasicPaint<C>, spec: &BasicPaintSpec<C>) -> Result<BasicPaint<C>, PaintError> {
+    pub fn replace_paint(&self, paint: &BasicPaint<C>, spec: &BasicPaintSpec<C>) -> Result<BasicPaint<C>, PaintError<C>> {
         if paint.name() != spec.name && self.has_paint_named(&spec.name) {
             return Err(PaintErrorType::AlreadyExists(spec.name.clone()).into())
         };
@@ -220,7 +220,7 @@ impl<A, C> BasicPaintFactoryViewCore<A, C>
         self.paint_factory.has_paint_named(name)
     }
 
-    pub fn add_paint(&self, spec: &BasicPaintSpec<C>) -> Result<BasicPaint<C>, PaintError> {
+    pub fn add_paint(&self, spec: &BasicPaintSpec<C>) -> Result<BasicPaint<C>, PaintError<C>> {
         match self.paint_factory.add_paint(spec) {
             Ok(paint) => {
                 self.list_store.append_row(&paint.tv_rows());
@@ -245,7 +245,7 @@ impl<A, C> BasicPaintFactoryViewCore<A, C>
         }
     }
 
-    pub fn replace_paint(&self, paint: &BasicPaint<C>, spec: &BasicPaintSpec<C>) -> Result<BasicPaint<C>, PaintError> {
+    pub fn replace_paint(&self, paint: &BasicPaint<C>, spec: &BasicPaintSpec<C>) -> Result<BasicPaint<C>, PaintError<C>> {
         let new_paint = self.paint_factory.replace_paint(paint, spec)?;
         if let Some((index, iter)) = self.find_paint_named(&paint.name()) {
             self.list_store.remove(&iter);
@@ -371,7 +371,7 @@ impl<A, C> BasicPaintFactoryDisplayCore<A, C>
         };
     }
 
-    pub fn add_paint(&self, spec: &BasicPaintSpec<C>) -> Result<BasicPaint<C>, PaintError> {
+    pub fn add_paint(&self, spec: &BasicPaintSpec<C>) -> Result<BasicPaint<C>, PaintError<C>> {
         let paint = self.paint_factory_view.add_paint(spec)?;
         for wheel in self.hue_attr_wheels.iter() {
             wheel.add_paint(&paint)
@@ -379,7 +379,7 @@ impl<A, C> BasicPaintFactoryDisplayCore<A, C>
         Ok(paint)
     }
 
-    pub fn replace_paint(&self, old_paint: &BasicPaint<C>, spec: &BasicPaintSpec<C>) -> Result<BasicPaint<C>, PaintError> {
+    pub fn replace_paint(&self, old_paint: &BasicPaint<C>, spec: &BasicPaintSpec<C>) -> Result<BasicPaint<C>, PaintError<C>> {
         let new_paint = self.paint_factory_view.replace_paint(old_paint, spec)?;
         for wheel in self.hue_attr_wheels.iter() {
             wheel.replace_paint(old_paint, &new_paint)
