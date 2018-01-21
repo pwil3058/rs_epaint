@@ -379,6 +379,7 @@ impl<A, C> MixerHueAttrWheelInterface<A, C> for MixerHueAttrWheel<A, C>
                 }
              }
         );
+
         let wheel_c = wheel.clone();
         wheel.graticule.connect_draw(
             move |graticule, cairo_context| {
@@ -388,6 +389,7 @@ impl<A, C> MixerHueAttrWheelInterface<A, C> for MixerHueAttrWheel<A, C>
                 wheel_c.target_colours.draw(graticule, cairo_context);
             }
         );
+
         wheel
     }
 }

@@ -338,7 +338,7 @@ impl<C> BasicPaintInterface<C> for MixedPaint<C>
     }
 
     fn tv_row_len() -> usize {
-        16 + C::tv_row_len()
+        MP_CHARS_0 as usize + C::tv_row_len()
     }
 
     fn tv_rows(&self) -> Vec<gtk::Value> {

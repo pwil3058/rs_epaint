@@ -193,6 +193,27 @@ impl<A, C> PaintDisplayDialogInterface<A, C> for MixedPaintDisplayDialog<A, C>
     }
 }
 
+pub const PC_NAME: i32 = SP_NAME;
+pub const PC_NOTES: i32 = SP_NOTES;
+pub const PC_CHROMA: i32 = SP_CHROMA;
+pub const PC_GREYNESS: i32 = SP_GREYNESS;
+pub const PC_VALUE: i32 = SP_VALUE;
+pub const PC_WARMTH: i32 = SP_WARMTH;
+pub const PC_RGB: i32 = SP_RGB;
+pub const PC_RGB_FG: i32 = SP_RGB_FG;
+pub const PC_MONO_RGB: i32 = SP_MONO_RGB;
+pub const PC_MONO_RGB_FG: i32 = SP_MONO_RGB_FG;
+pub const PC_WARMTH_RGB: i32 = SP_WARMTH_RGB;
+pub const PC_WARMTH_RGB_FG: i32 = SP_WARMTH_RGB_FG;
+pub const PC_HUE_RGB: i32 = SP_HUE_RGB;
+pub const PC_HUE_ANGLE: i32 = SP_HUE_ANGLE;
+pub const PC_PAINT_INDEX: i32 = 14;
+pub const PC_PARTS: i32 = 15;
+pub const PC_CHARS_0: i32 = 16;
+pub const PC_CHARS_1: i32 = 17;
+pub const PC_CHARS_2: i32 = 18;
+pub const PC_CHARS_3: i32 = 19;
+
 lazy_static! {
     pub static ref PAINT_COMPONENTS_ROW_SPEC: [gtk::Type; 20] =
         [
@@ -351,7 +372,7 @@ impl<A, C> PaintComponentListViewInterface<A, C> for PaintComponentListView<A, C
         components: &Rc<Vec<PaintComponent<C>>>,
         current_target: Option<&Colour>
     ) -> PaintComponentListView<A, C> {
-        let len = 16 + C::tv_row_len();
+        let len = PC_CHARS_0 as usize + C::tv_row_len();
         let list_store = gtk::ListStore::new(&PAINT_COMPONENTS_ROW_SPEC[0..len]);
         for (index, component) in components.iter().enumerate() {
             list_store.append_row(&component.tv_rows(index as u32));
@@ -381,9 +402,9 @@ impl<A, C> PaintComponentListViewInterface<A, C> for PaintComponentListView<A, C
             }
         );
 
-        pclv.view.append_column(&simple_text_column("Parts", 15, 15, -1, -1, -1, true));
-        pclv.view.append_column(&simple_text_column("Name", 0, 0, 6, 7, -1, true));
-        pclv.view.append_column(&simple_text_column("Notes", 1, 1, 6, 7, -1, true));
+        pclv.view.append_column(&simple_text_column("Parts", PC_PARTS, PC_PARTS, -1, -1, -1, true));
+        pclv.view.append_column(&simple_text_column("Name", PC_NAME, PC_NAME, PC_RGB, PC_RGB_FG, -1, true));
+        pclv.view.append_column(&simple_text_column("Notes", PC_NOTES, PC_NOTES, PC_RGB, PC_RGB_FG, -1, true));
         for col in A::tv_columns() {
             pclv.view.append_column(&col);
         }
