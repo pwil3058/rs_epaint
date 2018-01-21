@@ -182,14 +182,13 @@ pub const MP_HUE_RGB: i32 = SP_HUE_RGB;
 pub const MP_HUE_ANGLE: i32 = SP_HUE_ANGLE;
 pub const MP_MATCHED_RGB: i32 = 14;
 pub const MP_MATCHED_ANGLE: i32 = 15;
-pub const MP_PARTS: i32 = 16;
-pub const MP_CHARS_0: i32 = 17;
-pub const MP_CHARS_1: i32 = 18;
-pub const MP_CHARS_2: i32 = 19;
-pub const MP_CHARS_3: i32 = 20;
+pub const MP_CHARS_0: i32 = 16;
+pub const MP_CHARS_1: i32 = 17;
+pub const MP_CHARS_2: i32 = 18;
+pub const MP_CHARS_3: i32 = 19;
 
 lazy_static! {
-    pub static ref MIXED_PAINT_ROW_SPEC: [gtk::Type; 21] =
+    pub static ref MIXED_PAINT_ROW_SPEC: [gtk::Type; 20] =
         [
             gtk::Type::String,          // 0 Name
             gtk::Type::String,          // 1 Notes
@@ -207,11 +206,10 @@ lazy_static! {
             f64::static_type(),         // 13 Hue angle (radians)
             gdk::RGBA::static_type(),   // 14 Matched Colour
             f64::static_type(),         // 15 Matched Colour angle (radians)
-            u32::static_type(),         // 16 Parts
-            gtk::Type::String,          // 17 Characteristic #1
-            gtk::Type::String,          // 18 Characteristic #2
-            gtk::Type::String,          // 19 Characteristic #3
-            gtk::Type::String,          // 20 Characteristic #4
+            gtk::Type::String,          // 16 Characteristic #1
+            gtk::Type::String,          // 17 Characteristic #2
+            gtk::Type::String,          // 18 Characteristic #3
+            gtk::Type::String,          // 19 Characteristic #4
         ];
 }
 
@@ -361,7 +359,6 @@ impl<C> BasicPaintInterface<C> for MixedPaint<C>
         } else {
             self.hue().angle().radians()
         };
-        let parts: u32 = 0;
         let mut rows = vec![
             self.name().to_value(),
             self.notes().to_value(),
@@ -379,7 +376,6 @@ impl<C> BasicPaintInterface<C> for MixedPaint<C>
             self.hue().angle().radians().to_value(),
             mcrgba.to_value(),
             mcsort.to_value(),
-            parts.to_value(),
         ];
         for row in self.characteristics().tv_rows().iter() {
             rows.push(row.clone());

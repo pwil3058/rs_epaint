@@ -22,7 +22,6 @@ use num::Integer;
 use gdk;
 use gtk;
 use gtk::prelude::*;
-use gtk::{SpinButtonSignals, AdjustmentExt};
 
 use pw_gix::colour::*;
 use pw_gix::gtkx::list_store::*;
@@ -35,7 +34,6 @@ use basic_paint::*;
 use error::*;
 
 use super::*;
-use super::components::new_adjustment;
 use super::display::*;
 use super::target::TargetColourInterface;
 
@@ -357,7 +355,7 @@ impl<A, C> MixedPaintCollectionViewInterface<A, C> for MixedPaintCollectionView<
         }
         let view = gtk::TreeView::new_with_model(&list_store.clone());
         view.set_headers_visible(true);
-        view.get_selection().set_mode(gtk::SelectionMode::Single);
+        view.get_selection().set_mode(gtk::SelectionMode::None);
 
         let mspl = Rc::new(
             MixedPaintCollectionViewCore::<A, C> {
@@ -374,44 +372,6 @@ impl<A, C> MixedPaintCollectionViewInterface<A, C> for MixedPaintCollectionView<
                 spec: PhantomData,
             }
         );
-
-        // PARTS SPINENTRY
-        let col = gtk::TreeViewColumn::new();
-        col.set_title("Parts");
-        col.set_resizable(false);
-        //if sort_id >= 0 {
-        col.set_sort_column_id(MP_PARTS);
-        //};
-        //col.set_fixed_width(fixed_width);
-        let cell = gtk::CellRendererSpin::new();
-        cell.set_property_editable(true);
-        cell.set_property_adjustment(Some(&new_adjustment()));
-        col.pack_start(&cell, false);
-        cell.connect_edited(
-            |spinner, tree_path, text| println!("EDITED: {:?}: {:?}: {:?}", spinner, tree_path, text)
-        );
-        cell.connect_editing_started(
-            |one, two, three| {
-                println!("STARTED: {:?}: {:?}: {:?}", one, two, three);
-                println!("SPINBOX: {:?}", two.clone().dynamic_cast::<gtk::SpinButton>());
-                //if let Ok(ref spin_button) = two.clone().upcast::<gtk::SpinButton>() {
-                    //println!("yes")
-                //} else {
-                    //println!("no")
-                //}
-            }
-        );
-        //if text_id >= 0 {
-        col.add_attribute(&cell, "text", MP_PARTS);
-        //};
-        //if bg_id >= 0 {
-        //    col.add_attribute(&cell, "background-rgba", bg_id)
-        //};
-        //if fg_id >= 0 {
-        //    col.add_attribute(&cell, "foreground-rgba", fg_id)
-        //};
-        mspl.view.append_column(&col);
-        //
 
         mspl.view.append_column(&simple_text_column("Name", MP_NAME, MP_NAME, MP_RGB, MP_RGB_FG, -1, true));
         if mixing_mode == MixingMode::MatchTarget {
@@ -518,8 +478,6 @@ impl<A, C> MixedPaintCollectionViewInterface<A, C> for MixedPaintCollectionView<
                         *mspl_c.chosen_paint.borrow_mut() = o_paint;
                         mspl_c.popup_menu.popup_at_event(event);
                         return Inhibit(true)
-                    } else if event.get_button() == 2 {
-                        mspl_c.view.get_selection().unselect_all();
                     }
                 }
                 Inhibit(false)

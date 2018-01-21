@@ -134,16 +134,12 @@ impl<A, C> WidgetWrapper for PaintPartsSpinButtonCore<A, C>
 
 pub type PaintPartsSpinButton<A, C> = Rc<PaintPartsSpinButtonCore<A, C>>;
 
-pub fn new_adjustment() -> gtk::Adjustment {
-    gtk::Adjustment::new(0.0, 0.0, 999.0, 1.0, 10.0, 0.0)
-}
-
 impl<A, C> PaintPartsSpinButtonInterface<A, C> for PaintPartsSpinButton<A, C>
     where   C: CharacteristicsInterface + 'static,
             A: ColourAttributesInterface + 'static,
 {
     fn create_with(paint: &Paint<C>, current_target: Option<&Colour>, sensitive:bool) -> PaintPartsSpinButton<A, C> {
-        let adj = new_adjustment();
+        let adj = gtk::Adjustment::new(0.0, 0.0, 999.0, 1.0, 10.0, 0.0);
         let label_text = paint.name();
         let parts_changed_callbacks: RefCell<Vec<Box<Fn(u32)>>> = RefCell::new(Vec::new());
         let remove_me_callbacks: RefCell<Vec<Box<Fn(&PaintPartsSpinButton<A, C>)>>> = RefCell::new(Vec::new());
