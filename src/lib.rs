@@ -151,15 +151,18 @@ pub mod error {
     pub type PaintResult<T, C> = Result<T, PaintError<C>>;
 }
 
-pub mod display {
+pub mod dialogue {
     use std::rc::Rc;
 
+    use glib::signal::SignalHandlerId;
     use gtk;
-    use gtk::GtkWindowExt;
+    use gtk::{DialogExt, GtkWindowExt, WidgetExt};
 
+    use pw_gix::colour::*;
     use pw_gix::wrapper::{parent_none, WidgetWrapper};
 
     use super::app_name;
+    use super::basic_paint::{BasicPaintInterface, CharacteristicsInterface, ColourAttributesInterface};
 
     pub struct PaintDisplayButtonSpec {
         pub label: String,
@@ -185,6 +188,69 @@ pub mod display {
         };
         dialog
     }
+
+    pub trait DialogWrapper {
+        fn dialog(&self) -> gtk::Dialog;
+
+        fn show(&self) {
+            self.dialog().show()
+        }
+
+        fn present(&self) {
+            self.dialog().present()
+        }
+
+        fn close(&self) {
+            self.dialog().close()
+        }
+
+        fn set_response_sensitive(&self, response_id: i32, setting: bool) {
+            self.dialog().set_response_sensitive(response_id, setting);
+        }
+
+        fn connect_close<F: Fn(&gtk::Dialog) + 'static>(&self, f: F) -> SignalHandlerId {
+            self.dialog().connect_close(f)
+        }
+
+        fn connect_destroy<F: Fn(&gtk::Dialog) + 'static>(&self, f: F) -> SignalHandlerId {
+            self.dialog().connect_destroy(f)
+        }
+    }
+
+    static mut NEXT_DIALOG_ID: u32 = 0;
+
+    pub fn get_id_for_dialog() -> u32 {
+        let id: u32;
+        unsafe {
+            id = NEXT_DIALOG_ID;
+            NEXT_DIALOG_ID += 1;
+        }
+        id
+    }
+
+    pub trait DialogIdentifier {
+        fn id_no(&self) -> u32;
+    }
+
+    pub trait PaintDisplayDialogCreate<A, C, P>: DialogWrapper + DialogIdentifier
+        where   C: CharacteristicsInterface + 'static,
+                A: ColourAttributesInterface + 'static,
+                P: BasicPaintInterface<C> + 'static,
+    {
+        fn create<W: WidgetWrapper>(
+            paint: &P,
+            current_target: Option<&Colour>,
+            caller: &Rc<W>,
+            button_specs: Vec<PaintDisplayButtonSpec>,
+        ) -> Self;
+
+        fn paint(&self) -> P;
+        fn set_current_target(&self, new_current_target: Option<&Colour>);
+
+        fn connect_destroyed<F: 'static + Fn(u32)>(&self, callback: F);
+        fn inform_destroyed(&self);
+    }
+
 }
 
 pub mod basic_paint;

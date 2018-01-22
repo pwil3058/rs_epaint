@@ -30,7 +30,7 @@ use pw_gix::gtkx::tree_view_column::*;
 use pw_gix::wrapper::*;
 
 use basic_paint::*;
-use display::*;
+use dialogue::*;
 use series_paint::*;
 
 use super::*;
@@ -150,7 +150,7 @@ impl<A, C> PaintDisplayDialogInterface<A, C> for MixedPaintDisplayDialog<A, C>
             vbox.pack_start(&current_target_label.clone(), true, true, 0);
         }
         //
-        content_area.pack_start(&vbox, true, true, 0);
+        content_area.pack_start(&vbox, false, true, 0);
         let cads = A::create();
         cads.set_colour(Some(&paint.colour()));
         content_area.pack_start(&cads.pwo(), true, true, 1);
@@ -454,7 +454,7 @@ impl<A, C> PaintComponentListViewInterface<A, C> for PaintComponentListView<A, C
                                 vec![]
                             );
                             let pclv_c_c = pclv_c.clone();
-                            dialog.connect_destroy(
+                            dialog.connect_destroyed(
                                 move |id| { pclv_c_c.series_paint_dialogs.borrow_mut().remove(&id); }
                             );
                             pclv_c.series_paint_dialogs.borrow_mut().insert(dialog.id_no(), dialog.clone());

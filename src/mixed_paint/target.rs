@@ -27,7 +27,7 @@ use pw_gix::gtkx::dialog::*;
 use app_name;
 use basic_paint::*;
 use colour_edit::*;
-use display::new_display_dialog;
+use dialogue::new_display_dialog;
 
 #[derive(Debug, Hash)]
 pub struct TargetColourCore {

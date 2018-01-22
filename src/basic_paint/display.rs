@@ -22,7 +22,7 @@ use pw_gix::gtkx::coloured::*;
 use pw_gix::gtkx::dialog::*;
 
 use basic_paint::*;
-pub use display::{PaintDisplayButtonSpec, new_display_dialog};
+pub use dialogue::{PaintDisplayButtonSpec, new_display_dialog};
 
 static mut NEXT_DIALOG_ID: u32 = 0;
 

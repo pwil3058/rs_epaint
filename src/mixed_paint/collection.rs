@@ -31,6 +31,7 @@ use pw_gix::rgb_math::rgb::*;
 use pw_gix::wrapper::*;
 
 use basic_paint::*;
+use dialogue::PaintDisplayButtonSpec;
 use error::*;
 
 use super::*;
@@ -96,36 +97,54 @@ impl<C: CharacteristicsInterface> MixedPaintCollectionCore<C> {
     pub fn add_paint(
         &self,
         notes: &str,
-        components: &Vec<PaintComponent<C>>,
+        sp_components: Vec<(SeriesPaint<C>, u32)>,
+        mp_components: Vec<(MixedPaint<C>, u32)>,
         matched_colour: Option<Colour>
     ) -> Result<MixedPaint<C>, PaintError<C>> {
         let mut total_parts: u32 = 0;
         let mut gcd: u32 = 0;
-        for component in components.iter() {
-            gcd = gcd.gcd(&component.parts);
-            total_parts += component.parts;
+        for &(_, parts) in sp_components.iter() {
+            gcd = gcd.gcd(&parts);
+            total_parts += parts;
+        }
+        for &(_, parts) in mp_components.iter() {
+            gcd = gcd.gcd(&parts);
+            total_parts += parts;
         }
         if gcd == 0 {
             return Err(PaintErrorType::NoSubstantiveComponents.into())
         }
         total_parts /= gcd;
         let mut new_rgb: RGB = BLACK;
-        let mut subst_components: Vec<PaintComponent<C>> = Vec::new();
+        let mut p_components: Vec<PaintComponent<C>> = Vec::new();
         let mut new_c_floats: Vec<f64> = Vec::new();
         for _ in 0..C::tv_row_len() {
             new_c_floats.push(0.0);
         }
-        for component in components.iter() {
-            if component.parts > 0 {
-                let subst_parts = component.parts / gcd;
-                let subst_component = PaintComponent::<C>{parts:subst_parts, paint:component.paint.clone()};
-                subst_components.push(subst_component);
-                let weight: f64 = subst_parts as f64 / total_parts as f64;
-                new_rgb += component.paint.rgb() * weight;
-                let floats = component.paint.characteristics().to_floats();
+        for (series_paint, mut parts) in sp_components {
+            if parts > 0 {
+                parts /= gcd;
+                let weight: f64 = parts as f64 / total_parts as f64;
+                new_rgb += series_paint.rgb() * weight;
+                let floats = series_paint.characteristics().to_floats();
                 for (i, val) in new_c_floats.iter_mut().enumerate() {
                     *val = *val + floats[i] * weight;
                 }
+                let paint = Paint::Series(series_paint);
+                p_components.push(PaintComponent{parts, paint});
+            }
+        }
+        for (mixed_paint, mut parts) in mp_components {
+            if parts > 0 {
+                parts /= gcd;
+                let weight: f64 = parts as f64 / total_parts as f64;
+                new_rgb += mixed_paint.rgb() * weight;
+                let floats = mixed_paint.characteristics().to_floats();
+                for (i, val) in new_c_floats.iter_mut().enumerate() {
+                    *val = *val + floats[i] * weight;
+                }
+                let paint = Paint::Mixed(mixed_paint);
+                p_components.push(PaintComponent{parts, paint});
             }
         }
         let name_num = self.last_mixture_id.get() + 1;
@@ -143,7 +162,7 @@ impl<C: CharacteristicsInterface> MixedPaintCollectionCore<C> {
                 notes: notes.to_string(),
                 characteristics: C::from_floats(&new_c_floats),
                 target_colour: target_colour,
-                components: Rc::new(subst_components)
+                components: Rc::new(p_components)
             }
         );
         self.paints.borrow_mut().push(mixed_paint.clone());
@@ -286,10 +305,11 @@ impl<A, C> MixedPaintCollectionViewCore<A, C>
     pub fn add_paint(
         &self,
         notes: &str,
-        components: &Vec<PaintComponent<C>>,
+        sp_components: Vec<(SeriesPaint<C>, u32)>,
+        mp_components: Vec<(MixedPaint<C>, u32)>,
         matched_colour: Option<Colour>
     ) -> Result<MixedPaint<C>, PaintError<C>> {
-        match self.collection.add_paint(notes, components, matched_colour) {
+        match self.collection.add_paint(notes, sp_components, mp_components, matched_colour) {
             Ok(mixed_paint) => {
                 self.list_store.append_row(&mixed_paint.tv_rows());
                 Ok(mixed_paint)

@@ -201,6 +201,8 @@ pub trait PaintMixerInterface<A, C>
     fn create(mixing_mode: MixingMode, series_paint_data_path: &Path, paint_standards_data_path: Option<&Path>) -> Self::PaintMixerType;
 }
 
+pub type SeriesPaintComponentBox<A, C> = PaintComponentsBox<A, C, SeriesPaint<C>, SeriesPaintDisplayDialog<A, C>>;
+
 pub struct PaintMixerCore<A, C>
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static
@@ -209,7 +211,7 @@ pub struct PaintMixerCore<A, C>
     cads: Rc<A>,
     colour_match_area: ColourMatchArea,
     hue_attr_wheels: Vec<MixerHueAttrWheel<A, C>>,
-    paint_components: PaintComponentsBox<A, C>,
+    series_paint_components: SeriesPaintComponentBox<A, C>,
     mixed_paints_view: MixedPaintCollectionView<A, C>,
     notes: gtk::Entry,
     next_name_label: gtk::Label,
@@ -251,7 +253,7 @@ impl<A, C> PaintMixerCore<A, C>
     }
 
     pub fn add_series_paint(&self, paint: &SeriesPaint<C>) {
-        self.paint_components.add_series_paint(paint);
+        self.series_paint_components.add_paint(paint);
         for wheel in self.hue_attr_wheels.iter() {
             wheel.add_series_paint(paint);
         }
@@ -278,7 +280,7 @@ impl<A, C> PaintMixerCore<A, C>
     }
 
     fn set_button_sensitivities(&self) {
-        let has_colour = self.paint_components.has_colour();
+        let has_colour = self.series_paint_components.has_colour();
         self.simplify_parts_btn.set_sensitive(has_colour);
         self.reset_parts_btn.set_sensitive(has_colour);
         if self.mixing_mode() == MixingMode::MatchSamples {
@@ -304,7 +306,7 @@ impl<A, C> PaintMixerCore<A, C>
         self.cads.set_target_colour(o_colour);
         self.colour_match_area.set_target_colour(o_colour);
         self.series_paint_manager.set_target_colour(o_colour);
-        self.paint_components.set_current_target(o_colour);
+        self.series_paint_components.set_current_target(o_colour);
         for wheel in self.hue_attr_wheels.iter() {
             wheel.set_target_colour(o_colour);
         }
@@ -317,7 +319,7 @@ impl<A, C> PaintMixerCore<A, C>
             self.mixed_paint_notes.set_text("");
         }
         self.set_target_colour(o_target_colour);
-        self.paint_components.reset_all_parts_to_zero();
+        self.series_paint_components.reset_all_parts_to_zero();
         let name_text = format!("#{:03}:", self.mixed_paints_view.next_mixture_id());
         self.next_name_label.set_text(name_text.as_str());
         self.set_button_sensitivities();
@@ -330,8 +332,8 @@ impl<A, C> PaintMixerCore<A, C>
             "".to_string()
         };
         let o_matched_colour = self.colour_match_area.get_target_colour();
-        let components = self.paint_components.get_paint_components();
-        if let Ok(mixed_paint) = self.mixed_paints_view.add_paint(&notes, &components, o_matched_colour) {
+        let sp_components = self.series_paint_components.get_paint_components();
+        if let Ok(mixed_paint) = self.mixed_paints_view.add_paint(&notes, sp_components, vec![], o_matched_colour) {
             for wheel in self.hue_attr_wheels.iter() {
                 wheel.add_mixed_paint(&mixed_paint);
             }
@@ -345,7 +347,7 @@ impl<A, C> PaintMixerCore<A, C>
         self.mixed_paint_notes.set_text("");
         self.set_target_colour(None);
         self.next_name_label.set_text("#00?:");
-        self.paint_components.reset_all_parts_to_zero();
+        self.series_paint_components.reset_all_parts_to_zero();
         self.set_button_sensitivities();
     }
 
@@ -443,7 +445,7 @@ impl<A, C> PaintMixerInterface<A, C> for PaintMixer<A, C>
                 cads: A::create(),
                 hue_attr_wheels: view_attr_wheels,
                 colour_match_area: ColourMatchArea::create(mixing_mode),
-                paint_components: PaintComponentsBox::<A, C>::create_with(4, true),
+                series_paint_components: SeriesPaintComponentBox::<A, C>::create_with(4, true),
                 mixed_paints_view: MixedPaintCollectionView::<A, C>::create(&mixed_paints, mixing_mode),
                 notes: gtk::Entry::new(),
                 next_name_label: gtk::Label::new(Some("#???:")),
@@ -507,7 +509,7 @@ impl<A, C> PaintMixerInterface<A, C> for PaintMixer<A, C>
         paint_mixer.vbox.pack_start(&hpaned, true, true, 0);
 
         let frame = gtk::Frame::new(Some("Paints"));
-        frame.add(&paint_mixer.paint_components.pwo());
+        frame.add(&paint_mixer.series_paint_components.pwo());
         paint_mixer.vbox.pack_start(&frame, true, true, 0);
 
         let button_box = gtk::Box::new(gtk::Orientation::Horizontal, 2);
@@ -576,14 +578,14 @@ impl<A, C> PaintMixerInterface<A, C> for PaintMixer<A, C>
         paint_mixer.simplify_parts_btn.set_tooltip_text("Divide all paints' parts by their greatest common denominator.");
         let paint_mixer_c = paint_mixer.clone();
         paint_mixer.simplify_parts_btn.connect_clicked(
-            move |_| paint_mixer_c.paint_components.simplify_parts()
+            move |_| paint_mixer_c.series_paint_components.simplify_parts()
         );
 
         paint_mixer.reset_parts_btn.set_tooltip_text("Reset parts of all paints in mixing part to zero.");
         let paint_mixer_c = paint_mixer.clone();
         paint_mixer.reset_parts_btn.connect_clicked(
             move |_| {
-                paint_mixer_c.paint_components.reset_all_parts_to_zero();
+                paint_mixer_c.series_paint_components.reset_all_parts_to_zero();
                 paint_mixer_c.set_button_sensitivities();
             }
         );
@@ -591,11 +593,11 @@ impl<A, C> PaintMixerInterface<A, C> for PaintMixer<A, C>
         paint_mixer.remove_unused_btn.set_tooltip_text("Remove paints with zero parts from the mixing area.");
         let paint_mixer_c = paint_mixer.clone();
         paint_mixer.remove_unused_btn.connect_clicked(
-            move |_| paint_mixer_c.paint_components.remove_unused_spin_buttons()
+            move |_| paint_mixer_c.series_paint_components.remove_unused_spin_buttons()
         );
 
         let paint_mixer_c = paint_mixer.clone();
-        paint_mixer.paint_components.connect_colour_changed(
+        paint_mixer.series_paint_components.connect_colour_changed(
             move |o_colour| {
                 paint_mixer_c.colour_match_area.set_mixed_colour(o_colour);
                 paint_mixer_c.cads.set_colour(o_colour);
@@ -604,11 +606,9 @@ impl<A, C> PaintMixerInterface<A, C> for PaintMixer<A, C>
         );
 
         let paint_mixer_c = paint_mixer.clone();
-        paint_mixer.paint_components.connect_paint_removed(
+        paint_mixer.series_paint_components.connect_paint_removed(
             move |paint| {
-                if let Paint::Series(ref series_paint) = *paint {
-                    paint_mixer_c.remove_series_paint(series_paint);
-                }
+                paint_mixer_c.remove_series_paint(paint);
             }
         );
 

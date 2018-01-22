@@ -31,7 +31,6 @@ use colln_paint::collection::*;
 use error::*;
 use characteristics::*;
 use mixed_paint::*;
-use mixed_paint::components::*;
 use series_paint::*;
 use standards::*;
 
@@ -318,7 +317,7 @@ pub type ModelMixedPaint = MixedPaint<ModelPaintCharacteristics>;
 pub type ModelPaint = Paint<ModelPaintCharacteristics>;
 pub type BasicModelPaint = BasicPaint<ModelPaintCharacteristics>;
 pub type ModelPaintSeries = SeriesPaintColln<ModelPaintCharacteristics>;
-pub type ModelPaintComponentsBox = PaintComponentsBox<ModelPaintAttributes, ModelPaintCharacteristics>;
+pub type ModelPaintComponentsBox = SeriesPaintComponentBox<ModelPaintAttributes, ModelPaintCharacteristics>;
 pub type ModelPaintMixer = PaintMixer<ModelPaintAttributes, ModelPaintCharacteristics>;
 pub type ModelPaintSeriesManager = SeriesPaintManager<ModelPaintAttributes, ModelPaintCharacteristics>;
 pub type ModelPaintFactoryDisplay = BasicPaintFactoryDisplay<ModelPaintAttributes, ModelPaintCharacteristics>;

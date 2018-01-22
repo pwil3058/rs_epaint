@@ -28,6 +28,7 @@ use pw_gix::rgb_math::rgb::*;
 use pw_gix::wrapper::*;
 
 use basic_paint::*;
+use dialogue::*;
 use graticule::*;
 use series_paint::*;
 use shape::*;
@@ -273,7 +274,7 @@ impl<A, C> MixerHueAttrWheelInterface<A, C> for MixerHueAttrWheel<A, C>
                             };
                             let dialog = SeriesPaintDisplayDialog::<A, C>::create(&paint, target, &wheel_c, vec![spec]);
                             let wheel_c_c = wheel_c.clone();
-                            dialog.connect_destroy(
+                            dialog.connect_destroyed(
                                 move |id| { wheel_c_c.series_paint_dialogs.borrow_mut().remove(&id); }
                             );
                             wheel_c.series_paint_dialogs.borrow_mut().insert(dialog.id_no(), dialog.clone());
