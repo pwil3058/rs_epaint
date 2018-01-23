@@ -73,6 +73,7 @@ pub mod error {
         NoCollectionId,
         UserCancelled,
         BeingUsedBy(Vec<MixedPaint<C>>),
+        PartOfCurrentMixture,
     }
 
     #[derive(Debug)]
@@ -98,6 +99,7 @@ pub mod error {
                 PaintErrorType::NoCollectionId => "Missing collection identifier.".to_string(),
                 PaintErrorType::UserCancelled => "Operation cancelled by the user.".to_string(),
                 PaintErrorType::BeingUsedBy(_) => "Is being used as a component by one or more paints.".to_string(),
+                PaintErrorType::PartOfCurrentMixture => "Is being used as a component of the current mixture.".to_string(),
             };
             PaintError{error_type, msg}
         }

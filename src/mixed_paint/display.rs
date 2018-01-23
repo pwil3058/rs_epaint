@@ -56,70 +56,26 @@ pub struct MixedPaintDisplayDialogCore<A, C>
     cads: Rc<A>,
     components_view: PaintComponentListView<A, C>,
     id_no: u32,
-    destroy_callbacks: RefCell<Vec<Box<Fn(u32)>>>
-}
-
-impl<A, C> MixedPaintDisplayDialogCore<A, C>
-    where   C: CharacteristicsInterface + 'static,
-            A: ColourAttributesInterface + 'static
-{
-    pub fn show(&self) {
-        self.dialog.show()
-    }
-
-    pub fn present(&self) {
-        self.dialog.present()
-    }
-
-    pub fn close(&self) {
-        self.dialog.close()
-    }
-
-    pub fn id_no(&self) -> u32 {
-        self.id_no
-    }
-
-    pub fn set_current_target(&self, new_current_target: Option<&Colour>) {
-        if let Some(ref colour) = new_current_target {
-            self.current_target_label.set_label("Current Target");
-            self.current_target_label.set_widget_colour(&colour);
-            self.cads.set_target_colour(Some(&colour));
-            self.components_view.set_target_colour(Some(&colour));
-        } else {
-            self.current_target_label.set_label("");
-            self.current_target_label.set_widget_colour(&self.paint.colour());
-            self.cads.set_target_colour(None);
-            self.components_view.set_target_colour(None);
-        };
-    }
-
-    pub fn connect_destroy<F: 'static + Fn(u32)>(&self, callback: F) {
-        self.destroy_callbacks.borrow_mut().push(Box::new(callback))
-    }
-
-    pub fn inform_destroy(&self) {
-        for callback in self.destroy_callbacks.borrow().iter() {
-            callback(self.id_no);
-        }
-    }
-
+    destroyed_callbacks: RefCell<Vec<Box<Fn(u32)>>>
 }
 
 pub type MixedPaintDisplayDialog<A, C> = Rc<MixedPaintDisplayDialogCore<A, C>>;
 
-pub trait PaintDisplayDialogInterface<A, C>
-    where   C: CharacteristicsInterface + 'static,
-            A: ColourAttributesInterface + 'static
+impl<A, C> DialogWrapper for MixedPaintDisplayDialog<A, C>
+    where   A: ColourAttributesInterface + 'static,
+            C: CharacteristicsInterface + 'static,
 {
-    fn create<W: WidgetWrapper>(
-        paint: &MixedPaint<C>,
-        current_target: Option<&Colour>,
-        caller: &Rc<W>,
-        button_specs: Vec<PaintDisplayButtonSpec>,
-    ) -> MixedPaintDisplayDialog<A, C>;
+    fn dialog(&self) -> gtk::Dialog { self.dialog. clone() }
 }
 
-impl<A, C> PaintDisplayDialogInterface<A, C> for MixedPaintDisplayDialog<A, C>
+impl<A, C> DialogIdentifier for MixedPaintDisplayDialog<A, C>
+    where   A: ColourAttributesInterface + 'static,
+            C: CharacteristicsInterface + 'static,
+{
+    fn id_no(&self) -> u32 { self.id_no }
+}
+
+impl<A, C> PaintDisplayDialogCreate<A, C, MixedPaint<C>> for MixedPaintDisplayDialog<A, C>
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static,
 {
@@ -178,18 +134,46 @@ impl<A, C> PaintDisplayDialogInterface<A, C> for MixedPaintDisplayDialog<A, C>
                 cads: cads,
                 components_view: components_view,
                 id_no: get_id_for_dialog(),
-                destroy_callbacks: RefCell::new(Vec::new()),
+                destroyed_callbacks: RefCell::new(Vec::new()),
             }
         );
         spd_dialog.set_current_target(current_target);
         let spd_dialog_c = spd_dialog.clone();
         spd_dialog.dialog.connect_destroy(
             move |_| {
-                spd_dialog_c.inform_destroy()
+                spd_dialog_c.inform_destroyed()
             }
         );
 
         spd_dialog
+    }
+
+    fn paint(&self) -> MixedPaint<C> {
+        self.paint.clone()
+    }
+
+    fn set_current_target(&self, new_current_target: Option<&Colour>) {
+        if let Some(ref colour) = new_current_target {
+            self.current_target_label.set_label("Current Target");
+            self.current_target_label.set_widget_colour(&colour);
+            self.cads.set_target_colour(Some(&colour));
+            self.components_view.set_target_colour(Some(&colour));
+        } else {
+            self.current_target_label.set_label("");
+            self.current_target_label.set_widget_colour(&self.paint.colour());
+            self.cads.set_target_colour(None);
+            self.components_view.set_target_colour(None);
+        };
+    }
+
+    fn connect_destroyed<F: 'static + Fn(u32)>(&self, callback: F) {
+        self.destroyed_callbacks.borrow_mut().push(Box::new(callback))
+    }
+
+    fn inform_destroyed(&self) {
+        for callback in self.destroyed_callbacks.borrow().iter() {
+            callback(self.id_no);
+        }
     }
 }
 
@@ -440,7 +424,7 @@ impl<A, C> PaintComponentListViewInterface<A, C> for PaintComponentListView<A, C
                                 vec![]
                             );
                             let pclv_c_c = pclv_c.clone();
-                            dialog.connect_destroy(
+                            dialog.connect_destroyed(
                                 move |id| { pclv_c_c.mixed_paint_dialogs.borrow_mut().remove(&id); }
                             );
                             pclv_c.mixed_paint_dialogs.borrow_mut().insert(dialog.id_no(), dialog.clone());

@@ -48,17 +48,17 @@ impl ColourMixer {
         }
     }
 
-    pub fn add(&mut self, component: &ColourComponent) {
-        self.total_parts += component.parts;
-        self.rgb_sum += component.colour.rgb() * component.parts;
+    pub fn add(&mut self, colour: &Colour, parts: u32) {
+        self.total_parts += parts;
+        self.rgb_sum += colour.rgb() * parts;
     }
 }
 
-impl From<Vec<ColourComponent>> for ColourMixer {
-    fn from(colour_components: Vec<ColourComponent>) -> ColourMixer {
+impl From<Vec<(Colour, u32)>> for ColourMixer {
+    fn from(colour_components: Vec<(Colour, u32)>) -> ColourMixer {
         let mut colour_mixer = ColourMixer::new();
-        for colour_component in colour_components.iter() {
-            colour_mixer.add(colour_component);
+        for (ref colour, parts) in colour_components {
+            colour_mixer.add(colour, parts);
         };
         colour_mixer
     }
@@ -72,7 +72,7 @@ mod tests {
     fn paint_colour_mix_test() {
         let mut colour_mixer = ColourMixer::new();
         assert_eq!(colour_mixer.get_colour(), None);
-        colour_mixer.add(&ColourComponent{parts: 10, colour: Colour::from(RED)});
+        colour_mixer.add(Colour::from(RED), 10);
         assert_eq!(colour_mixer.get_colour(), Some(Colour::from(RED)));
     }
 }

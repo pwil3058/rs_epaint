@@ -295,7 +295,7 @@ impl<A, C> MixerHueAttrWheelInterface<A, C> for MixerHueAttrWheel<A, C>
                             };
                             let dialog = MixedPaintDisplayDialog::<A, C>::create(&paint, target, &wheel_c, vec![spec]);
                             let wheel_c_c = wheel_c.clone();
-                            dialog.connect_destroy(
+                            dialog.connect_destroyed(
                                 move |id| { wheel_c_c.mixed_paint_dialogs.borrow_mut().remove(&id); }
                             );
                             wheel_c.mixed_paint_dialogs.borrow_mut().insert(dialog.id_no(), dialog.clone());

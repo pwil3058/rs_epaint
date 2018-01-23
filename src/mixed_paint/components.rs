@@ -27,7 +27,6 @@ use pw_gix::gtkx::menu::*;
 use pw_gix::wrapper::*;
 
 use basic_paint::*;
-use colour_mix::*;
 use dialogue::PaintDisplayDialogCreate;
 
 pub trait PaintPartsSpinButtonInterface<A, C, P, D>
@@ -37,19 +36,7 @@ pub trait PaintPartsSpinButtonInterface<A, C, P, D>
             D: PaintDisplayDialogCreate<A, C, P> + 'static,
 {
     fn create_with(paint: &P, current_target: Option<&Colour>, sensitive:bool) -> PaintPartsSpinButton<A, C, P, D>;
-    //fn get_parts(&self) -> u32;
-    //fn set_parts(&self, parts: u32);
-    //fn divide_parts(&self, divisor: u32);
-    //fn get_colour_component(&self) -> ColourComponent;
-    //fn get_paint_component(&self) -> PaintComponent<C>;
-    //fn set_sensitive(&self, sensitive: bool);
-    //fn connect_parts_changed<F: 'static + Fn(u32)>(&self, callback: F);
-    //fn inform_parts_changed(&self);
-    //fn connect_remove_me<F: 'static + Fn(&PaintPartsSpinButton<A, C>)>(&self, callback: F);
     fn inform_remove_me(&self);
-    //fn close_dialog(&self);
-    //fn set_current_target(&self, new_current_target: Option<&Colour>);
-    //fn get_current_target(&self) -> Option<Colour>;
 }
 
 pub struct PaintPartsSpinButtonCore<A, C, P, D>
@@ -182,6 +169,7 @@ impl<A, C, P, D> PaintPartsSpinButtonInterface<A, C, P, D> for PaintPartsSpinBut
             move |_, event| {
                 if event.get_event_type() == gdk::EventType::ButtonPress {
                     if event.get_button() == 3 {
+                        spin_button_c.popup_menu.set_sensitivities(spin_button_c.get_parts() == 0, &["remove"]);
                         spin_button_c.popup_menu.popup_at_event(event);
                         return Inhibit(true)
                     }
@@ -207,6 +195,10 @@ impl<A, C, P, D> PaintPartsSpinButtonCore<A, C, P, D>
             P: BasicPaintInterface<C> + 'static,
             D: PaintDisplayDialogCreate<A, C, P> + 'static,
 {
+    fn paint(&self) -> P {
+        self.paint.clone()
+    }
+
     fn get_parts(&self) -> u32 {
         self.entry.get_value_as_int() as u32
     }
@@ -218,13 +210,6 @@ impl<A, C, P, D> PaintPartsSpinButtonCore<A, C, P, D>
     fn divide_parts(&self, divisor: u32) {
         let parts = self.entry.get_value_as_int() as u32 / divisor;
         self.entry.set_value(parts as f64);
-    }
-
-    fn get_colour_component(&self) -> ColourComponent {
-        ColourComponent{
-            colour: self.paint.colour().clone(),
-            parts: self.entry.get_value_as_int() as u32
-        }
     }
 
     fn get_paint_component(&self) -> (P, u32) {
@@ -300,7 +285,7 @@ pub struct PaintComponentsBoxCore<A, C, P, D>
     is_sensitive: Cell<bool>,
     supress_change_notification: Cell<bool>,
     current_target: RefCell<Option<Colour>>,
-    colour_changed_callbacks: RefCell<Vec<Box<Fn(Option<&Colour>)>>>,
+    contributions_changed_callbacks: RefCell<Vec<Box<Fn()>>>,
     paint_removed_callbacks: RefCell<Vec<Box<Fn(&P)>>>
 }
 
@@ -323,6 +308,25 @@ impl<A, C, P, D> PaintComponentsBoxCore<A, C, P, D>
             P: BasicPaintInterface<C> + 'static,
             D: PaintDisplayDialogCreate<A, C, P> + 'static
 {
+    fn find_paint_index(&self, paint: &P) -> Result<usize, usize> {
+        let result = self.spin_buttons.borrow().binary_search_by_key(
+            paint,
+            |spinner| spinner.paint()
+        );
+        result
+    }
+
+    pub fn has_listeners(&self) -> bool {
+        self.contributions_changed_callbacks.borrow().len() > 0
+    }
+
+    pub fn is_being_used(&self, paint: &P) -> bool {
+        if let Ok(index) = self.find_paint_index(paint) {
+            return self.spin_buttons.borrow()[index].get_parts() > 0
+        };
+        false
+    }
+
     //pub fn set_sensitive(&self, sensitive: bool) {
         //self.is_sensitive.set(sensitive);
         //for spin_button in self.spin_buttons.borrow().iter() {
@@ -330,33 +334,19 @@ impl<A, C, P, D> PaintComponentsBoxCore<A, C, P, D>
         //}
     //}
 
-    pub fn connect_colour_changed<F: 'static>(&self, callback: F)
-        where for<'r> F: (Fn(Option<&'r Colour>))
+    pub fn connect_contributions_changed<F: 'static>(&self, callback: F)
+        where F: (Fn())
     {
-        self.colour_changed_callbacks.borrow_mut().push(Box::new(callback))
+        self.contributions_changed_callbacks.borrow_mut().push(Box::new(callback))
     }
 
-    fn inform_colour_changed(&self) {
-        if self.supress_change_notification.get() {
-            return
-        }
-        let mut colour_mixer = ColourMixer::new();
-        for spin_button in self.spin_buttons.borrow().iter() {
-            let colour_component = spin_button.get_colour_component();
-            colour_mixer.add(&colour_component)
-        };
-        if let Some(colour) = colour_mixer.get_colour() {
-            for callback in self.colour_changed_callbacks.borrow().iter() {
-                callback(Some(&colour));
-            }
-        } else {
-            for callback in self.colour_changed_callbacks.borrow().iter() {
-                callback(None);
-            }
+    fn inform_contributions_changed(&self) {
+        for callback in self.contributions_changed_callbacks.borrow().iter() {
+            callback();
         }
     }
 
-    pub fn has_colour(&self) -> bool {
+    pub fn has_contributions(&self) -> bool {
         for spin_button in self.spin_buttons.borrow().iter() {
             if spin_button.get_parts() > 0 {
                 return true
@@ -418,7 +408,13 @@ impl<A, C, P, D> PaintComponentsBoxCore<A, C, P, D>
         }
         self.inform_paint_removed(&spin_button.paint);
         if colour_will_change {
-            self.inform_colour_changed()
+            self.inform_contributions_changed()
+        }
+    }
+
+    pub fn remove_paint(&self, paint: &P) {
+        if let Ok(index) = self.find_paint_index(paint) {
+            self.remove_spin_button(&self.spin_buttons.borrow()[index])
         }
     }
 
@@ -440,14 +436,18 @@ impl<A, C, P, D> PaintComponentsBoxCore<A, C, P, D>
             spin_button.set_parts(0);
         }
         self.supress_change_notification.set(false);
-        self.inform_colour_changed();
+        self.inform_contributions_changed();
     }
 
-    pub fn simplify_parts(&self) {
+    pub fn get_gcd(&self) -> u32 {
         let mut gcd: u32 = 0;
         for spin_button in self.spin_buttons.borrow().iter() {
             gcd = gcd.gcd(&spin_button.get_parts());
-        }
+        };
+        gcd
+    }
+
+    pub fn divide_all_parts_by(&self, gcd: u32) {
         if gcd > 1 {
             self.supress_change_notification.set(true);
             for spin_button in self.spin_buttons.borrow().iter() {
@@ -505,38 +505,35 @@ impl<A, C, P, D> PaintComponentsBoxInterface<A, C, P, D> for PaintComponentsBox<
             is_sensitive: Cell::new(sensitive),
             supress_change_notification: Cell::new(false),
             current_target: RefCell::new(None),
-            colour_changed_callbacks: RefCell::new(Vec::new()),
+            contributions_changed_callbacks: RefCell::new(Vec::new()),
             paint_removed_callbacks: RefCell::new(Vec::new()),
         };
         Rc::new(pcb_core)
     }
 
     fn add_paint(&self, paint: &P) {
-        for spin_button in self.spin_buttons.borrow().iter() {
-            if spin_button.paint == *paint {
-                return
-            }
+        if let Err(index) = self.find_paint_index(paint) {
+            let pc = paint.clone();
+            let target_colour = self.get_current_target();
+            let target = if let Some(ref colour) = target_colour {
+                Some(colour)
+            } else {
+                None
+            };
+            let spin_button = PaintPartsSpinButton::<A, C, P, D>::create_with(&pc, target, self.is_sensitive.get());
+            let spin_button_c = spin_button.clone();
+            self.spin_buttons.borrow_mut().insert(index, spin_button_c);
+            let self_c = self.clone();
+            spin_button.connect_parts_changed(
+                move |_| {self_c.inform_contributions_changed()}
+            );
+            let self_c = self.clone();
+            spin_button.connect_remove_me(
+                move |sb| { self_c.remove_spin_button(sb) }
+            );
+            self.pack_append(&spin_button);
+            self.vbox.show_all();
         }
-        let pc = paint.clone();
-        let target_colour = self.get_current_target();
-        let target = if let Some(ref colour) = target_colour {
-            Some(colour)
-        } else {
-            None
-        };
-        let spin_button = PaintPartsSpinButton::<A, C, P, D>::create_with(&pc, target, self.is_sensitive.get());
-        let spin_button_c = spin_button.clone();
-        self.spin_buttons.borrow_mut().push(spin_button_c);
-        let self_c = self.clone();
-        spin_button.connect_parts_changed(
-            move |_| {self_c.inform_colour_changed()}
-        );
-        let self_c = self.clone();
-        spin_button.connect_remove_me(
-            move |sb| { self_c.remove_spin_button(sb) }
-        );
-        self.pack_append(&spin_button);
-        self.vbox.show_all();
     }
 }
 

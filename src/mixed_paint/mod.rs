@@ -28,6 +28,7 @@ pub mod collection;
 pub mod components;
 pub mod display;
 pub mod hue_wheel;
+pub mod match_area;
 pub mod mixer;
 pub mod target;
 

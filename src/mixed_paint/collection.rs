@@ -31,10 +31,11 @@ use pw_gix::rgb_math::rgb::*;
 use pw_gix::wrapper::*;
 
 use basic_paint::*;
-use dialogue::PaintDisplayButtonSpec;
+use dialogue::*;
 use error::*;
 
 use super::*;
+use super::components::*;
 use super::display::*;
 use super::target::TargetColourInterface;
 
@@ -227,15 +228,19 @@ impl<C> MixedPaintCollectionInterface<C> for MixedPaintCollection<C>
     }
 }
 
-pub struct MixedPaintCollectionViewCore<A, C>
+pub type MixedPaintComponentBox<A, C> = PaintComponentsBox<A, C, MixedPaint<C>, MixedPaintDisplayDialog<A, C>>;
+
+pub struct MixedPaintCollectionWidgetCore<A, C>
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static,
 {
+    vbox: gtk::Box,
     scrolled_window: gtk::ScrolledWindow,
     list_store: gtk::ListStore,
     view: gtk::TreeView,
     popup_menu: WrappedMenu,
     collection: MixedPaintCollection<C>,
+    components: MixedPaintComponentBox<A, C>,
     chosen_paint: RefCell<Option<MixedPaint<C>>>,
     current_target: RefCell<Option<Colour>>,
     add_paint_callbacks: RefCell<Vec<Box<Fn(&MixedPaint<C>)>>>,
@@ -244,7 +249,7 @@ pub struct MixedPaintCollectionViewCore<A, C>
     spec: PhantomData<A>
 }
 
-impl<A, C> MixedPaintCollectionViewCore<A, C>
+impl<A, C> MixedPaintCollectionWidgetCore<A, C>
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static,
 {
@@ -325,7 +330,11 @@ impl<A, C> MixedPaintCollectionViewCore<A, C>
     }
 
     pub fn remove_paint(&self, paint: &MixedPaint<C> ) -> Result<(), PaintError<C>> {
+        if self.components.is_being_used(paint) {
+            return Err(PaintErrorType::PartOfCurrentMixture.into())
+        };
         self.collection.remove_paint(paint)?;
+        self.components.remove_paint(paint);
         if let Some((_, iter)) = self.find_paint_named(&paint.name()) {
             self.list_store.remove(&iter);
         } else {
@@ -341,33 +350,38 @@ impl<A, C> MixedPaintCollectionViewCore<A, C>
     pub fn get_mixed_paints(&self) -> Vec<MixedPaint<C>> {
         self.collection.get_mixed_paints()
     }
-}
 
-impl<A, C> WidgetWrapper for MixedPaintCollectionViewCore<A, C>
-    where   A: ColourAttributesInterface + 'static,
-            C: CharacteristicsInterface + 'static,
-{
-    type PWT = gtk::ScrolledWindow;
-
-    fn pwo(&self) -> gtk::ScrolledWindow {
-        self.scrolled_window.clone()
+    // Components interface
+    pub fn components(&self) -> MixedPaintComponentBox<A, C> {
+        self.components.clone()
     }
 }
 
-pub type MixedPaintCollectionView<A, C> = Rc<MixedPaintCollectionViewCore<A, C>>;
-
-pub trait MixedPaintCollectionViewInterface<A, C>
+impl<A, C> WidgetWrapper for MixedPaintCollectionWidgetCore<A, C>
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static,
 {
-    fn create(collection: &MixedPaintCollection<C>, mixing_mode: MixingMode) -> MixedPaintCollectionView<A, C>;
+    type PWT = gtk::Box;
+
+    fn pwo(&self) -> gtk::Box {
+        self.vbox.clone()
+    }
 }
 
-impl<A, C> MixedPaintCollectionViewInterface<A, C> for MixedPaintCollectionView<A, C>
+pub type MixedPaintCollectionWidget<A, C> = Rc<MixedPaintCollectionWidgetCore<A, C>>;
+
+pub trait MixedPaintCollectionWidgetInterface<A, C>
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static,
 {
-    fn create(collection: &MixedPaintCollection<C>, mixing_mode: MixingMode) -> MixedPaintCollectionView<A, C> {
+    fn create(collection: &MixedPaintCollection<C>, mixing_mode: MixingMode) -> MixedPaintCollectionWidget<A, C>;
+}
+
+impl<A, C> MixedPaintCollectionWidgetInterface<A, C> for MixedPaintCollectionWidget<A, C>
+    where   A: ColourAttributesInterface + 'static,
+            C: CharacteristicsInterface + 'static,
+{
+    fn create(collection: &MixedPaintCollection<C>, mixing_mode: MixingMode) -> MixedPaintCollectionWidget<A, C> {
         let len = MixedPaint::<C>::tv_row_len();
         let list_store = gtk::ListStore::new(&MIXED_PAINT_ROW_SPEC[0..len]);
         for paint in collection.get_mixed_paints().iter() {
@@ -378,11 +392,13 @@ impl<A, C> MixedPaintCollectionViewInterface<A, C> for MixedPaintCollectionView<
         view.get_selection().set_mode(gtk::SelectionMode::None);
 
         let mspl = Rc::new(
-            MixedPaintCollectionViewCore::<A, C> {
+            MixedPaintCollectionWidgetCore::<A, C> {
+                vbox: gtk::Box::new(gtk::Orientation::Vertical, 2),
                 scrolled_window: gtk::ScrolledWindow::new(None, None),
                 list_store: list_store,
                 popup_menu: WrappedMenu::new(&vec![]),
                 collection: collection.clone(),
+                components: MixedPaintComponentBox::<A, C>::create_with(4, true),
                 view: view,
                 chosen_paint: RefCell::new(None),
                 current_target: RefCell::new(None),
@@ -409,6 +425,10 @@ impl<A, C> MixedPaintCollectionViewInterface<A, C> for MixedPaintCollectionView<
 
         mspl.scrolled_window.add(&mspl.view.clone());
         mspl.scrolled_window.show_all();
+        mspl.vbox.pack_start(&mspl.components.pwo(), false, false, 0);
+        mspl.vbox.pack_start(&mspl.scrolled_window, true, true, 0);
+        mspl.vbox.show_all();
+
 
         let mspl_c = mspl.clone();
         mspl.popup_menu.append_item(
@@ -444,7 +464,7 @@ impl<A, C> MixedPaintCollectionViewInterface<A, C> for MixedPaintCollectionView<
                         buttons
                     );
                     let mspl_c_c = mspl_c.clone();
-                    dialog.connect_destroy(
+                    dialog.connect_destroyed(
                         move |id| { mspl_c_c.mixed_paint_dialogs.borrow_mut().remove(&id); }
                     );
                     mspl_c.mixed_paint_dialogs.borrow_mut().insert(dialog.id_no(), dialog.clone());
@@ -461,7 +481,7 @@ impl<A, C> MixedPaintCollectionViewInterface<A, C> for MixedPaintCollectionView<
         ).connect_activate(
             move |_| {
                 if let Some(ref paint) = *mspl_c.chosen_paint.borrow() {
-                    mspl_c.inform_add_paint(paint);
+                    mspl_c.components.add_paint(paint);
                 } else {
                     panic!("File: {:?} Line: {:?} SHOULDN'T GET HERE", file!(), line!())
                 }
@@ -470,9 +490,9 @@ impl<A, C> MixedPaintCollectionViewInterface<A, C> for MixedPaintCollectionView<
 
         let mspl_c = mspl.clone();
         mspl.popup_menu.append_item(
-            "remove",
-            "Remove from Mixer",
-            "Remove this paint from the mixer",
+            "delete",
+            "Delete",
+            "Remove this paint from the collection of mixed paints",
         ).connect_activate(
             move |_| {
                 if let Some(ref paint) = *mspl_c.chosen_paint.borrow() {
@@ -490,11 +510,11 @@ impl<A, C> MixedPaintCollectionViewInterface<A, C> for MixedPaintCollectionView<
                     if event.get_button() == 3 {
                         let o_paint = mspl_c.get_mixed_paint_at(event.get_position());
                         mspl_c.popup_menu.set_sensitivities(o_paint.is_some(), &["info"]);
-                        mspl_c.popup_menu.set_sensitivities(o_paint.is_some(), &["add", "remove"]);
-                        let have_listeners = mspl_c.add_paint_callbacks.borrow().len() > 0;
+                        mspl_c.popup_menu.set_sensitivities(o_paint.is_some(), &["add", "delete"]);
+                        let have_listeners = mspl_c.components().has_listeners();
                         mspl_c.popup_menu.set_visibilities(have_listeners, &["add"]);
                         let have_listeners = mspl_c.remove_paint_callbacks.borrow().len() > 0;
-                        mspl_c.popup_menu.set_visibilities(have_listeners, &["remove"]);
+                        mspl_c.popup_menu.set_visibilities(have_listeners, &["delete"]);
                         *mspl_c.chosen_paint.borrow_mut() = o_paint;
                         mspl_c.popup_menu.popup_at_event(event);
                         return Inhibit(true)
