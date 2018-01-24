@@ -69,11 +69,7 @@ impl<C: CharacteristicsInterface> MixedPaintCollectionCore<C> {
     }
 
     pub fn get_paints(&self) -> Vec<MixedPaint<C>> {
-        let mut v: Vec<MixedPaint<C>> = Vec::new();
-        for paint in self.paints.borrow().iter() {
-            v.push(paint.clone())
-        };
-        v
+        self.paints.borrow().iter().map(|p| p.clone()).collect()
     }
 
     pub fn has_paint_named(&self, name: &str) -> bool {
@@ -87,26 +83,18 @@ impl<C: CharacteristicsInterface> MixedPaintCollectionCore<C> {
         mp_components: Vec<(MixedPaint<C>, u32)>,
         matched_colour: Option<Colour>
     ) -> Result<MixedPaint<C>, PaintError<C>> {
-        let mut total_parts: u32 = 0;
-        let mut gcd: u32 = 0;
-        for &(_, parts) in sp_components.iter() {
-            gcd = gcd.gcd(&parts);
-            total_parts += parts;
-        }
-        for &(_, parts) in mp_components.iter() {
-            gcd = gcd.gcd(&parts);
-            total_parts += parts;
-        }
+        let mut parts: Vec<u32> = sp_components.iter().map(|c| c.1).collect();
+        parts.extend(mp_components.iter().map(|c| c.1));
+        let gcd: u32 = parts.iter().fold(0, |gcd, p| gcd.gcd(&p));
         if gcd == 0 {
             return Err(PaintErrorType::NoSubstantiveComponents.into())
         }
+        let mut total_parts: u32 = parts.iter().sum();
         total_parts /= gcd;
         let mut new_rgb: RGB = BLACK;
         let mut p_components: Vec<PaintComponent<C>> = Vec::new();
         let mut new_c_floats: Vec<f64> = Vec::new();
-        for _ in 0..C::tv_row_len() {
-            new_c_floats.push(0.0);
-        }
+        for _ in 0..C::tv_row_len() { new_c_floats.push(0.0); }
         for (series_paint, mut parts) in sp_components {
             if parts > 0 {
                 parts /= gcd;
@@ -186,14 +174,7 @@ impl<C: CharacteristicsInterface> MixedPaintCollectionCore<C> {
     }
 
     pub fn mixed_paints_using(&self, paint: &Paint<C>) -> Vec<MixedPaint<C>> {
-        let mut mpu = Vec::new();
-        for mixed_paint in self.paints.borrow().iter() {
-            if mixed_paint.uses_paint(paint) {
-                mpu.push(mixed_paint.clone())
-            }
-        }
-
-        mpu
+        self.paints.borrow().iter().filter(|p| p.uses_paint(paint)).map(|m| m.clone()).collect()
     }
 }
 

@@ -173,20 +173,6 @@ impl<A> NewTargetColourDialogInterface<A> for NewTargetColourDialog<A>
     where   A: ColourAttributesInterface
 {
     fn create<W: WidgetWrapper>(caller: &Rc<W>) -> NewTargetColourDialog<A> {
-        //let title = format!("{}: New Mixed Paint Target Colour", app_name());
-        //let dialog = gtk::Dialog::new_with_buttons(
-            //Some(&title),
-            //parent_none(),
-            //gtk::DialogFlags::DESTROY_WITH_PARENT,
-            //&[("gtk-cancel", gtk::ResponseType::Reject.into()), ("gtk-ok", gtk::ResponseType::Accept.into())]
-        //);
-        //if let Some(tlw) = caller.get_toplevel_gtk_window() {
-            //dialog.set_transient_for(Some(&tlw));
-            //if let Some(ref icon) = tlw.get_icon() {
-                //dialog.set_icon(Some(icon));
-            //}
-        //};
-        //let buttons = &[("gtk-cancel", gtk::ResponseType::Reject.into()), ("gtk-ok", gtk::ResponseType::Accept.into())];
         let title = format!("{}: New Mixed Paint Target Colour", app_name());
         let dialog = caller.new_dialog_with_buttons(Some(&title), gtk::DialogFlags::DESTROY_WITH_PARENT, CANCEL_OK_BUTTONS);
         let colour_editor = ColourEditor::<A>::create(&vec![]);

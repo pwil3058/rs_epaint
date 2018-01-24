@@ -347,12 +347,7 @@ impl<A, C, P, D> PaintComponentsBoxCore<A, C, P, D>
     }
 
     pub fn has_contributions(&self) -> bool {
-        for spin_button in self.spin_buttons.borrow().iter() {
-            if spin_button.get_parts() > 0 {
-                return true
-            }
-        };
-        false
+        self.spin_buttons.borrow().iter().any(|s| s.get_parts() > 0)
     }
 
     pub fn connect_paint_removed<F: 'static>(&self, callback: F)
@@ -440,11 +435,7 @@ impl<A, C, P, D> PaintComponentsBoxCore<A, C, P, D>
     }
 
     pub fn get_gcd(&self) -> u32 {
-        let mut gcd: u32 = 0;
-        for spin_button in self.spin_buttons.borrow().iter() {
-            gcd = gcd.gcd(&spin_button.get_parts());
-        };
-        gcd
+        self.spin_buttons.borrow().iter().fold(0, |gcd, s| gcd.gcd(&s.get_parts()))
     }
 
     pub fn divide_all_parts_by(&self, gcd: u32) {
@@ -458,13 +449,7 @@ impl<A, C, P, D> PaintComponentsBoxCore<A, C, P, D>
     }
 
     pub fn get_paint_components(&self) -> Vec<(P, u32)> {
-        let mut components = vec![];
-        for spin_button in self.spin_buttons.borrow().iter() {
-            if spin_button.get_parts() > 0 {
-                components.push(spin_button.get_paint_component())
-            }
-        }
-        components
+        self.spin_buttons.borrow().iter().filter(|s| s.get_parts() > 0).map(|s| s.get_paint_component()).collect()
     }
 
     pub fn set_current_target(&self, new_current_target: Option<&Colour>) {

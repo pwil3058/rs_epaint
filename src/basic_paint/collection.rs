@@ -272,11 +272,7 @@ impl<C, CID> CollnPaintCollnCore<C, CID>
     }
 
     pub fn get_paints(&self) -> Vec<CollnPaint<C, CID>> {
-        let mut v: Vec<CollnPaint<C, CID>> = Vec::new();
-        for paint in self.paints.borrow().iter() {
-            v.push(paint.clone())
-        };
-        v
+        self.paints.borrow().iter().map(|p| p.clone()).collect()
     }
 
     pub fn has_paint_named(&self, name: &str) -> bool {

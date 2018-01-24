@@ -65,19 +65,11 @@ impl<C> BasicPaintFactoryCore<C>
     }
 
     pub fn get_paints(&self) -> Vec<BasicPaint<C>> {
-        let mut v: Vec<BasicPaint<C>> = Vec::new();
-        for paint in self.paints.borrow().iter() {
-            v.push(paint.clone())
-        };
-        v
+        self.paints.borrow().iter().map(|p| p.clone()).collect()
     }
 
     pub fn get_paint_specs(&self) -> Vec<BasicPaintSpec<C>> {
-        let mut v: Vec<BasicPaintSpec<C>> = Vec::new();
-        for paint in self.paints.borrow().iter() {
-            v.push(paint.get_spec())
-        };
-        v
+        self.paints.borrow().iter().map(|p| p.get_spec()).collect()
     }
 
     pub fn matches_paint_specs(&self, specs: &Vec<BasicPaintSpec<C>>) -> bool {
@@ -364,10 +356,8 @@ impl<A, C> BasicPaintFactoryDisplayCore<A, C>
     }
 
     fn close_dialogs_for_paint(&self, paint: &BasicPaint<C>) {
-        for dialog in self.paint_dialogs.borrow().values() {
-            if dialog.paint() == *paint {
-                dialog.close();
-            }
+        for dialog in self.paint_dialogs.borrow().values().filter(|d| d.paint() == *paint) {
+            dialog.close();
         };
     }
 
