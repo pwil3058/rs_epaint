@@ -124,7 +124,7 @@ pub trait ColouredItemInterface {
     }
 }
 
-pub trait BasicPaintInterface<C>: Hash + Clone + PartialEq + Ord + Debug + ColouredItemInterface
+pub trait BasicPaintInterface<C>: Clone + PartialEq + Ord + Debug + ColouredItemInterface
     where   C: CharacteristicsInterface
 {
     fn name(&self) -> String;

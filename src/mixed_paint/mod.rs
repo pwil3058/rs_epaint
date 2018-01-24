@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::cell::RefCell;
 use std::cmp::Ordering;
 use std::rc::Rc;
 
@@ -40,7 +41,7 @@ pub enum MixingMode {
     MatchSamples
 }
 
-#[derive(Debug, Clone, Hash)]
+#[derive(Debug, Clone)]
 pub enum Paint<C: CharacteristicsInterface> {
     Series(SeriesPaint<C>),
     Mixed(MixedPaint<C>)
@@ -161,7 +162,7 @@ impl<C: CharacteristicsInterface> BasicPaintInterface<C> for Paint<C> {
     }
 }
 
-#[derive(Debug, PartialEq, Hash, Clone)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct PaintComponent<C: CharacteristicsInterface> {
     pub paint: Paint<C>,
     pub parts: u32
@@ -214,11 +215,11 @@ lazy_static! {
         ];
 }
 
-#[derive(Debug, Clone, Hash)]
+#[derive(Debug, Clone)]
 pub struct MixedPaintCore<C: CharacteristicsInterface> {
     colour: Colour,
     name: String,
-    notes: String,
+    notes: RefCell<String>,
     characteristics: C,
     target_colour: Option<TargetColour>,
     components: Rc<Vec<PaintComponent<C>>>
@@ -245,6 +246,10 @@ impl<C: CharacteristicsInterface> Ord for MixedPaintCore<C> {
 }
 
 impl<C: CharacteristicsInterface> MixedPaintCore<C> {
+    pub fn set_notes(&self, text: &str) {
+        *self.notes.borrow_mut() = text.to_string();
+    }
+
     pub fn uses_paint(&self, paint: &Paint<C>) -> bool {
         for component in self.components.iter() {
             if *paint == component.paint {
@@ -327,11 +332,11 @@ impl<C> BasicPaintInterface<C> for MixedPaint<C>
     }
 
     fn notes(&self) -> String {
-        self.notes.clone()
+        self.notes.borrow().clone()
     }
 
     fn tooltip_text(&self) -> String {
-        format!("{}: {}", self.name, self.notes)
+        format!("{}: {}", self.name, self.notes.borrow())
     }
 
     fn characteristics(&self) -> C {

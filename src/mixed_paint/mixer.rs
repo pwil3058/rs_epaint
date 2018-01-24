@@ -259,7 +259,7 @@ impl<A, C> PaintMixerCore<A, C>
         chunks.push(text);
 
         let mut text = format!("<b>{}</b>\n\n", escape_str_attribute("Mixed Colours:"));
-        for mixed_paint in self.mixed_paints.get_mixed_paints().iter() {
+        for mixed_paint in self.mixed_paints.get_paints().iter() {
             text += &format!("<span background=\"{}\">\t</span> ", mixed_paint.rgb().pango_string());
             text += &format!("<span background=\"{}\">\t</span> ", mixed_paint.monotone_rgb().pango_string());
             text += &format!("<span background=\"{}\">\t</span> ", mixed_paint.max_chroma_rgb().pango_string());

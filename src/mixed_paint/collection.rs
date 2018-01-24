@@ -61,29 +61,14 @@ impl<C: CharacteristicsInterface> MixedPaintCollectionCore<C> {
         self.paints.borrow().len()
     }
 
-    pub fn get_paint(&self, name: &str) -> Option<Paint<C>> {
-        match self.find_name(name) {
-            Ok(index) => Some(Paint::Mixed(self.paints.borrow()[index].clone())),
-            Err(_) => None
-        }
-    }
-
-    pub fn get_paints(&self) -> Vec<Paint<C>> {
-        let mut v: Vec<Paint<C>> = Vec::new();
-        for paint in self.paints.borrow().iter() {
-            v.push(Paint::Mixed(paint.clone()))
-        };
-        v
-    }
-
-    pub fn get_mixed_paint(&self, name: &str) -> Option<MixedPaint<C>> {
+    pub fn get_paint(&self, name: &str) -> Option<MixedPaint<C>> {
         match self.find_name(name) {
             Ok(index) => Some(self.paints.borrow()[index].clone()),
             Err(_) => None
         }
     }
 
-    pub fn get_mixed_paints(&self) -> Vec<MixedPaint<C>> {
+    pub fn get_paints(&self) -> Vec<MixedPaint<C>> {
         let mut v: Vec<MixedPaint<C>> = Vec::new();
         for paint in self.paints.borrow().iter() {
             v.push(paint.clone())
@@ -160,7 +145,7 @@ impl<C: CharacteristicsInterface> MixedPaintCollectionCore<C> {
             MixedPaintCore::<C> {
                 colour: Colour::from(new_rgb),
                 name: format!("Mix #{:03}", name_num),
-                notes: notes.to_string(),
+                notes: RefCell::new(notes.to_string()),
                 characteristics: C::from_floats(&new_c_floats),
                 target_colour: target_colour,
                 components: Rc::new(p_components)
@@ -266,7 +251,7 @@ impl<A, C> MixedPaintCollectionWidgetCore<A, C>
                     let name: String = self.list_store.get_value(&iter, MP_NAME).get().unwrap_or_else(
                         || panic!("File: {:?} Line: {:?}", file!(), line!())
                     );
-                    let paint = self.collection.get_mixed_paint(&name).unwrap_or_else(
+                    let paint = self.collection.get_paint(&name).unwrap_or_else(
                         || panic!("File: {:?} Line: {:?}", file!(), line!())
                     );
                     return Some(paint)
@@ -329,6 +314,20 @@ impl<A, C> MixedPaintCollectionWidgetCore<A, C>
         )
     }
 
+    fn set_notes_for_paint_at(&self, iter: &gtk::TreeIter, new_notes: &str) {
+        let o_paint_name: Option<String> = self.list_store.get_value(iter, MP_NAME).get();
+        if let Some(ref paint_name) = o_paint_name {
+            if let Some(paint) = self.collection.get_paint(paint_name) {
+                paint.set_notes(new_notes);
+                self.list_store.set_value(iter, MP_NOTES as u32, &new_notes.into());
+            } else {
+                panic!("File: {} Line: {}", file!(), line!())
+            }
+        } else {
+            panic!("File: {} Line: {}", file!(), line!())
+        }
+    }
+
     pub fn remove_paint(&self, paint: &MixedPaint<C> ) -> Result<(), PaintError<C>> {
         if self.components.is_being_used(paint) {
             return Err(PaintErrorType::PartOfCurrentMixture.into())
@@ -347,8 +346,8 @@ impl<A, C> MixedPaintCollectionWidgetCore<A, C>
         self.collection.series_paints_used()
     }
 
-    pub fn get_mixed_paints(&self) -> Vec<MixedPaint<C>> {
-        self.collection.get_mixed_paints()
+    pub fn get_paints(&self) -> Vec<MixedPaint<C>> {
+        self.collection.get_paints()
     }
 
     // Components interface
@@ -384,12 +383,12 @@ impl<A, C> MixedPaintCollectionWidgetInterface<A, C> for MixedPaintCollectionWid
     fn create(collection: &MixedPaintCollection<C>, mixing_mode: MixingMode) -> MixedPaintCollectionWidget<A, C> {
         let len = MixedPaint::<C>::tv_row_len();
         let list_store = gtk::ListStore::new(&MIXED_PAINT_ROW_SPEC[0..len]);
-        for paint in collection.get_mixed_paints().iter() {
+        for paint in collection.get_paints().iter() {
             list_store.append_row(&paint.tv_rows());
         }
         let view = gtk::TreeView::new_with_model(&list_store.clone());
         view.set_headers_visible(true);
-        view.get_selection().set_mode(gtk::SelectionMode::None);
+        view.get_selection().set_mode(gtk::SelectionMode::Single);
 
         let mspl = Rc::new(
             MixedPaintCollectionWidgetCore::<A, C> {
@@ -413,7 +412,17 @@ impl<A, C> MixedPaintCollectionWidgetInterface<A, C> for MixedPaintCollectionWid
         if mixing_mode == MixingMode::MatchTarget {
             mspl.view.append_column(&simple_text_column("Match?", -1, MP_MATCHED_ANGLE, MP_MATCHED_RGB, -1, 50, true));
         };
-        mspl.view.append_column(&simple_text_column("Notes", MP_NOTES, MP_NOTES, MP_RGB, MP_RGB_FG, -1, true));
+        let mspl_c = mspl.clone();
+        let notes_col = editable_text_column("Notes", MP_NOTES, MP_NOTES, MP_RGB, MP_RGB_FG, -1, true,
+            move |_, tree_path, new_notes| {
+                if let Some(ref iter) = mspl_c.list_store.get_iter(&tree_path) {
+                    mspl_c.set_notes_for_paint_at(iter, new_notes);
+                } else {
+                    panic!("File: {} Line: {}", file!(), line!())
+                }
+            }
+        );
+        mspl.view.append_column(&notes_col);
         for col in A::tv_columns() {
             mspl.view.append_column(&col);
         }
@@ -517,6 +526,9 @@ impl<A, C> MixedPaintCollectionWidgetInterface<A, C> for MixedPaintCollectionWid
                         mspl_c.popup_menu.set_visibilities(have_listeners, &["delete"]);
                         *mspl_c.chosen_paint.borrow_mut() = o_paint;
                         mspl_c.popup_menu.popup_at_event(event);
+                        return Inhibit(true)
+                    } else if event.get_button() == 2 {
+                        mspl_c.view.get_selection().unselect_all();
                         return Inhibit(true)
                     }
                 }
