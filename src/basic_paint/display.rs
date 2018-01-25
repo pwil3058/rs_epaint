@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::cell::RefCell;
 use std::rc::Rc;
 
 use gtk;
@@ -22,18 +21,7 @@ use pw_gix::gtkx::coloured::*;
 use pw_gix::gtkx::dialog::*;
 
 use basic_paint::*;
-pub use dialogue::{PaintDisplayButtonSpec, new_display_dialog};
-
-static mut NEXT_DIALOG_ID: u32 = 0;
-
-fn get_id_for_dialog() -> u32 {
-    let id: u32;
-    unsafe {
-        id = NEXT_DIALOG_ID;
-        NEXT_DIALOG_ID += 1;
-    }
-    id
-}
+pub use dialogue::*;
 
 pub struct BasicPaintDisplayDialogCore<A, C>
     where   C: CharacteristicsInterface + 'static,
@@ -43,59 +31,30 @@ pub struct BasicPaintDisplayDialogCore<A, C>
     paint: BasicPaint<C>,
     _cads: Rc<A>,
     id_no: u32,
-    destroy_callbacks: RefCell<Vec<Box<Fn(u32)>>>,
-}
-
-impl<A, C> BasicPaintDisplayDialogCore<A, C>
-    where   C: CharacteristicsInterface + 'static,
-            A: ColourAttributesInterface + 'static,
-{
-    pub fn show(&self) {
-        self.dialog.show()
-    }
-
-    pub fn close(&self) {
-        self.dialog.close()
-    }
-
-    pub fn set_response_sensitive(&self, response_id: i32, setting: bool) {
-        self.dialog.set_response_sensitive(response_id, setting);
-    }
-
-    pub fn paint(&self) -> BasicPaint<C> {
-        self.paint.clone()
-    }
-
-    pub fn id_no(&self) -> u32 {
-        self.id_no
-    }
-
-    pub fn connect_destroy<F: 'static + Fn(u32)>(&self, callback: F) {
-        self.destroy_callbacks.borrow_mut().push(Box::new(callback))
-    }
-
-    pub fn inform_destroy(&self) {
-        for callback in self.destroy_callbacks.borrow().iter() {
-            callback(self.id_no);
-        }
-    }
-
+    destroyed_callbacks: DestroyedCallbacks,
 }
 
 pub type BasicPaintDisplayDialog<A, C> = Rc<BasicPaintDisplayDialogCore<A, C>>;
 
-pub trait BasicPaintDisplayDialogInterface<A, C>
-    where   C: CharacteristicsInterface + 'static,
-            A: ColourAttributesInterface + 'static,
+impl<A, C> DialogWrapper for BasicPaintDisplayDialog<A, C>
+    where   A: ColourAttributesInterface + 'static,
+            C: CharacteristicsInterface + 'static,
 {
-    fn create<W: WidgetWrapper>(
-        paint: &BasicPaint<C>,
-        caller: &Rc<W>,
-        button_specs: Vec<PaintDisplayButtonSpec>,
-    ) -> BasicPaintDisplayDialog<A, C>;
+    fn dialog(&self) -> gtk::Dialog { self.dialog. clone() }
 }
 
-impl<A, C> BasicPaintDisplayDialogInterface<A, C> for BasicPaintDisplayDialog<A, C>
+impl<A, C> TrackedDialog for BasicPaintDisplayDialog<A, C>
+    where   A: ColourAttributesInterface + 'static,
+            C: CharacteristicsInterface + 'static,
+{
+    fn id_no(&self) -> u32 { self.id_no }
+
+    fn destroyed_callbacks(&self) -> &DestroyedCallbacks {
+        &self.destroyed_callbacks
+    }
+}
+
+impl<A, C> PaintDisplay<A, C, BasicPaint<C>> for BasicPaintDisplayDialog<A, C>
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static,
 {
@@ -139,17 +98,21 @@ impl<A, C> BasicPaintDisplayDialogInterface<A, C> for BasicPaintDisplayDialog<A,
                 paint: paint.clone(),
                 _cads: cads,
                 id_no: get_id_for_dialog(),
-                destroy_callbacks: RefCell::new(Vec::new()),
+                destroyed_callbacks: DestroyedCallbacks::create(),
             }
         );
         let bpd_dialog_c = bpd_dialog.clone();
         bpd_dialog.dialog.connect_destroy(
             move |_| {
-                bpd_dialog_c.inform_destroy()
+                bpd_dialog_c.inform_destroyed()
             }
         );
 
         bpd_dialog
+    }
+
+    fn paint(&self) -> BasicPaint<C> {
+        self.paint.clone()
     }
 }
 

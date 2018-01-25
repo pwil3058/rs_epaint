@@ -507,7 +507,7 @@ impl<A, C> SimpleCreation for BasicPaintFactoryDisplay<A, C>
                     };
                     let dialog = BasicPaintDisplayDialog::<A, C>::create(&paint, &bpf_c, vec![edit_btn_spec, remove_btn_spec]);
                     let bpf_c_c = bpf_c.clone();
-                    dialog.connect_destroy(
+                    dialog.connect_destroyed(
                         move |id| { bpf_c_c.paint_dialogs.borrow_mut().remove(&id); }
                     );
                     bpf_c.paint_dialogs.borrow_mut().insert(dialog.id_no(), dialog.clone());

@@ -47,12 +47,16 @@ impl<A, C, CID> DialogWrapper for CollnPaintDisplayDialog<A, C, CID>
     fn dialog(&self) -> gtk::Dialog { self.dialog. clone() }
 }
 
-impl<A, C, CID> DialogIdentifier for CollnPaintDisplayDialog<A, C, CID>
+impl<A, C, CID> TrackedDialog for CollnPaintDisplayDialog<A, C, CID>
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static,
             CID: CollnIdInterface + 'static,
 {
     fn id_no(&self) -> u32 { self.id_no }
+
+    fn destroyed_callbacks(&self) -> &RefCell<Vec<Box<Fn(u32)>>> {
+        &self.destroyed_callbacks
+    }
 }
 
 pub trait CollnPaintDisplayDialogInterface<A, C, CID>
@@ -68,7 +72,7 @@ pub trait CollnPaintDisplayDialogInterface<A, C, CID>
     ) -> CollnPaintDisplayDialog<A, C, CID>;
 }
 
-impl<A, C, CID> PaintDisplayDialogCreate<A, C, CollnPaint<C, CID>> for CollnPaintDisplayDialog<A, C, CID>
+impl<A, C, CID> PaintDisplayWithCurrentTarget<A, C, CollnPaint<C, CID>> for CollnPaintDisplayDialog<A, C, CID>
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static,
             CID: CollnIdInterface + 'static,
@@ -134,7 +138,7 @@ impl<A, C, CID> PaintDisplayDialogCreate<A, C, CollnPaint<C, CID>> for CollnPain
                 current_target_label: current_target_label,
                 cads: cads,
                 id_no: get_id_for_dialog(),
-                destroyed_callbacks: RefCell::new(Vec::new()),
+                destroyed_callbacks: DestroyedCallbacks::create(),
             }
         );
         cpd_dialog.set_current_target(current_target);
@@ -163,16 +167,6 @@ impl<A, C, CID> PaintDisplayDialogCreate<A, C, CollnPaint<C, CID>> for CollnPain
                 self.current_target_label.set_widget_colour(&self.paint.colour());
                 self.cads.set_target_colour(None);
             };
-        }
-    }
-
-    fn connect_destroyed<F: 'static + Fn(u32)>(&self, callback: F) {
-        self.destroyed_callbacks.borrow_mut().push(Box::new(callback))
-    }
-
-    fn inform_destroyed(&self) {
-        for callback in self.destroyed_callbacks.borrow().iter() {
-            callback(self.id_no);
         }
     }
 }

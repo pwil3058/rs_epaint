@@ -27,13 +27,13 @@ use pw_gix::gtkx::menu::*;
 use pw_gix::wrapper::*;
 
 use basic_paint::*;
-use dialogue::PaintDisplayDialogCreate;
+use dialogue::PaintDisplayWithCurrentTarget;
 
 pub trait PaintPartsSpinButtonInterface<A, C, P, D>
     where   C: CharacteristicsInterface + 'static,
             A: ColourAttributesInterface + 'static,
             P: BasicPaintInterface<C> + 'static,
-            D: PaintDisplayDialogCreate<A, C, P> + 'static,
+            D: PaintDisplayWithCurrentTarget<A, C, P> + 'static,
 {
     fn create_with(paint: &P, current_target: Option<&Colour>, sensitive:bool) -> PaintPartsSpinButton<A, C, P, D>;
     fn inform_remove_me(&self);
@@ -43,7 +43,7 @@ pub struct PaintPartsSpinButtonCore<A, C, P, D>
     where   C: CharacteristicsInterface + 'static,
             A: ColourAttributesInterface + 'static,
             P: BasicPaintInterface<C> + 'static,
-            D: PaintDisplayDialogCreate<A, C, P> + 'static,
+            D: PaintDisplayWithCurrentTarget<A, C, P> + 'static,
 {
     event_box: gtk::EventBox,
     entry: gtk::SpinButton,
@@ -60,7 +60,7 @@ impl<A, C, P, D> PartialEq for PaintPartsSpinButtonCore<A, C, P, D>
     where   C: CharacteristicsInterface + 'static,
             A: ColourAttributesInterface + 'static,
             P: BasicPaintInterface<C> + 'static,
-            D: PaintDisplayDialogCreate<A, C, P> + 'static,
+            D: PaintDisplayWithCurrentTarget<A, C, P> + 'static,
 {
     fn eq(&self, other: &PaintPartsSpinButtonCore<A, C, P, D>) -> bool {
         self.paint == other.paint
@@ -71,7 +71,7 @@ impl<A, C, P, D> WidgetWrapper for PaintPartsSpinButtonCore<A, C, P, D>
     where   C: CharacteristicsInterface + 'static,
             A: ColourAttributesInterface + 'static,
             P: BasicPaintInterface<C> + 'static,
-            D: PaintDisplayDialogCreate<A, C, P> + 'static,
+            D: PaintDisplayWithCurrentTarget<A, C, P> + 'static,
 {
     type PWT = gtk::EventBox;
 
@@ -86,7 +86,7 @@ impl<A, C, P, D> PaintPartsSpinButtonInterface<A, C, P, D> for PaintPartsSpinBut
     where   C: CharacteristicsInterface + 'static,
             A: ColourAttributesInterface + 'static,
             P: BasicPaintInterface<C> + 'static,
-            D: PaintDisplayDialogCreate<A, C, P> + 'static,
+            D: PaintDisplayWithCurrentTarget<A, C, P> + 'static,
 {
     fn create_with(paint: &P, current_target: Option<&Colour>, sensitive:bool) -> PaintPartsSpinButton<A, C, P, D> {
         let adj = gtk::Adjustment::new(0.0, 0.0, 999.0, 1.0, 10.0, 0.0);
@@ -193,7 +193,7 @@ impl<A, C, P, D> PaintPartsSpinButtonCore<A, C, P, D>
     where   C: CharacteristicsInterface + 'static,
             A: ColourAttributesInterface + 'static,
             P: BasicPaintInterface<C> + 'static,
-            D: PaintDisplayDialogCreate<A, C, P> + 'static,
+            D: PaintDisplayWithCurrentTarget<A, C, P> + 'static,
 {
     fn paint(&self) -> P {
         self.paint.clone()
@@ -265,7 +265,7 @@ pub trait PaintComponentsBoxInterface<A, C, P, D>
     where   C: CharacteristicsInterface + 'static,
             A: ColourAttributesInterface + 'static,
             P: BasicPaintInterface<C> + 'static,
-            D: PaintDisplayDialogCreate<A, C, P> + 'static
+            D: PaintDisplayWithCurrentTarget<A, C, P> + 'static
 {
     fn create_with(n_cols: u32, sensitive:bool) -> PaintComponentsBox<A, C, P, D>;
     fn add_paint(&self, paint: &P);
@@ -275,7 +275,7 @@ pub struct PaintComponentsBoxCore<A, C, P, D>
     where   C: CharacteristicsInterface + 'static,
             A: ColourAttributesInterface + 'static,
             P: BasicPaintInterface<C> + 'static,
-            D: PaintDisplayDialogCreate<A, C, P> + 'static
+            D: PaintDisplayWithCurrentTarget<A, C, P> + 'static
 {
     vbox: gtk::Box,
     spin_buttons: RefCell<Vec<PaintPartsSpinButton<A, C, P, D>>>,
@@ -293,7 +293,7 @@ impl<A, C, P, D> WidgetWrapper for PaintComponentsBoxCore<A, C, P, D>
     where   C: CharacteristicsInterface + 'static,
             A: ColourAttributesInterface + 'static,
             P: BasicPaintInterface<C> + 'static,
-            D: PaintDisplayDialogCreate<A, C, P> + 'static
+            D: PaintDisplayWithCurrentTarget<A, C, P> + 'static
 {
     type PWT = gtk::Box;
 
@@ -306,7 +306,7 @@ impl<A, C, P, D> PaintComponentsBoxCore<A, C, P, D>
     where   C: CharacteristicsInterface + 'static,
             A: ColourAttributesInterface + 'static,
             P: BasicPaintInterface<C> + 'static,
-            D: PaintDisplayDialogCreate<A, C, P> + 'static
+            D: PaintDisplayWithCurrentTarget<A, C, P> + 'static
 {
     fn find_paint_index(&self, paint: &P) -> Result<usize, usize> {
         let result = self.spin_buttons.borrow().binary_search_by_key(
@@ -478,7 +478,7 @@ impl<A, C, P, D> PaintComponentsBoxInterface<A, C, P, D> for PaintComponentsBox<
     where   C: CharacteristicsInterface + 'static,
             A: ColourAttributesInterface + 'static,
             P: BasicPaintInterface<C> + 'static,
-            D: PaintDisplayDialogCreate<A, C, P> + 'static
+            D: PaintDisplayWithCurrentTarget<A, C, P> + 'static
 {
     fn create_with(n_cols: u32, sensitive:bool) -> PaintComponentsBox<A, C, P, D> {
         let pcb_core = PaintComponentsBoxCore::<A, C, P, D> {

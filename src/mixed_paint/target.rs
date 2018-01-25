@@ -27,7 +27,7 @@ use pw_gix::gtkx::dialog::*;
 use app_name;
 use basic_paint::*;
 use colour_edit::*;
-use dialogue::new_display_dialog;
+use dialogue::*;
 
 #[derive(Debug, Hash)]
 pub struct TargetColourCore {
@@ -102,15 +102,15 @@ pub struct TargetColourDisplayDialogCore<A>
     cads: PhantomData<A>,
 }
 
-impl<A> TargetColourDisplayDialogCore<A>
+pub type TargetColourDisplayDialog<A> = Rc<TargetColourDisplayDialogCore<A>>;
+
+impl<A> DialogWrapper for TargetColourDisplayDialog<A>
     where   A: ColourAttributesInterface
 {
-    pub fn show(&self) {
-        self.dialog.show()
+    fn dialog(&self) -> gtk::Dialog {
+        self.dialog.clone()
     }
 }
-
-pub type TargetColourDisplayDialog<A> = Rc<TargetColourDisplayDialogCore<A>>;
 
 pub trait TargetColourDisplayDialogInterface<A>
     where   A: ColourAttributesInterface

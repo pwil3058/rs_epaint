@@ -154,6 +154,7 @@ pub mod error {
 }
 
 pub mod dialogue {
+    use std::cell::RefCell;
     use std::rc::Rc;
 
     use glib::signal::SignalHandlerId;
@@ -230,11 +231,46 @@ pub mod dialogue {
         id
     }
 
-    pub trait DialogIdentifier {
-        fn id_no(&self) -> u32;
+    pub type DestroyedCallbacks = RefCell<Vec<Box<Fn(u32)>>>;
+
+    pub trait DestroyedCallbacksIfce {
+        fn create() -> DestroyedCallbacks;
     }
 
-    pub trait PaintDisplayDialogCreate<A, C, P>: DialogWrapper + DialogIdentifier
+    impl DestroyedCallbacksIfce for DestroyedCallbacks {
+        fn create() -> DestroyedCallbacks { RefCell::new(Vec::new()) }
+    }
+
+    pub trait TrackedDialog {
+        fn id_no(&self) -> u32;
+        fn destroyed_callbacks(&self) -> &DestroyedCallbacks;
+
+        fn connect_destroyed<F: 'static + Fn(u32)>(&self, callback: F) {
+            self.destroyed_callbacks().borrow_mut().push(Box::new(callback))
+        }
+
+        fn inform_destroyed(&self) {
+            for callback in self.destroyed_callbacks().borrow().iter() {
+                callback(self.id_no());
+            }
+        }
+    }
+
+    pub trait PaintDisplay<A, C, P>: DialogWrapper + TrackedDialog
+        where   C: CharacteristicsInterface + 'static,
+                A: ColourAttributesInterface + 'static,
+                P: BasicPaintInterface<C> + 'static,
+    {
+        fn create<W: WidgetWrapper>(
+            paint: &P,
+            caller: &Rc<W>,
+            button_specs: Vec<PaintDisplayButtonSpec>,
+        ) -> Self;
+
+        fn paint(&self) -> P;
+    }
+
+    pub trait PaintDisplayWithCurrentTarget<A, C, P>: DialogWrapper + TrackedDialog
         where   C: CharacteristicsInterface + 'static,
                 A: ColourAttributesInterface + 'static,
                 P: BasicPaintInterface<C> + 'static,
@@ -248,11 +284,7 @@ pub mod dialogue {
 
         fn paint(&self) -> P;
         fn set_current_target(&self, new_current_target: Option<&Colour>);
-
-        fn connect_destroyed<F: 'static + Fn(u32)>(&self, callback: F);
-        fn inform_destroyed(&self);
     }
-
 }
 
 pub mod basic_paint;

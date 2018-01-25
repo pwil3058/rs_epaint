@@ -45,7 +45,7 @@ pub struct MixedPaintDisplayDialogCore<A, C>
     cads: Rc<A>,
     components_view: PaintComponentListView<A, C>,
     id_no: u32,
-    destroyed_callbacks: RefCell<Vec<Box<Fn(u32)>>>
+    destroyed_callbacks: DestroyedCallbacks
 }
 
 pub type MixedPaintDisplayDialog<A, C> = Rc<MixedPaintDisplayDialogCore<A, C>>;
@@ -57,14 +57,18 @@ impl<A, C> DialogWrapper for MixedPaintDisplayDialog<A, C>
     fn dialog(&self) -> gtk::Dialog { self.dialog. clone() }
 }
 
-impl<A, C> DialogIdentifier for MixedPaintDisplayDialog<A, C>
+impl<A, C> TrackedDialog for MixedPaintDisplayDialog<A, C>
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static,
 {
     fn id_no(&self) -> u32 { self.id_no }
+
+    fn destroyed_callbacks(&self) -> &DestroyedCallbacks {
+        &self.destroyed_callbacks
+    }
 }
 
-impl<A, C> PaintDisplayDialogCreate<A, C, MixedPaint<C>> for MixedPaintDisplayDialog<A, C>
+impl<A, C> PaintDisplayWithCurrentTarget<A, C, MixedPaint<C>> for MixedPaintDisplayDialog<A, C>
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static,
 {
@@ -123,7 +127,7 @@ impl<A, C> PaintDisplayDialogCreate<A, C, MixedPaint<C>> for MixedPaintDisplayDi
                 cads: cads,
                 components_view: components_view,
                 id_no: get_id_for_dialog(),
-                destroyed_callbacks: RefCell::new(Vec::new()),
+                destroyed_callbacks: DestroyedCallbacks::create(),
             }
         );
         spd_dialog.set_current_target(current_target);
@@ -153,16 +157,6 @@ impl<A, C> PaintDisplayDialogCreate<A, C, MixedPaint<C>> for MixedPaintDisplayDi
             self.cads.set_target_colour(None);
             self.components_view.set_target_colour(None);
         };
-    }
-
-    fn connect_destroyed<F: 'static + Fn(u32)>(&self, callback: F) {
-        self.destroyed_callbacks.borrow_mut().push(Box::new(callback))
-    }
-
-    fn inform_destroyed(&self) {
-        for callback in self.destroyed_callbacks.borrow().iter() {
-            callback(self.id_no);
-        }
     }
 }
 
