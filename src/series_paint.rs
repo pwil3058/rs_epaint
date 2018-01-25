@@ -94,7 +94,7 @@ pub type SeriesPaintCollnSpec<C> = PaintCollnSpec<C, PaintSeriesId>;
 
 pub type SeriesPaintCollnBinder<A, C> = CollnPaintCollnBinder<A, C, PaintSeriesId>;
 pub type SeriesPaintDisplayDialog<A, C> = CollnPaintDisplayDialog<A, C, PaintSeriesId>;
-pub type SeriesPaintEditor<A, C> = BasicPaintEditor<A, C, PaintSeriesId>;
+pub type SeriesPaintEditor<A, C> = CollnPaintEditor<A, C, PaintSeriesId>;
 
 const TOOLTIP_TEXT: &str =
 "Open the Series Paint Manager.

@@ -26,13 +26,14 @@ pub use pw_gix::wrapper::WidgetWrapper;
 
 use pw_pathux;
 
-use colln_paint::*;
 use icons::file_status_xpms::*;
 
 pub use struct_traits::SimpleCreation;
 
-use super::factory::*;
-use super::entry::*;
+use basic_paint::factory::*;
+use basic_paint::entry::*;
+
+use super::*;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum FileStatus {
@@ -69,7 +70,7 @@ struct FileData<C, CID>
     pub spec: PaintCollnSpec<C, CID>
 }
 
-pub struct BasicPaintEditorCore<A, C, CID>
+pub struct CollnPaintEditorCore<A, C, CID>
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static,
             CID: CollnIdInterface + 'static,
@@ -93,7 +94,7 @@ pub struct BasicPaintEditorCore<A, C, CID>
     file_status_btn: gtk::Button,
 }
 
-impl<A, C, CID> BasicPaintEditorCore<A, C, CID>
+impl<A, C, CID> CollnPaintEditorCore<A, C, CID>
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static,
             CID: CollnIdInterface + 'static,
@@ -428,7 +429,7 @@ impl<A, C, CID> BasicPaintEditorCore<A, C, CID>
     }
 }
 
-impl<A, C, CID> WidgetWrapper for BasicPaintEditorCore<A, C, CID>
+impl<A, C, CID> WidgetWrapper for CollnPaintEditorCore<A, C, CID>
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static,
             CID: CollnIdInterface + 'static,
@@ -440,14 +441,14 @@ impl<A, C, CID> WidgetWrapper for BasicPaintEditorCore<A, C, CID>
     }
 }
 
-pub type BasicPaintEditor<A, C, CID> = Rc<BasicPaintEditorCore<A, C, CID>>;
+pub type CollnPaintEditor<A, C, CID> = Rc<CollnPaintEditorCore<A, C, CID>>;
 
-impl<A, C, CID> SimpleCreation for BasicPaintEditor<A, C, CID>
+impl<A, C, CID> SimpleCreation for CollnPaintEditor<A, C, CID>
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static,
             CID: CollnIdInterface + 'static,
 {
-    fn create() -> BasicPaintEditor<A, C, CID> {
+    fn create() -> CollnPaintEditor<A, C, CID> {
         let add_paint_btn = gtk::Button::new_with_label("Add");
         add_paint_btn.set_tooltip_text("Add the paint defined by this specification to the collection");
         let accept_changes_btn = gtk::Button::new_with_label("Accept");
@@ -469,7 +470,7 @@ impl<A, C, CID> SimpleCreation for BasicPaintEditor<A, C, CID>
         file_status_btn.set_image(&up_to_date_image(24));
 
         let bpe = Rc::new(
-            BasicPaintEditorCore::<A, C, CID> {
+            CollnPaintEditorCore::<A, C, CID> {
                 vbox: gtk::Box::new(gtk::Orientation::Vertical, 1),
                 h_paned: gtk::Paned::new(gtk::Orientation::Horizontal),
                 basic_paint_factory: BasicPaintFactoryDisplay::<A, C>::create(),

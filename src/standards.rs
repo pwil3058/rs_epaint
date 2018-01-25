@@ -93,7 +93,7 @@ pub type PaintStandardCollnSpec<C> = PaintCollnSpec<C, PaintStandardId>;
 
 pub type PaintStandardCollnBinder<A, C> = CollnPaintCollnBinder<A, C, PaintStandardId>;
 pub type PaintStandardDisplayDialog<A, C> = CollnPaintDisplayDialog<A, C, PaintStandardId>;
-pub type PaintStandardEditor<A, C> = BasicPaintEditor<A, C, PaintStandardId>;
+pub type PaintStandardEditor<A, C> = CollnPaintEditor<A, C, PaintStandardId>;
 
 const TOOLTIP_TEXT: &str =
 "Open the Series Paint Manager.

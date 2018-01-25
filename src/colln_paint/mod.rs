@@ -28,7 +28,6 @@ use gtk;
 use gtk::prelude::*;
 
 use pw_gix::colour::*;
-pub use pw_gix::rgb_math::rgb::*;
 use pw_gix::wrapper::*;
 
 pub mod binder;
