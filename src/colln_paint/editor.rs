@@ -21,6 +21,7 @@ use std::rc::Rc;
 use pw_gix::gtkx::coloured::*;
 use pw_gix::gtkx::paned::RememberPosition;
 use pw_gix::recollections::{recall, remember};
+use pw_gix::rgb_math::rgb::*;
 pub use pw_gix::wrapper::WidgetWrapper;
 
 use pw_pathux;
@@ -30,7 +31,6 @@ use icons::file_status_xpms::*;
 
 pub use struct_traits::SimpleCreation;
 
-use super::*;
 use super::factory::*;
 use super::entry::*;
 
