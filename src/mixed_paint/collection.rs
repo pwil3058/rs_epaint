@@ -39,12 +39,12 @@ use super::components::*;
 use super::display::*;
 use super::target::TargetColourInterface;
 
-pub struct MixedPaintCollectionCore<C: CharacteristicsInterface> {
+pub struct MixedPaintFactoryCore<C: CharacteristicsInterface> {
     last_mixture_id: Cell<u32>,
     paints: RefCell<Vec<MixedPaint<C>>>
 }
 
-impl<C: CharacteristicsInterface> MixedPaintCollectionCore<C> {
+impl<C: CharacteristicsInterface> MixedPaintFactoryCore<C> {
     fn find_name(&self, name: &str) -> Result<usize, usize> {
         let result = self.paints.borrow().binary_search_by_key(
             &name.to_string(),
@@ -178,19 +178,19 @@ impl<C: CharacteristicsInterface> MixedPaintCollectionCore<C> {
     }
 }
 
-pub type MixedPaintCollection<C> = Rc<MixedPaintCollectionCore<C>>;
+pub type MixedPaintFactory<C> = Rc<MixedPaintFactoryCore<C>>;
 
-pub trait MixedPaintCollectionInterface<C: CharacteristicsInterface> {
-    fn create() -> MixedPaintCollection<C>;
+pub trait MixedPaintFactoryInterface<C: CharacteristicsInterface> {
+    fn create() -> MixedPaintFactory<C>;
 }
 
-impl<C> MixedPaintCollectionInterface<C> for MixedPaintCollection<C>
+impl<C> MixedPaintFactoryInterface<C> for MixedPaintFactory<C>
     where   C: CharacteristicsInterface
 {
-    fn create() -> MixedPaintCollection<C> {
+    fn create() -> MixedPaintFactory<C> {
         let last_mixture_id: Cell<u32> = Cell::new(0);
         let paints: RefCell<Vec<MixedPaint<C>>> = RefCell::new(Vec::new());
-        Rc::new(MixedPaintCollectionCore::<C>{last_mixture_id, paints})
+        Rc::new(MixedPaintFactoryCore::<C>{last_mixture_id, paints})
     }
 }
 
@@ -205,7 +205,7 @@ pub struct MixedPaintCollectionWidgetCore<A, C>
     list_store: gtk::ListStore,
     view: gtk::TreeView,
     popup_menu: WrappedMenu,
-    collection: MixedPaintCollection<C>,
+    factory: MixedPaintFactory<C>,
     components: MixedPaintComponentBox<A, C>,
     chosen_paint: RefCell<Option<MixedPaint<C>>>,
     current_target: RefCell<Option<Colour>>,
@@ -220,7 +220,7 @@ impl<A, C> MixedPaintCollectionWidgetCore<A, C>
             C: CharacteristicsInterface + 'static,
 {
     pub fn next_mixture_id(&self) -> u32 {
-        self.collection.next_mixture_id()
+        self.factory.next_mixture_id()
     }
 
     fn get_mixed_paint_at(&self, posn: (f64, f64)) -> Option<MixedPaint<C>> {
@@ -232,7 +232,7 @@ impl<A, C> MixedPaintCollectionWidgetCore<A, C>
                     let name: String = self.list_store.get_value(&iter, MP_NAME).get().unwrap_or_else(
                         || panic!("File: {:?} Line: {:?}", file!(), line!())
                     );
-                    let paint = self.collection.get_paint(&name).unwrap_or_else(
+                    let paint = self.factory.get_paint(&name).unwrap_or_else(
                         || panic!("File: {:?} Line: {:?}", file!(), line!())
                     );
                     return Some(paint)
@@ -280,7 +280,7 @@ impl<A, C> MixedPaintCollectionWidgetCore<A, C>
         mp_components: Vec<(MixedPaint<C>, u32)>,
         matched_colour: Option<Colour>
     ) -> Result<MixedPaint<C>, PaintError<C>> {
-        match self.collection.add_paint(notes, sp_components, mp_components, matched_colour) {
+        match self.factory.add_paint(notes, sp_components, mp_components, matched_colour) {
             Ok(mixed_paint) => {
                 self.list_store.append_row(&mixed_paint.tv_rows());
                 Ok(mixed_paint)
@@ -298,7 +298,7 @@ impl<A, C> MixedPaintCollectionWidgetCore<A, C>
     fn set_notes_for_paint_at(&self, iter: &gtk::TreeIter, new_notes: &str) {
         let o_paint_name: Option<String> = self.list_store.get_value(iter, MP_NAME).get();
         if let Some(ref paint_name) = o_paint_name {
-            if let Some(paint) = self.collection.get_paint(paint_name) {
+            if let Some(paint) = self.factory.get_paint(paint_name) {
                 paint.set_notes(new_notes);
                 self.list_store.set_value(iter, MP_NOTES as u32, &new_notes.into());
             } else {
@@ -313,7 +313,7 @@ impl<A, C> MixedPaintCollectionWidgetCore<A, C>
         if self.components.is_being_used(paint) {
             return Err(PaintErrorType::PartOfCurrentMixture.into())
         };
-        self.collection.remove_paint(paint)?;
+        self.factory.remove_paint(paint)?;
         self.components.remove_paint(paint);
         if let Some((_, iter)) = self.find_paint_named(&paint.name()) {
             self.list_store.remove(&iter);
@@ -324,11 +324,11 @@ impl<A, C> MixedPaintCollectionWidgetCore<A, C>
     }
 
     pub fn series_paints_used(&self) -> Vec<SeriesPaint<C>> {
-        self.collection.series_paints_used()
+        self.factory.series_paints_used()
     }
 
     pub fn get_paints(&self) -> Vec<MixedPaint<C>> {
-        self.collection.get_paints()
+        self.factory.get_paints()
     }
 
     // Components interface
@@ -354,17 +354,17 @@ pub trait MixedPaintCollectionWidgetInterface<A, C>
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static,
 {
-    fn create(collection: &MixedPaintCollection<C>, mixing_mode: MixingMode) -> MixedPaintCollectionWidget<A, C>;
+    fn create(factory: &MixedPaintFactory<C>, mixing_mode: MixingMode) -> MixedPaintCollectionWidget<A, C>;
 }
 
 impl<A, C> MixedPaintCollectionWidgetInterface<A, C> for MixedPaintCollectionWidget<A, C>
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static,
 {
-    fn create(collection: &MixedPaintCollection<C>, mixing_mode: MixingMode) -> MixedPaintCollectionWidget<A, C> {
+    fn create(factory: &MixedPaintFactory<C>, mixing_mode: MixingMode) -> MixedPaintCollectionWidget<A, C> {
         let len = MixedPaint::<C>::tv_row_len();
         let list_store = gtk::ListStore::new(&MIXED_PAINT_ROW_SPEC[0..len]);
-        for paint in collection.get_paints().iter() {
+        for paint in factory.get_paints().iter() {
             list_store.append_row(&paint.tv_rows());
         }
         let view = gtk::TreeView::new_with_model(&list_store.clone());
@@ -377,7 +377,7 @@ impl<A, C> MixedPaintCollectionWidgetInterface<A, C> for MixedPaintCollectionWid
                 scrolled_window: gtk::ScrolledWindow::new(None, None),
                 list_store: list_store,
                 popup_menu: WrappedMenu::new(&vec![]),
-                collection: collection.clone(),
+                factory: factory.clone(),
                 components: MixedPaintComponentBox::<A, C>::create_with(4, true),
                 view: view,
                 chosen_paint: RefCell::new(None),
