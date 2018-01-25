@@ -312,7 +312,6 @@ impl<A, C> PaintMixerInterface<A, C> for PaintMixer<A, C>
         for attr in A::scalar_attributes().iter() {
             view_attr_wheels.push(MixerHueAttrWheel::<A, C>::create(*attr));
         }
-        let mixed_paint_factory = MixedPaintFactory::<C>::create();
         let o_paint_standards_manager = if let Some(path) = paint_standards_data_path {
             Some(PaintStandardManager::<A, C>::create(path))
         } else {
@@ -325,7 +324,7 @@ impl<A, C> PaintMixerInterface<A, C> for PaintMixer<A, C>
                 hue_attr_wheels: view_attr_wheels,
                 colour_match_area: ColourMatchArea::create(mixing_mode),
                 series_paint_components: SeriesPaintComponentBox::<A, C>::create_with(4, true),
-                mixed_paints: MixedPaintCollectionWidget::<A, C>::create(&mixed_paint_factory, mixing_mode),
+                mixed_paints: MixedPaintCollectionWidget::<A, C>::create(mixing_mode),
                 notes: gtk::Entry::new(),
                 next_name_label: gtk::Label::new(Some("#???:")),
                 mixed_paint_notes: gtk::Entry::new(),

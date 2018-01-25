@@ -354,19 +354,16 @@ pub trait MixedPaintCollectionWidgetInterface<A, C>
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static,
 {
-    fn create(factory: &MixedPaintFactory<C>, mixing_mode: MixingMode) -> MixedPaintCollectionWidget<A, C>;
+    fn create(mixing_mode: MixingMode) -> MixedPaintCollectionWidget<A, C>;
 }
 
 impl<A, C> MixedPaintCollectionWidgetInterface<A, C> for MixedPaintCollectionWidget<A, C>
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static,
 {
-    fn create(factory: &MixedPaintFactory<C>, mixing_mode: MixingMode) -> MixedPaintCollectionWidget<A, C> {
+    fn create(mixing_mode: MixingMode) -> MixedPaintCollectionWidget<A, C> {
         let len = MixedPaint::<C>::tv_row_len();
         let list_store = gtk::ListStore::new(&MIXED_PAINT_ROW_SPEC[0..len]);
-        for paint in factory.get_paints().iter() {
-            list_store.append_row(&paint.tv_rows());
-        }
         let view = gtk::TreeView::new_with_model(&list_store.clone());
         view.set_headers_visible(true);
         view.get_selection().set_mode(gtk::SelectionMode::Single);
@@ -377,7 +374,7 @@ impl<A, C> MixedPaintCollectionWidgetInterface<A, C> for MixedPaintCollectionWid
                 scrolled_window: gtk::ScrolledWindow::new(None, None),
                 list_store: list_store,
                 popup_menu: WrappedMenu::new(&vec![]),
-                factory: factory.clone(),
+                factory: MixedPaintFactory::create(),
                 components: MixedPaintComponentBox::<A, C>::create_with(4, true),
                 view: view,
                 chosen_paint: RefCell::new(None),
