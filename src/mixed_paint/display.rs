@@ -35,17 +35,6 @@ use series_paint::*;
 
 use super::*;
 
-static mut NEXT_DIALOG_ID: u32 = 0;
-
-fn get_id_for_dialog() -> u32 {
-    let id: u32;
-    unsafe {
-        id = NEXT_DIALOG_ID;
-        NEXT_DIALOG_ID += 1;
-    }
-    id
-}
-
 pub struct MixedPaintDisplayDialogCore<A, C>
     where   C: CharacteristicsInterface + 'static,
             A: ColourAttributesInterface + 'static

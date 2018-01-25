@@ -22,18 +22,7 @@ use pw_gix::gtkx::coloured::*;
 use pw_gix::gtkx::dialog::*;
 
 use super::*;
-pub use dialogue::{PaintDisplayButtonSpec, new_display_dialog};
-
-static mut NEXT_DIALOG_ID: u32 = 0;
-
-fn get_id_for_dialog() -> u32 {
-    let id: u32;
-    unsafe {
-        id = NEXT_DIALOG_ID;
-        NEXT_DIALOG_ID += 1;
-    }
-    id
-}
+pub use dialogue::*;
 
 pub struct CollnPaintDisplayDialogCore<A, C, CID>
     where   C: CharacteristicsInterface + 'static,
@@ -45,65 +34,26 @@ pub struct CollnPaintDisplayDialogCore<A, C, CID>
     current_target_label: gtk::Label,
     cads: Rc<A>,
     id_no: u32,
-    destroy_callbacks: RefCell<Vec<Box<Fn(u32)>>>,
-}
-
-impl<A, C, CID> CollnPaintDisplayDialogCore<A, C, CID>
-    where   C: CharacteristicsInterface + 'static,
-            A: ColourAttributesInterface + 'static,
-            CID: CollnIdInterface + 'static,
-{
-    pub fn show(&self) {
-        self.dialog.show()
-    }
-
-    pub fn present(&self) {
-        self.dialog.present()
-    }
-
-    pub fn close(&self) {
-        self.dialog.close()
-    }
-
-    pub fn set_response_sensitive(&self, response_id: i32, setting: bool) {
-        self.dialog.set_response_sensitive(response_id, setting);
-    }
-
-    pub fn paint(&self) -> CollnPaint<C, CID> {
-        self.paint.clone()
-    }
-
-    pub fn id_no(&self) -> u32 {
-        self.id_no
-    }
-
-    pub fn set_current_target(&self, new_current_target: Option<&Colour>) {
-        if CID::display_current_target() {
-            if let Some(ref colour) = new_current_target {
-                self.current_target_label.set_label("Current Target");
-                self.current_target_label.set_widget_colour(&colour);
-                self.cads.set_target_colour(Some(&colour));
-            } else {
-                self.current_target_label.set_label("");
-                self.current_target_label.set_widget_colour(&self.paint.colour());
-                self.cads.set_target_colour(None);
-            };
-        }
-    }
-
-    pub fn connect_destroy<F: 'static + Fn(u32)>(&self, callback: F) {
-        self.destroy_callbacks.borrow_mut().push(Box::new(callback))
-    }
-
-    pub fn inform_destroy(&self) {
-        for callback in self.destroy_callbacks.borrow().iter() {
-            callback(self.id_no);
-        }
-    }
-
+    destroyed_callbacks: RefCell<Vec<Box<Fn(u32)>>>,
 }
 
 pub type CollnPaintDisplayDialog<A, C, CID> = Rc<CollnPaintDisplayDialogCore<A, C, CID>>;
+
+impl<A, C, CID> DialogWrapper for CollnPaintDisplayDialog<A, C, CID>
+    where   A: ColourAttributesInterface + 'static,
+            C: CharacteristicsInterface + 'static,
+            CID: CollnIdInterface + 'static,
+{
+    fn dialog(&self) -> gtk::Dialog { self.dialog. clone() }
+}
+
+impl<A, C, CID> DialogIdentifier for CollnPaintDisplayDialog<A, C, CID>
+    where   A: ColourAttributesInterface + 'static,
+            C: CharacteristicsInterface + 'static,
+            CID: CollnIdInterface + 'static,
+{
+    fn id_no(&self) -> u32 { self.id_no }
+}
 
 pub trait CollnPaintDisplayDialogInterface<A, C, CID>
     where   C: CharacteristicsInterface + 'static,
@@ -116,17 +66,9 @@ pub trait CollnPaintDisplayDialogInterface<A, C, CID>
         caller: &Rc<W>,
         button_specs: Vec<PaintDisplayButtonSpec>,
     ) -> CollnPaintDisplayDialog<A, C, CID>;
-
-    fn create_without_target<W: WidgetWrapper>(
-        paint: &CollnPaint<C, CID>,
-        caller: &Rc<W>,
-        button_specs: Vec<PaintDisplayButtonSpec>,
-    ) -> CollnPaintDisplayDialog<A, C, CID> {
-        Self::create(paint, None, caller, button_specs)
-    }
 }
 
-impl<A, C, CID> CollnPaintDisplayDialogInterface<A, C, CID> for CollnPaintDisplayDialog<A, C, CID>
+impl<A, C, CID> PaintDisplayDialogCreate<A, C, CollnPaint<C, CID>> for CollnPaintDisplayDialog<A, C, CID>
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static,
             CID: CollnIdInterface + 'static,
@@ -192,18 +134,46 @@ impl<A, C, CID> CollnPaintDisplayDialogInterface<A, C, CID> for CollnPaintDispla
                 current_target_label: current_target_label,
                 cads: cads,
                 id_no: get_id_for_dialog(),
-                destroy_callbacks: RefCell::new(Vec::new()),
+                destroyed_callbacks: RefCell::new(Vec::new()),
             }
         );
         cpd_dialog.set_current_target(current_target);
         let cpd_dialog_c = cpd_dialog.clone();
         cpd_dialog.dialog.connect_destroy(
             move |_| {
-                cpd_dialog_c.inform_destroy()
+                cpd_dialog_c.inform_destroyed()
             }
         );
 
         cpd_dialog
+    }
+
+    fn paint(&self) -> CollnPaint<C, CID> {
+        self.paint.clone()
+    }
+
+    fn set_current_target(&self, new_current_target: Option<&Colour>) {
+        if CID::display_current_target() {
+            if let Some(ref colour) = new_current_target {
+                self.current_target_label.set_label("Current Target");
+                self.current_target_label.set_widget_colour(&colour);
+                self.cads.set_target_colour(Some(&colour));
+            } else {
+                self.current_target_label.set_label("");
+                self.current_target_label.set_widget_colour(&self.paint.colour());
+                self.cads.set_target_colour(None);
+            };
+        }
+    }
+
+    fn connect_destroyed<F: 'static + Fn(u32)>(&self, callback: F) {
+        self.destroyed_callbacks.borrow_mut().push(Box::new(callback))
+    }
+
+    fn inform_destroyed(&self) {
+        for callback in self.destroyed_callbacks.borrow().iter() {
+            callback(self.id_no);
+        }
     }
 }
 
