@@ -93,8 +93,7 @@ impl<C: CharacteristicsInterface> MixedPaintFactoryCore<C> {
         total_parts /= gcd;
         let mut new_rgb: RGB = BLACK;
         let mut p_components: Vec<PaintComponent<C>> = Vec::new();
-        let mut new_c_floats: Vec<f64> = Vec::new();
-        for _ in 0..C::tv_row_len() { new_c_floats.push(0.0); }
+        let mut new_c_floats = vec![0.0_f64; C::tv_row_len()];
         for (series_paint, mut parts) in sp_components {
             if parts > 0 {
                 parts /= gcd;
