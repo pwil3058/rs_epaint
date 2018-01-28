@@ -115,7 +115,7 @@ impl ColourMatchAreaCore {
 
 pub type ColourMatchArea = Rc<ColourMatchAreaCore>;
 
-impl_widget_wrapper!(ColourMatchAreaCore, drawing_area, gtk::DrawingArea);
+impl_widget_wrapper!(drawing_area: gtk::DrawingArea, ColourMatchAreaCore);
 
 pub trait ColourMatchAreaInterface {
     type ColourMatchAreaType;

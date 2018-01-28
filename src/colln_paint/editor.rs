@@ -429,17 +429,11 @@ impl<A, C, CID> CollnPaintEditorCore<A, C, CID>
     }
 }
 
-impl<A, C, CID> WidgetWrapper for CollnPaintEditorCore<A, C, CID>
+impl_widget_wrapper!(vbox: gtk::Box, CollnPaintEditorCore<A, C, CID>
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static,
             CID: CollnIdInterface + 'static,
-{
-    type PWT = gtk::Box;
-
-    fn pwo(&self) -> gtk::Box {
-        self.vbox.clone()
-    }
-}
+);
 
 pub type CollnPaintEditor<A, C, CID> = Rc<CollnPaintEditorCore<A, C, CID>>;
 

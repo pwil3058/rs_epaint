@@ -308,16 +308,10 @@ impl<A, C> PaintComponentListViewCore<A, C>
     }
 }
 
-impl<A, C> WidgetWrapper for PaintComponentListViewCore<A, C>
+impl_widget_wrapper!(scrolled_window: gtk::ScrolledWindow, PaintComponentListViewCore<A, C>
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static,
-{
-    type PWT = gtk::ScrolledWindow;
-
-    fn pwo(&self) -> gtk::ScrolledWindow {
-        self.scrolled_window.clone()
-    }
-}
+);
 
 pub type PaintComponentListView<A, C> = Rc<PaintComponentListViewCore<A, C>>;
 

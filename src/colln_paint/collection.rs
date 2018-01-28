@@ -173,17 +173,11 @@ impl<A, C, CID> CollnPaintCollnViewCore<A, C, CID>
     }
 }
 
-impl<A, C, CID> WidgetWrapper for CollnPaintCollnViewCore<A, C, CID>
+impl_widget_wrapper!(scrolled_window: gtk::ScrolledWindow, CollnPaintCollnViewCore<A, C, CID>
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static,
             CID: CollnIdInterface,
-{
-    type PWT = gtk::ScrolledWindow;
-
-    fn pwo(&self) -> gtk::ScrolledWindow {
-        self.scrolled_window.clone()
-    }
-}
+);
 
 pub type CollnPaintCollnView<A, C, CID> = Rc<CollnPaintCollnViewCore<A, C, CID>>;
 
@@ -295,16 +289,10 @@ pub struct CollnPaintHueAttrWheelCore<C, CID>
     graticule: Graticule,
 }
 
-impl<C, CID> WidgetWrapper for CollnPaintHueAttrWheelCore<C, CID>
+impl_widget_wrapper!(graticule.drawing_area() -> gtk::DrawingArea, CollnPaintHueAttrWheelCore<C, CID>
     where   C: CharacteristicsInterface + 'static,
             CID: CollnIdInterface + 'static,
-{
-    type PWT = gtk::DrawingArea;
-
-    fn pwo(&self) -> gtk::DrawingArea {
-        self.graticule.drawing_area()
-    }
-}
+);
 
 pub type CollnPaintHueAttrWheel<C, CID> = Rc<CollnPaintHueAttrWheelCore<C, CID>>;
 
@@ -405,17 +393,11 @@ pub struct CollnPaintCollnWidgetCore<A, C, CID>
     paint_selected_callbacks: RefCell<Vec<Box<Fn(&CollnPaint<C, CID>)>>>,
 }
 
-impl<A, C, CID> WidgetWrapper for CollnPaintCollnWidgetCore<A, C, CID>
+impl_widget_wrapper!(vbox: gtk::Box, CollnPaintCollnWidgetCore<A, C, CID>
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static,
             CID: CollnIdInterface + 'static,
-{
-    type PWT = gtk::Box;
-
-    fn pwo(&self) -> gtk::Box {
-        self.vbox.clone()
-    }
-}
+);
 
 pub type CollnPaintCollnWidget<A, C, CID> = Rc<CollnPaintCollnWidgetCore<A, C, CID>>;
 

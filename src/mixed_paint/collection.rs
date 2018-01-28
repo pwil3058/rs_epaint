@@ -336,16 +336,10 @@ impl<A, C> MixedPaintCollectionWidgetCore<A, C>
     }
 }
 
-impl<A, C> WidgetWrapper for MixedPaintCollectionWidgetCore<A, C>
+impl_widget_wrapper!(vbox: gtk::Box, MixedPaintCollectionWidgetCore<A, C>
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static,
-{
-    type PWT = gtk::Box;
-
-    fn pwo(&self) -> gtk::Box {
-        self.vbox.clone()
-    }
-}
+);
 
 pub type MixedPaintCollectionWidget<A, C> = Rc<MixedPaintCollectionWidgetCore<A, C>>;
 

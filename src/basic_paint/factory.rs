@@ -253,16 +253,10 @@ impl<A, C> BasicPaintFactoryViewCore<A, C>
     }
 }
 
-impl<A, C> WidgetWrapper for BasicPaintFactoryViewCore<A, C>
+impl_widget_wrapper!(scrolled_window: gtk::ScrolledWindow, BasicPaintFactoryViewCore<A, C>
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static,
-{
-    type PWT = gtk::ScrolledWindow;
-
-    fn pwo(&self) -> gtk::ScrolledWindow {
-        self.scrolled_window.clone()
-    }
-}
+);
 
 pub type BasicPaintFactoryView<A, C> = Rc<BasicPaintFactoryViewCore<A, C>>;
 
@@ -426,16 +420,10 @@ impl<A, C> BasicPaintFactoryDisplayCore<A, C>
 // FACTORY DISPLAY
 pub type BasicPaintFactoryDisplay<A, C> = Rc<BasicPaintFactoryDisplayCore<A, C>>;
 
-impl<A, C> WidgetWrapper for BasicPaintFactoryDisplayCore<A, C>
+impl_widget_wrapper!(notebook: gtk::Notebook, BasicPaintFactoryDisplayCore<A, C>
     where   A: ColourAttributesInterface + 'static,
             C: CharacteristicsInterface + 'static,
-{
-    type PWT = gtk::Notebook;
-
-    fn pwo(&self) -> gtk::Notebook {
-        self.notebook.clone()
-    }
-}
+);
 
 impl<A, C> SimpleCreation for BasicPaintFactoryDisplay<A, C>
     where   A: ColourAttributesInterface + 'static,

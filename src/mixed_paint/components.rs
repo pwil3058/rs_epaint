@@ -67,18 +67,12 @@ impl<A, C, P, D> PartialEq for PaintPartsSpinButtonCore<A, C, P, D>
     }
 }
 
-impl<A, C, P, D> WidgetWrapper for PaintPartsSpinButtonCore<A, C, P, D>
+impl_widget_wrapper!(event_box: gtk::EventBox, PaintPartsSpinButtonCore<A, C, P, D>
     where   C: CharacteristicsInterface + 'static,
             A: ColourAttributesInterface + 'static,
             P: BasicPaintInterface<C> + 'static,
             D: PaintDisplayWithCurrentTarget<A, C, P> + 'static,
-{
-    type PWT = gtk::EventBox;
-
-    fn pwo(&self) -> gtk::EventBox {
-        self.event_box.clone()
-    }
-}
+);
 
 pub type PaintPartsSpinButton<A, C, P, D> = Rc<PaintPartsSpinButtonCore<A, C, P, D>>;
 
@@ -289,18 +283,12 @@ pub struct PaintComponentsBoxCore<A, C, P, D>
     paint_removed_callbacks: RefCell<Vec<Box<Fn(&P)>>>
 }
 
-impl<A, C, P, D> WidgetWrapper for PaintComponentsBoxCore<A, C, P, D>
+impl_widget_wrapper!(vbox: gtk::Box, PaintComponentsBoxCore<A, C, P, D>
     where   C: CharacteristicsInterface + 'static,
             A: ColourAttributesInterface + 'static,
             P: BasicPaintInterface<C> + 'static,
             D: PaintDisplayWithCurrentTarget<A, C, P> + 'static
-{
-    type PWT = gtk::Box;
-
-    fn pwo(&self) -> gtk::Box {
-        self.vbox.clone()
-    }
-}
+);
 
 impl<A, C, P, D> PaintComponentsBoxCore<A, C, P, D>
     where   C: CharacteristicsInterface + 'static,

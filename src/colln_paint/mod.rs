@@ -79,15 +79,9 @@ pub struct CollnIdEntryData<CID>
     phantom_data: PhantomData<CID>,
 }
 
-impl<CID> WidgetWrapper for CollnIdEntryData<CID>
+impl_widget_wrapper!(grid: gtk::Grid, CollnIdEntryData<CID>
     where   CID: CollnIdInterface
-{
-    type PWT = gtk::Grid;
-
-    fn pwo(&self) -> gtk::Grid {
-        self.grid.clone()
-    }
-}
+);
 
 pub type CollnIdEntry<CID> = Rc<CollnIdEntryData<CID>>;
 
