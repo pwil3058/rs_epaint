@@ -210,9 +210,9 @@ impl<A, C, P, D> PaintPartsSpinButtonCore<A, C, P, D>
         (self.paint.clone(), self.entry.get_value_as_int() as u32)
     }
 
-    //fn set_sensitive(&self, sensitive: bool) {
-        //self.entry.set_sensitive(sensitive)
-    //}
+    fn set_sensitive(&self, sensitive: bool) {
+        self.entry.set_sensitive(sensitive)
+    }
 
     fn connect_parts_changed<F: 'static + Fn(u32)>(&self, callback: F) {
         self.parts_changed_callbacks.borrow_mut().push(Box::new(callback))
@@ -315,12 +315,12 @@ impl<A, C, P, D> PaintComponentsBoxCore<A, C, P, D>
         false
     }
 
-    //pub fn set_sensitive(&self, sensitive: bool) {
-        //self.is_sensitive.set(sensitive);
-        //for spin_button in self.spin_buttons.borrow().iter() {
-            //spin_button.set_sensitive(sensitive)
-        //}
-    //}
+    pub fn set_sensitive(&self, sensitive: bool) {
+        self.is_sensitive.set(sensitive);
+        for spin_button in self.spin_buttons.borrow().iter() {
+            spin_button.set_sensitive(sensitive)
+        }
+    }
 
     pub fn connect_contributions_changed<F: 'static>(&self, callback: F)
         where F: (Fn())

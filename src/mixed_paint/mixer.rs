@@ -136,6 +136,8 @@ impl<A, C> PaintMixerCore<A, C>
         if self.mixing_mode() == MixingMode::MatchSamples {
             self.accept_mixture_btn.set_sensitive(has_colour && self.has_notes());
         } else if self.colour_match_area.has_target_colour() {
+            self.series_paint_components.set_sensitive(true);
+            self.mixed_paints.components().set_sensitive(true);
             self.new_mixture_btn.set_sensitive(false);
             self.cancel_btn.set_sensitive(true);
             self.accept_mixture_btn.set_sensitive(has_colour && self.has_notes());
@@ -143,6 +145,8 @@ impl<A, C> PaintMixerCore<A, C>
                 paint_standards_manager.set_initiate_select_ok(false)
             };
         } else {
+            self.series_paint_components.set_sensitive(false);
+            self.mixed_paints.components().set_sensitive(false);
             self.new_mixture_btn.set_sensitive(true);
             self.accept_mixture_btn.set_sensitive(false);
             self.cancel_btn.set_sensitive(false);
