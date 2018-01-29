@@ -331,6 +331,110 @@ implement_entry_core!(Transparency, TransparencyEntryCore);
 
 pub type TransparencyEntry = Rc<TransparencyEntryCore>;
 
+// PERMANENCE
+#[derive(Debug, PartialEq, Hash, Clone, Copy)]
+pub enum Permanence {
+    ExtremelyPermanent,
+    Permanent,
+    ModeratelyDurable,
+    Fugitive,
+}
+
+static PERMANENCE_VALUES: &[Permanence] =
+    &[
+        Permanence::ExtremelyPermanent,
+        Permanence::Permanent,
+        Permanence::ModeratelyDurable,
+        Permanence::Fugitive,
+    ];
+
+impl CharacteristicInterface for Permanence {
+    fn name() -> &'static str {
+        "Permanence"
+    }
+
+    fn abbrev(&self) -> &'static str {
+        match *self {
+            Permanence::ExtremelyPermanent => "AA",
+            Permanence::Permanent => "A",
+            Permanence::ModeratelyDurable => "B",
+            Permanence::Fugitive => "T",
+        }
+    }
+
+    fn description(&self) -> &'static str {
+        match *self {
+            Permanence::ExtremelyPermanent => "Extremely Permanent",
+            Permanence::Permanent => "Permanent",
+            Permanence::ModeratelyDurable => "Moderately Durable",
+            Permanence::Fugitive => "Fugitive",
+        }
+    }
+
+    fn values() -> &'static [Permanence] {
+        PERMANENCE_VALUES
+    }
+}
+
+lazy_static! {
+    pub static ref PERMANENCE_RE: Regex = Regex::new(
+        r#"permanence\s*=\s*"(?P<permanence>\w+)""#
+    ).unwrap();
+}
+
+impl FromStr for Permanence {
+    type Err = CharacteristicError;
+
+    fn from_str(string: &str) -> Result<Permanence, CharacteristicError> {
+        let mut mstr = string;
+        if let Some(c) = PERMANENCE_RE.captures(string) {
+            if let Some(m) = c.name("permanence") {
+                mstr = m.as_str()
+            }
+        }
+        match mstr {
+            "AA" | "Extremely Permanent" => Ok(Permanence::ExtremelyPermanent),
+            "A" | "Permanent" => Ok(Permanence::Permanent),
+            "B" | "Moderately Durable" => Ok(Permanence::ModeratelyDurable),
+            "T" | "Fugitive" => Ok(Permanence::Fugitive),
+            _ => Err(CharacteristicError::new(string))
+        }
+    }
+}
+
+impl From<f64> for Permanence {
+    fn from(float: f64) -> Permanence {
+        match float.round() as u8 {
+            4 => Permanence::ExtremelyPermanent,
+            3 => Permanence::Permanent,
+            2 => Permanence::ModeratelyDurable,
+            1 => Permanence::Fugitive,
+            _ => panic!("{:?}: out of bounds Permanence", float)
+        }
+    }
+}
+
+impl From<Permanence> for f64 {
+    fn from(finish: Permanence) -> f64 {
+        match finish {
+            Permanence::ExtremelyPermanent => 4.0,
+            Permanence::Permanent => 3.0,
+            Permanence::ModeratelyDurable => 2.0,
+            Permanence::Fugitive => 1.0,
+        }
+    }
+}
+
+impl fmt::Display for Permanence {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "permanence=\"{}\"", self.abbrev())
+    }
+}
+
+implement_entry_core!(Permanence, PermanenceEntryCore);
+
+pub type PermanenceEntry = Rc<PermanenceEntryCore>;
+
 // FLUORESCENCE
 #[derive(Debug, PartialEq, Hash, Clone, Copy)]
 pub enum Fluorescence {
