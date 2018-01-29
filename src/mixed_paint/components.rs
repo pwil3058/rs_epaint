@@ -151,7 +151,9 @@ impl<A, C, P, D> PaintPartsSpinButtonInterface<A, C, P, D> for PaintPartsSpinBut
         let hbox = gtk::Box::new(gtk::Orientation::Horizontal, 1);
         hbox.pack_start(&spin_button.label.clone(), true, true, 0);
         hbox.pack_start(&spin_button.entry.clone(), false, false, 0);
+        hbox.set_widget_colour(&paint.colour());
         let frame = gtk::Frame::new(None);
+        frame.set_widget_colour(&paint.colour());
         frame.add(&hbox);
         spin_button.event_box.add(&frame);
         let spin_button_c = spin_button.clone();
@@ -263,6 +265,7 @@ pub trait PaintComponentsBoxInterface<A, C, P, D>
 {
     fn create_with(n_cols: u32, sensitive:bool) -> PaintComponentsBox<A, C, P, D>;
     fn add_paint(&self, paint: &P);
+    fn iter_colour_components(&self) -> ColourPartsIter<A, C, P, D>;
 }
 
 pub struct PaintComponentsBoxCore<A, C, P, D>
@@ -507,5 +510,41 @@ impl<A, C, P, D> PaintComponentsBoxInterface<A, C, P, D> for PaintComponentsBox<
             self.pack_append(&spin_button);
             self.vbox.show_all();
         }
+    }
+
+    fn iter_colour_components(&self) -> ColourPartsIter<A, C, P, D> {
+        ColourPartsIter{components: self.clone(), index: 0}
+    }
+}
+
+pub struct ColourPartsIter<A, C, P, D>
+    where   C: CharacteristicsInterface + 'static,
+            A: ColourAttributesInterface + 'static,
+            P: BasicPaintInterface<C> + 'static,
+            D: PaintDisplayWithCurrentTarget<A, C, P> + 'static
+{
+    components: PaintComponentsBox<A, C, P, D>,
+    index: usize,
+}
+
+impl<A, C, P, D> Iterator for ColourPartsIter<A, C, P, D>
+    where   C: CharacteristicsInterface + 'static,
+            A: ColourAttributesInterface + 'static,
+            P: BasicPaintInterface<C> + 'static,
+            D: PaintDisplayWithCurrentTarget<A, C, P> + 'static
+{
+    type Item = (Colour, u32);
+
+    fn next(&mut self) -> Option<(Colour, u32)> {
+        let spin_buttons = self.components.spin_buttons.borrow();
+        while self.index < spin_buttons.len() {
+            let spin_button = &spin_buttons[self.index];
+            self.index += 1;
+            let parts = spin_button.get_parts();
+            if parts > 0 {
+                return Some((spin_button.paint.colour(), parts))
+            }
+        }
+        None
     }
 }

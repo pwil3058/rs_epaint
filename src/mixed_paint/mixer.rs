@@ -202,11 +202,11 @@ impl<A, C> PaintMixerCore<A, C>
 
     fn update_mixed_colour(&self) {
         let mut colour_mixer = ColourMixer::new();
-        for (paint, parts) in self.series_paint_components.get_paint_components() {
-            colour_mixer.add(&paint.colour(), parts)
+        for (colour, parts) in self.series_paint_components.iter_colour_components() {
+            colour_mixer.add(&colour, parts)
         }
-        for (paint, parts) in self.mixed_paints.components().get_paint_components() {
-            colour_mixer.add(&paint.colour(), parts)
+        for (colour, parts) in self.mixed_paints.components().iter_colour_components() {
+            colour_mixer.add(&colour, parts)
         }
         if let Some(ref colour) = colour_mixer.get_colour() {
             self.colour_match_area.set_mixed_colour(Some(colour));
