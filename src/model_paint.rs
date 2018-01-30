@@ -305,6 +305,14 @@ impl ColourAttributesInterface for ModelPaintAttributes {
     }
 }
 
+pub struct ModelPaintMixerConfig;
+
+impl MixerConfig for ModelPaintMixerConfig {
+    fn mixing_mode() -> MixingMode {
+        MixingMode::MatchTarget
+    }
+}
+
 pub type ModelSeriesPaint = SeriesPaint<ModelPaintCharacteristics>;
 pub type ModelSeriesPaintSpec = BasicPaintSpec<ModelPaintCharacteristics>;
 pub type ModelMixedPaint = MixedPaint<ModelPaintCharacteristics>;
@@ -312,7 +320,7 @@ pub type ModelPaint = Paint<ModelPaintCharacteristics>;
 pub type BasicModelPaint = BasicPaint<ModelPaintCharacteristics>;
 pub type ModelPaintSeries = SeriesPaintColln<ModelPaintCharacteristics>;
 pub type ModelPaintComponentsBox = SeriesPaintComponentBox<ModelPaintAttributes, ModelPaintCharacteristics>;
-pub type ModelPaintMixer = PaintMixer<ModelPaintAttributes, ModelPaintCharacteristics>;
+pub type ModelPaintMixer = PaintMixer<ModelPaintAttributes, ModelPaintCharacteristics, ModelPaintMixerConfig>;
 pub type ModelPaintSeriesManager = SeriesPaintManager<ModelPaintAttributes, ModelPaintCharacteristics>;
 pub type ModelPaintFactoryDisplay = BasicPaintFactoryDisplay<ModelPaintAttributes, ModelPaintCharacteristics>;
 pub type BasicModelPaintEditor = SeriesPaintEditor<ModelPaintAttributes, ModelPaintCharacteristics>;

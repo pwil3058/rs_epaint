@@ -249,6 +249,14 @@ impl ColourAttributesInterface for ArtPaintAttributes {
     }
 }
 
+pub struct ArtPaintMixerConfig;
+
+impl MixerConfig for ArtPaintMixerConfig {
+    fn mixing_mode() -> MixingMode {
+        MixingMode::MatchSamples
+    }
+}
+
 pub type ArtSeriesPaint = SeriesPaint<ArtPaintCharacteristics>;
 pub type ArtSeriesPaintSpec = BasicPaintSpec<ArtPaintCharacteristics>;
 pub type ArtMixedPaint = MixedPaint<ArtPaintCharacteristics>;
@@ -256,7 +264,7 @@ pub type ArtPaint = Paint<ArtPaintCharacteristics>;
 pub type BasicArtPaint = BasicPaint<ArtPaintCharacteristics>;
 pub type ArtPaintSeries = SeriesPaintColln<ArtPaintCharacteristics>;
 pub type ArtPaintComponentsBox = SeriesPaintComponentBox<ArtPaintAttributes, ArtPaintCharacteristics>;
-pub type ArtPaintMixer = PaintMixer<ArtPaintAttributes, ArtPaintCharacteristics>;
+pub type ArtPaintMixer = PaintMixer<ArtPaintAttributes, ArtPaintCharacteristics, ArtPaintMixerConfig>;
 pub type ArtPaintSeriesManager = SeriesPaintManager<ArtPaintAttributes, ArtPaintCharacteristics>;
 pub type ArtPaintFactoryDisplay = BasicPaintFactoryDisplay<ArtPaintAttributes, ArtPaintCharacteristics>;
 pub type BasicArtPaintEditor = SeriesPaintEditor<ArtPaintAttributes, ArtPaintCharacteristics>;

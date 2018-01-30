@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::marker::PhantomData;
 use std::path::Path;
 use std::rc::Rc;
 
@@ -41,20 +42,24 @@ use super::hue_wheel::*;
 use super::match_area::*;
 use super::target::*;
 
-pub trait PaintMixerInterface<A, C>
-    where   A: ColourAttributesInterface + 'static,
-            C: CharacteristicsInterface + 'static
-{
-    type PaintMixerType;
+pub trait MixerConfig {
+    fn mixing_mode() -> MixingMode;
+}
 
-    fn create(mixing_mode: MixingMode, series_paint_data_path: &Path, paint_standards_data_path: Option<&Path>) -> Self::PaintMixerType;
+pub trait PaintMixerInterface<A, C, MC>
+    where   A: ColourAttributesInterface + 'static,
+            C: CharacteristicsInterface + 'static,
+            MC: MixerConfig + 'static,
+{
+    fn create(series_paint_data_path: &Path, paint_standards_data_path: Option<&Path>) -> PaintMixer<A, C, MC>;
 }
 
 pub type SeriesPaintComponentBox<A, C> = PaintComponentsBox<A, C, SeriesPaint<C>, SeriesPaintDisplayDialog<A, C>>;
 
-pub struct PaintMixerCore<A, C>
+pub struct PaintMixerCore<A, C, MC>
     where   A: ColourAttributesInterface + 'static,
-            C: CharacteristicsInterface + 'static
+            C: CharacteristicsInterface + 'static,
+            MC: MixerConfig + 'static,
 {
     vbox: gtk::Box,
     cads: Rc<A>,
@@ -76,16 +81,14 @@ pub struct PaintMixerCore<A, C>
     // Managers
     series_paint_manager: SeriesPaintManager<A, C>,
     o_paint_standards_manager: Option<PaintStandardManager<A, C>>,
+    phantom: PhantomData<MC>,
 }
 
-impl<A, C> PaintMixerCore<A, C>
+impl<A, C, MC> PaintMixerCore<A, C, MC>
     where   A: ColourAttributesInterface + 'static,
-            C: CharacteristicsInterface + 'static
+            C: CharacteristicsInterface + 'static,
+            MC: MixerConfig + 'static,
 {
-    pub fn mixing_mode(&self) -> MixingMode {
-        self.colour_match_area.mixing_mode()
-    }
-
     pub fn set_manager_icons(&self, icon: &Pixbuf) {
         self.series_paint_manager.set_icon(icon);
         if let Some(ref saint_standards_manager) = self.o_paint_standards_manager {
@@ -133,7 +136,7 @@ impl<A, C> PaintMixerCore<A, C>
             self.mixed_paints.components().has_contributions();
         self.simplify_parts_btn.set_sensitive(has_colour);
         self.reset_parts_btn.set_sensitive(has_colour);
-        if self.mixing_mode() == MixingMode::MatchSamples {
+        if MC::mixing_mode() == MixingMode::MatchSamples {
             self.accept_mixture_btn.set_sensitive(has_colour && self.has_notes());
         } else if self.colour_match_area.has_target_colour() {
             self.series_paint_components.set_sensitive(true);
@@ -291,21 +294,21 @@ impl<A, C> PaintMixerCore<A, C>
     }
 }
 
-impl_widget_wrapper!(vbox: gtk::Box, PaintMixerCore<A, C>
+impl_widget_wrapper!(vbox: gtk::Box, PaintMixerCore<A, C, MC>
     where   A: ColourAttributesInterface + 'static,
-            C: CharacteristicsInterface + 'static
+            C: CharacteristicsInterface + 'static,
+            MC: MixerConfig + 'static,
 );
 
-pub type PaintMixer<A, C> = Rc<PaintMixerCore<A, C>>;
+pub type PaintMixer<A, C, MC> = Rc<PaintMixerCore<A, C, MC>>;
 
-impl<A, C> PaintMixerInterface<A, C> for PaintMixer<A, C>
+impl<A, C, MC> PaintMixerInterface<A, C, MC> for PaintMixer<A, C, MC>
     where   A: ColourAttributesInterface + 'static,
-            C: CharacteristicsInterface + 'static
+            C: CharacteristicsInterface + 'static,
+            MC: MixerConfig + 'static,
 {
-    type PaintMixerType = PaintMixer<A, C>;
-
-    fn create(mixing_mode: MixingMode, series_paint_data_path: &Path, paint_standards_data_path: Option<&Path>) -> PaintMixer<A, C> {
-        assert!(paint_standards_data_path.is_none() || mixing_mode == MixingMode::MatchTarget);
+    fn create(series_paint_data_path: &Path, paint_standards_data_path: Option<&Path>) -> PaintMixer<A, C, MC> {
+        assert!(paint_standards_data_path.is_none() || MC::mixing_mode() == MixingMode::MatchTarget);
         let mut view_attr_wheels:Vec<MixerHueAttrWheel<A, C>> = Vec::new();
         for attr in A::scalar_attributes().iter() {
             view_attr_wheels.push(MixerHueAttrWheel::<A, C>::create(*attr));
@@ -316,13 +319,13 @@ impl<A, C> PaintMixerInterface<A, C> for PaintMixer<A, C>
             None
         };
         let paint_mixer = Rc::new(
-            PaintMixerCore::<A, C> {
+            PaintMixerCore::<A, C, MC> {
                 vbox: gtk::Box::new(gtk::Orientation::Vertical, 1),
                 cads: A::create(),
                 hue_attr_wheels: view_attr_wheels,
-                colour_match_area: ColourMatchArea::create(mixing_mode),
+                colour_match_area: ColourMatchArea::create(MC::mixing_mode()),
                 series_paint_components: SeriesPaintComponentBox::<A, C>::create_with(4, true),
-                mixed_paints: MixedPaintCollectionWidget::<A, C>::create(mixing_mode),
+                mixed_paints: MixedPaintCollectionWidget::<A, C>::create(MC::mixing_mode()),
                 notes: gtk::Entry::new(),
                 next_name_label: gtk::Label::new(Some("#???:")),
                 mixed_paint_notes: gtk::Entry::new(),
@@ -337,6 +340,7 @@ impl<A, C> PaintMixerInterface<A, C> for PaintMixer<A, C>
                 // Managers
                 series_paint_manager: SeriesPaintManager::<A, C>::create(series_paint_data_path),
                 o_paint_standards_manager: o_paint_standards_manager,
+                phantom: PhantomData,
             }
         );
 
@@ -386,7 +390,7 @@ impl<A, C> PaintMixerInterface<A, C> for PaintMixer<A, C>
 
         let button_box = gtk::Box::new(gtk::Orientation::Horizontal, 2);
         paint_mixer.vbox.pack_start(&button_box, false, false, 0);
-        if mixing_mode == MixingMode::MatchTarget {
+        if MC::mixing_mode() == MixingMode::MatchTarget {
             button_box.pack_start(&paint_mixer.new_mixture_btn, true, true, 0);
             button_box.pack_start(&paint_mixer.accept_mixture_btn, true, true, 0);
             button_box.pack_start(&paint_mixer.cancel_btn, true, true, 0);
@@ -428,7 +432,7 @@ impl<A, C> PaintMixerInterface<A, C> for PaintMixer<A, C>
             }
         );
 
-        if mixing_mode == MixingMode::MatchTarget {
+        if MC::mixing_mode() == MixingMode::MatchTarget {
             paint_mixer.new_mixture_btn.set_tooltip_text("Start mixing a new colour.");
             let paint_mixer_c = paint_mixer.clone();
             paint_mixer.new_mixture_btn.connect_clicked(
