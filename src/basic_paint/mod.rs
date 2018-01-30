@@ -35,7 +35,6 @@ use pw_gix::wrapper::*;
 use error::*;
 
 pub mod display;
-//pub mod editor;
 pub mod entry;
 pub mod factory;
 pub mod hue_wheel;

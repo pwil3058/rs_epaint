@@ -140,6 +140,9 @@ impl ColourMatchAreaInterface for ColourMatchArea {
         );
 
         if mixing_mode == MixingMode::MatchSamples {
+            let events = gdk::EventMask::BUTTON_PRESS_MASK | gdk::EventMask::BUTTON_RELEASE_MASK;
+            colour_match_area.drawing_area.add_events(events.bits() as i32);
+
             let colour_match_area_c = colour_match_area.clone();
             colour_match_area.popup_menu.append_item(
                 "paste",
@@ -167,6 +170,26 @@ impl ColourMatchAreaInterface for ColourMatchArea {
                 move |_| {
                     colour_match_area_c.remove_samples();
                 }
+            );
+
+            let colour_match_area_c = colour_match_area.clone();
+            colour_match_area.drawing_area.connect_button_press_event(
+                move |_, event| {
+                    if event.get_event_type() == gdk::EventType::ButtonPress {
+                        if event.get_button() == 3 {
+                            let position = Point::from(event.get_position());
+                            colour_match_area_c.popup_menu_position.set(position);
+                            let cbd = gtk::Clipboard::get(&gdk::SELECTION_CLIPBOARD);
+                            let pastable = cbd.wait_is_image_available();
+                            colour_match_area_c.popup_menu.set_sensitivities(pastable, &["paste"]);
+                            let have_samples = colour_match_area_c.samples.borrow().len() > 0;
+                            colour_match_area_c.popup_menu.set_sensitivities(have_samples, &["remove"]);
+                            colour_match_area_c.popup_menu.popup_at_event(event);
+                            return Inhibit(true)
+                        }
+                    }
+                    Inhibit(false)
+                 }
             );
         };
 
