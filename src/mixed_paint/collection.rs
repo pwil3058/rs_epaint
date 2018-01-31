@@ -175,6 +175,10 @@ impl<C: CharacteristicsInterface> MixedPaintFactoryCore<C> {
     pub fn mixed_paints_using(&self, paint: &Paint<C>) -> Vec<MixedPaint<C>> {
         self.paints.borrow().iter().filter(|p| p.uses_paint(paint)).map(|m| m.clone()).collect()
     }
+
+    pub fn mixed_paints_using_series_paint(&self, paint: &SeriesPaint<C>) -> Vec<MixedPaint<C>> {
+        self.paints.borrow().iter().filter(|p| p.uses_series_paint(paint)).map(|m| m.clone()).collect()
+    }
 }
 
 pub type MixedPaintFactory<C> = Rc<MixedPaintFactoryCore<C>>;
@@ -328,6 +332,10 @@ impl<A, C> MixedPaintCollectionWidgetCore<A, C>
 
     pub fn get_paints(&self) -> Vec<MixedPaint<C>> {
         self.factory.get_paints()
+    }
+
+    pub fn mixed_paints_using_series_paint(&self, paint: &SeriesPaint<C>) -> Vec<MixedPaint<C>> {
+        self.factory.mixed_paints_using_series_paint(paint)
     }
 
     // Components interface

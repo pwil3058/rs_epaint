@@ -283,7 +283,7 @@ pub struct PaintComponentsBoxCore<A, C, P, D>
     supress_change_notification: Cell<bool>,
     current_target: RefCell<Option<Colour>>,
     contributions_changed_callbacks: RefCell<Vec<Box<Fn()>>>,
-    paint_removed_callbacks: RefCell<Vec<Box<Fn(&P)>>>
+    removal_requested_callbacks: RefCell<Vec<Box<Fn(&P)>>>,
 }
 
 impl_widget_wrapper!(vbox: gtk::Box, PaintComponentsBoxCore<A, C, P, D>
@@ -341,14 +341,14 @@ impl<A, C, P, D> PaintComponentsBoxCore<A, C, P, D>
         self.spin_buttons.borrow().iter().any(|s| s.get_parts() > 0)
     }
 
-    pub fn connect_paint_removed<F: 'static>(&self, callback: F)
+    pub fn connect_removal_requested<F: 'static>(&self, callback: F)
         where for<'r> F: (Fn(&'r P))
     {
-        self.paint_removed_callbacks.borrow_mut().push(Box::new(callback))
+        self.removal_requested_callbacks.borrow_mut().push(Box::new(callback))
     }
 
-    pub fn inform_paint_removed(&self, paint: &P) {
-        for callback in self.paint_removed_callbacks.borrow().iter() {
+    pub fn inform_removal_requested(&self, paint: &P) {
+        for callback in self.removal_requested_callbacks.borrow().iter() {
             callback(paint);
         }
     }
@@ -364,7 +364,7 @@ impl<A, C, P, D> PaintComponentsBoxCore<A, C, P, D>
         self.count.set(self.count.get() + 1);
     }
 
-    fn unpack_all(&self) {
+    fn repack_all(&self) {
         for hbox in self.h_boxes.borrow().iter() {
             for child in hbox.get_children() {
                 hbox.remove(&child)
@@ -373,47 +373,38 @@ impl<A, C, P, D> PaintComponentsBoxCore<A, C, P, D>
         }
         self.h_boxes.borrow_mut().clear();
         self.count.set(0);
-    }
-
-    fn remove_spin_button(&self, spin_button: &PaintPartsSpinButton<A, C, P, D>) {
-        self.unpack_all();
-        spin_button.close_dialog();
-        let colour_will_change = spin_button.get_parts() > 0;
-        { // NB: needed to avoid mutable borrow conflict
-            let mut index: usize = 0;
-            let mut spin_buttons = self.spin_buttons.borrow_mut();
-            for (i, sb) in spin_buttons.iter().enumerate() {
-                if sb == spin_button {
-                    index = i;
-                } else {
-                    self.pack_append(sb);
-                }
-            };
-            spin_buttons.remove(index);
-            self.vbox.show_all();
+        for spin_button in self.spin_buttons.borrow().iter() {
+            self.pack_append(spin_button);
         }
-        self.inform_paint_removed(&spin_button.paint);
-        if colour_will_change {
-            self.inform_contributions_changed()
-        }
+        self.vbox.show_all();
     }
 
     pub fn remove_paint(&self, paint: &P) {
-        if let Ok(index) = self.find_paint_index(paint) {
-            self.remove_spin_button(&self.spin_buttons.borrow()[index])
+        let r_index = self.find_paint_index(paint);
+        if let Ok(index) = r_index {
+            let spin_button = self.spin_buttons.borrow_mut().remove(index);
+            spin_button.close_dialog();
+            self.repack_all();
+            if spin_button.get_parts() > 0 {
+                self.inform_contributions_changed()
+            }
         }
     }
 
-    pub fn remove_unused_spin_buttons(&self) {
-        let mut unused: Vec<PaintPartsSpinButton<A, C, P, D>> = vec![];
-        for spin_button in self.spin_buttons.borrow().iter() {
-            if spin_button.get_parts() == 0 {
-                unused.push(spin_button.clone())
+    pub fn remove_unused_spin_buttons(&self, in_use: &Vec<P>) -> Vec<P> {
+        let mut keepers: Vec<PaintPartsSpinButton<A, C, P, D>> = vec![];
+        let mut removed_paints: Vec<P> = vec![];
+        for spin_button in self.spin_buttons.borrow_mut().iter() {
+            if spin_button.get_parts() > 0 || in_use.binary_search(&spin_button.paint).is_ok() {
+                keepers.push(spin_button.clone());
+            } else {
+                spin_button.close_dialog();
+                removed_paints.push(spin_button.paint());
             }
         }
-        for spin_button in unused.iter() {
-            self.remove_spin_button(spin_button)
-        }
+        *self.spin_buttons.borrow_mut() = keepers;
+        self.repack_all();
+        removed_paints
     }
 
     pub fn reset_all_parts_to_zero(&self) {
@@ -482,7 +473,7 @@ impl<A, C, P, D> PaintComponentsBoxInterface<A, C, P, D> for PaintComponentsBox<
             supress_change_notification: Cell::new(false),
             current_target: RefCell::new(None),
             contributions_changed_callbacks: RefCell::new(Vec::new()),
-            paint_removed_callbacks: RefCell::new(Vec::new()),
+            removal_requested_callbacks: RefCell::new(Vec::new()),
         };
         Rc::new(pcb_core)
     }
@@ -505,7 +496,7 @@ impl<A, C, P, D> PaintComponentsBoxInterface<A, C, P, D> for PaintComponentsBox<
             );
             let self_c = self.clone();
             spin_button.connect_remove_me(
-                move |sb| { self_c.remove_spin_button(sb) }
+                move |sb| { self_c.inform_removal_requested(&sb.paint()) }
             );
             self.pack_append(&spin_button);
             self.vbox.show_all();

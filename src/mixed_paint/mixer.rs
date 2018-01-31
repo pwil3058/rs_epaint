@@ -111,10 +111,28 @@ impl<A, C, MC> PaintMixerCore<A, C, MC>
         }
     }
 
-    fn remove_series_paint(&self, paint: &SeriesPaint<C>) {
-        for wheel in self.hue_attr_wheels.iter() {
-            wheel.remove_series_paint(paint);
+    fn handle_series_paint_removal_request(&self, paint: &SeriesPaint<C>) {
+        //TODO: implement different policies for what "unused" means
+        let users = self.mixed_paints.mixed_paints_using_series_paint(paint);
+        if users.is_empty() {
+            self.series_paint_components.remove_paint(paint);
+            for wheel in self.hue_attr_wheels.iter() {
+                wheel.remove_series_paint(paint);
+            }
+        } else {
+            let expln = format!("\"{}\" is being used in one or more mixtures.", paint.name());
+            self.warn_user("Removal aborted!", Some(&expln))
         }
+    }
+
+    fn remove_unused_paints_from_mixing_area(&self) {
+        //TODO: implement different policies for what "unused" means
+        let series_paints_in_use = self.mixed_paints.series_paints_used();
+        for paint in self.series_paint_components.remove_unused_spin_buttons(&series_paints_in_use).iter() {
+            for wheel in self.hue_attr_wheels.iter() {
+                wheel.remove_series_paint(paint);
+            }
+        };
     }
 
     fn remove_mixed_paint(&self, paint: &MixedPaint<C>) {
@@ -474,12 +492,11 @@ impl<A, C, MC> PaintMixerInterface<A, C, MC> for PaintMixer<A, C, MC>
         );
 
         // TODO: be more sophisticated about removing series paints
-        paint_mixer.remove_unused_btn.set_tooltip_text("Remove paints with zero parts from the mixing area.");
+        paint_mixer.remove_unused_btn.set_tooltip_text("Remove paints not being used from the mixing area.");
         let paint_mixer_c = paint_mixer.clone();
         paint_mixer.remove_unused_btn.connect_clicked(
             move |_| {
-                paint_mixer_c.series_paint_components.remove_unused_spin_buttons();
-                paint_mixer_c.mixed_paints.components().remove_unused_spin_buttons();
+                paint_mixer_c.remove_unused_paints_from_mixing_area();
             }
         );
 
@@ -498,9 +515,9 @@ impl<A, C, MC> PaintMixerInterface<A, C, MC> for PaintMixer<A, C, MC>
         );
 
         let paint_mixer_c = paint_mixer.clone();
-        paint_mixer.series_paint_components.connect_paint_removed(
+        paint_mixer.series_paint_components.connect_removal_requested(
             move |paint| {
-                paint_mixer_c.remove_series_paint(paint);
+                paint_mixer_c.handle_series_paint_removal_request(paint);
             }
         );
 
