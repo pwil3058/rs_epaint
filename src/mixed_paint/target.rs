@@ -14,7 +14,7 @@
 
 use std::marker::PhantomData;
 
-use gtk;
+use gtk::{self, WidgetExt};
 use gtk::prelude::*;
 
 use std::cmp::*;

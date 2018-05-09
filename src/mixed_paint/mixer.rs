@@ -28,7 +28,6 @@ use gtk::prelude::*;
 pub use pw_gix::wrapper::*;
 use pw_gix::colour::*;
 use pw_gix::gtkx::paned::*;
-use pw_gix::sample;
 
 use basic_paint::*;
 use colour_mix::*;
@@ -414,19 +413,6 @@ impl<A, C, MC> PaintMixerInterface<A, C, MC> for PaintMixer<A, C, MC>
             button_box.pack_start(&paint_mixer.cancel_btn, true, true, 0);
         } else {
             button_box.pack_start(&paint_mixer.accept_mixture_btn, true, true, 0);
-            if sample::screen_sampling_available() {
-                let btn = gtk::Button::new_with_label("Take Sample");
-                btn.set_tooltip_text("Take a sample of a portion of the screen");
-                let paint_mixer_c = paint_mixer.clone();
-                btn.connect_clicked(
-                    move |_| {
-                        if let Err(err) = sample::take_screen_sample() {
-                            paint_mixer_c.report_error("Failure", &err);
-                        }
-                    }
-                );
-                button_box.pack_start(&btn, true, true, 0);
-            }
         };
         button_box.pack_start(&paint_mixer.simplify_parts_btn, true, true, 0);
         button_box.pack_start(&paint_mixer.reset_parts_btn, true, true, 0);

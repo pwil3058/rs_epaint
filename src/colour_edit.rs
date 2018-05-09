@@ -29,7 +29,6 @@ use pw_gix::gtkx::menu::*;
 use pw_gix::rgb_math::angle::*;
 use pw_gix::rgb_math::rgb::*;
 use pw_gix::rgb_math::rgb_manipulator::RGBManipulator;
-use pw_gix::sample;
 
 pub use pw_gix::wrapper::*;
 
@@ -264,19 +263,6 @@ impl<A> ColourEditorInterface for  Rc<ColourEditorCore<A>>
         let bbox = gtk::Box::new(gtk::Orientation::Horizontal, 2);
         for button in extra_buttons.iter() {
             bbox.pack_start(&button.clone(), true, true, 0);
-        }
-        if sample::screen_sampling_available() {
-            let btn = gtk::Button::new_with_label("Take Sample");
-            btn.set_tooltip_text("Take a sample of a portion of the screen");
-            let ced_c = ced.clone();
-            btn.connect_clicked(
-                move |_| {
-                    if let Err(err) = sample::take_screen_sample() {
-                        ced_c.report_error("Failure", &err);
-                    }
-                }
-            );
-            bbox.pack_start(&btn, true, true, 0);
         }
         bbox.pack_start(&ced.auto_match_btn.clone(), true, true, 0);
         bbox.pack_start(&ced.auto_match_on_paste_btn.clone(), false, false, 0);
