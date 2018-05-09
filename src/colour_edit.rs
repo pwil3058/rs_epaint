@@ -17,7 +17,7 @@ use std::rc::Rc;
 
 use cairo;
 use gdk;
-use gdk_pixbuf;
+use gdk_pixbuf::{self, PixbufExt};
 use gtk;
 use gtk::prelude::*;
 

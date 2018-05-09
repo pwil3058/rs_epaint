@@ -158,8 +158,7 @@ pub mod dialogue {
     use std::rc::Rc;
 
     use glib::signal::SignalHandlerId;
-    use gtk;
-    use gtk::{DialogExt, GtkWindowExt, WidgetExt};
+    use gtk::{self, DialogExt, GtkWindowExt, WidgetExt, GtkWindowExtManual};
 
     use pw_gix::colour::*;
     use pw_gix::wrapper::{parent_none, WidgetWrapper};

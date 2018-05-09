@@ -12,10 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use gdk_pixbuf;
+use gdk_pixbuf::{self, PixbufExt};
 use gtk;
-
-use pw_gix::gdk_pixbufx::PIXOPS_INTERP_BILINEAR;
 
 static NEEDS_SAVE_NOT_READY_XPM: &[&str] = &[
 "64 64 2 1",
@@ -92,7 +90,7 @@ pub fn needs_save_not_ready_pixbuf() -> gdk_pixbuf::Pixbuf {
 }
 
 pub fn needs_save_not_ready_image(size: i32) -> gtk::Image {
-    if let Ok(pixbuf) = needs_save_not_ready_pixbuf().scale_simple(size, size, PIXOPS_INTERP_BILINEAR) {
+    if let Some(pixbuf) = needs_save_not_ready_pixbuf().scale_simple(size, size, gdk_pixbuf::InterpType::Bilinear) {
         gtk::Image::new_from_pixbuf(Some(&pixbuf))
     } else {
         panic!("File: {:?} Line: {:?}", file!(), line!())
@@ -174,7 +172,7 @@ pub fn needs_save_ready_pixbuf() -> gdk_pixbuf::Pixbuf {
 }
 
 pub fn needs_save_ready_image(size: i32) -> gtk::Image {
-    if let Ok(pixbuf) = needs_save_ready_pixbuf().scale_simple(size, size, PIXOPS_INTERP_BILINEAR) {
+    if let Some(pixbuf) = needs_save_ready_pixbuf().scale_simple(size, size, gdk_pixbuf::InterpType::Bilinear) {
         gtk::Image::new_from_pixbuf(Some(&pixbuf))
     } else {
         panic!("File: {:?} Line: {:?}", file!(), line!())
@@ -256,7 +254,7 @@ pub fn up_to_date_pixbuf() -> gdk_pixbuf::Pixbuf {
 }
 
 pub fn up_to_date_image(size: i32) -> gtk::Image {
-    if let Ok(pixbuf) = up_to_date_pixbuf().scale_simple(size, size, PIXOPS_INTERP_BILINEAR) {
+    if let Some(pixbuf) = up_to_date_pixbuf().scale_simple(size, size, gdk_pixbuf::InterpType::Bilinear) {
         gtk::Image::new_from_pixbuf(Some(&pixbuf))
     } else {
         panic!("File: {:?} Line: {:?}", file!(), line!())
