@@ -31,6 +31,7 @@ use pw_gix::gtkx::paned::*;
 
 use basic_paint::*;
 use colour_mix::*;
+use icons::mixtures_print_xpm;
 use series_paint::*;
 use standards::*;
 
@@ -347,7 +348,7 @@ impl<A, C, MC> PaintMixerInterface<A, C, MC> for PaintMixer<A, C, MC>
                 next_name_label: gtk::Label::new(Some("#???:")),
                 mixed_paint_notes: gtk::Entry::new(),
                 // Buttons
-                print_report_btn: gtk::Button::new_from_icon_name("gtk-print", gtk::IconSize::LargeToolbar.into()),
+                print_report_btn: gtk::Button::new(),
                 new_mixture_btn: gtk::Button::new_with_label("New"),
                 accept_mixture_btn: gtk::Button::new_with_label("Accept"),
                 cancel_btn: gtk::Button::new_with_label("Cancel"),
@@ -426,6 +427,7 @@ impl<A, C, MC> PaintMixerInterface<A, C, MC> for PaintMixer<A, C, MC>
         frame.add(&paint_mixer.mixed_paints.pwo());
         paint_mixer.vbox.pack_start(&frame, true, true, 0);
 
+        paint_mixer.print_report_btn.set_image(&mixtures_print_xpm::mixtures_print_image(24));
         paint_mixer.print_report_btn.set_tooltip_text("Print a report of the mixtures and paints used");
         let paint_mixer_c = paint_mixer.clone();
         paint_mixer.print_report_btn.connect_clicked(
