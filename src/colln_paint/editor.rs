@@ -26,6 +26,7 @@ pub use pw_gix::wrapper::WidgetWrapper;
 
 use pw_pathux;
 
+use icons::colln_xpms;
 use icons::file_status_xpms::*;
 
 pub use struct_traits::SimpleCreation;
@@ -89,8 +90,8 @@ pub struct CollnPaintEditorCore<A, C, CID>
     file_path_text: gtk::Label,
     new_colln_btn: gtk::Button,
     load_colln_btn: gtk::Button,
-    save_btn: gtk::Button,
-    save_as_btn: gtk::Button,
+    save_colln_btn: gtk::Button,
+    save_as_colln_btn: gtk::Button,
     file_status_btn: gtk::Button,
 }
 
@@ -132,32 +133,32 @@ impl<A, C, CID> CollnPaintEditorCore<A, C, CID>
             FileStatus::NoFileNoData => {
                 self.new_colln_btn.set_sensitive(true);
                 self.load_colln_btn.set_sensitive(true);
-                self.save_btn.set_sensitive(false);
-                self.save_as_btn.set_sensitive(false);
+                self.save_colln_btn.set_sensitive(false);
+                self.save_as_colln_btn.set_sensitive(false);
             },
             FileStatus::NoFileDataReady => {
                 self.new_colln_btn.set_sensitive(true);
                 self.load_colln_btn.set_sensitive(false);
-                self.save_btn.set_sensitive(false);
-                self.save_as_btn.set_sensitive(true);
+                self.save_colln_btn.set_sensitive(false);
+                self.save_as_colln_btn.set_sensitive(true);
             },
             FileStatus::NoFileDataNotReady | FileStatus::NotUpToDateNotReady => {
                 self.new_colln_btn.set_sensitive(true);
                 self.load_colln_btn.set_sensitive(false);
-                self.save_btn.set_sensitive(false);
-                self.save_as_btn.set_sensitive(false);
+                self.save_colln_btn.set_sensitive(false);
+                self.save_as_colln_btn.set_sensitive(false);
             },
             FileStatus::UpToDate => {
                 self.new_colln_btn.set_sensitive(true);
                 self.load_colln_btn.set_sensitive(true);
-                self.save_btn.set_sensitive(false);
-                self.save_as_btn.set_sensitive(true);
+                self.save_colln_btn.set_sensitive(false);
+                self.save_as_colln_btn.set_sensitive(true);
             },
             FileStatus::NotUpToDateReady => {
                 self.new_colln_btn.set_sensitive(true);
                 self.load_colln_btn.set_sensitive(false);
-                self.save_btn.set_sensitive(true);
-                self.save_as_btn.set_sensitive(true);
+                self.save_colln_btn.set_sensitive(true);
+                self.save_as_colln_btn.set_sensitive(true);
             },
         };
         self.update_file_status_button(file_status);
@@ -451,14 +452,18 @@ impl<A, C, CID> SimpleCreation for CollnPaintEditor<A, C, CID>
         reset_entry_btn.set_tooltip_text("Reset in preparation for defining a new paint");
         let extra_buttons = vec![add_paint_btn.clone(), accept_changes_btn.clone(), reset_entry_btn.clone()];
 
-        let new_colln_btn = gtk::Button::new_from_icon_name("gtk-new", gtk::IconSize::LargeToolbar.into());
+        let new_colln_btn = gtk::Button::new();
+        new_colln_btn.set_image(&colln_xpms::colln_new_image(24));
         new_colln_btn.set_tooltip_text("Clear the editor in preparation for creating a new collection");
-        let load_colln_btn = gtk::Button::new_from_icon_name("gtk-open", gtk::IconSize::LargeToolbar.into());
+        let load_colln_btn = gtk::Button::new();
+        load_colln_btn.set_image(&colln_xpms::colln_open_image(24));
         load_colln_btn.set_tooltip_text("Load a paint collection from a file for editing");
-        let save_btn = gtk::Button::new_from_icon_name("gtk-save", gtk::IconSize::LargeToolbar.into());
-        save_btn.set_tooltip_text("Save the current editor content to file.");
-        let save_as_btn = gtk::Button::new_from_icon_name("gtk-save-as", gtk::IconSize::LargeToolbar.into());
-        save_as_btn.set_tooltip_text("Save the current editor content to a nominated file.");
+        let save_colln_btn = gtk::Button::new();
+        save_colln_btn.set_image(&colln_xpms::colln_save_image(24));
+        save_colln_btn.set_tooltip_text("Save the current editor content to file.");
+        let save_as_colln_btn = gtk::Button::new();
+        save_as_colln_btn.set_image(&colln_xpms::colln_save_as_image(24));
+        save_as_colln_btn.set_tooltip_text("Save the current editor content to a nominated file.");
 
         let file_status_btn = gtk::Button::new();
         file_status_btn.set_image(&up_to_date_image(24));
@@ -477,8 +482,8 @@ impl<A, C, CID> SimpleCreation for CollnPaintEditor<A, C, CID>
                 file_data: RefCell::new(None),
                 new_colln_btn: new_colln_btn,
                 load_colln_btn: load_colln_btn,
-                save_btn: save_btn,
-                save_as_btn: save_as_btn,
+                save_colln_btn: save_colln_btn,
+                save_as_colln_btn: save_as_colln_btn,
                 file_path_text: gtk::Label::new(None),
                 file_status_btn: file_status_btn,
             }
@@ -489,8 +494,8 @@ impl<A, C, CID> SimpleCreation for CollnPaintEditor<A, C, CID>
         let hbox = gtk::Box::new(gtk::Orientation::Horizontal, 2);
         hbox.pack_start(&bpe.new_colln_btn, false, false, 0);
         hbox.pack_start(&bpe.load_colln_btn, false, false, 0);
-        hbox.pack_start(&bpe.save_btn, false, false, 0);
-        hbox.pack_start(&bpe.save_as_btn, false, false, 0);
+        hbox.pack_start(&bpe.save_colln_btn, false, false, 0);
+        hbox.pack_start(&bpe.save_as_colln_btn, false, false, 0);
         hbox.pack_start(&gtk::Label::new(Some("Current File:")), false, false, 0);
         hbox.pack_start(&bpe.file_path_text, true, true, 0);
         hbox.pack_start(&bpe.file_status_btn, false, false, 0);
@@ -573,7 +578,7 @@ impl<A, C, CID> SimpleCreation for CollnPaintEditor<A, C, CID>
         );
 
         let bpe_c = bpe.clone();
-        bpe.save_btn.connect_clicked(
+        bpe.save_colln_btn.connect_clicked(
             move |_| {
                 let path = bpe_c.saved_file_path().expect("Save requires a saved file path");
                 if let Err(err) = bpe_c.write_to_file(&path) {
@@ -583,7 +588,7 @@ impl<A, C, CID> SimpleCreation for CollnPaintEditor<A, C, CID>
         );
 
         let bpe_c = bpe.clone();
-        bpe.save_as_btn.connect_clicked(
+        bpe.save_as_colln_btn.connect_clicked(
             move |_| {
                 if let Err(err) = bpe_c.save_as() {
                     bpe_c.report_save_as_failed(&err)
