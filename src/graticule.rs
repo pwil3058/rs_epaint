@@ -143,10 +143,10 @@ impl GraticuleCore {
     }
 
     fn draw(&self, cairo_context: &cairo::Context) {
-        cairo_context.set_source_colour_rgb((WHITE * 0.5));
+        cairo_context.set_source_colour_rgb(WHITE * 0.5);
         cairo_context.paint();
 
-        cairo_context.set_source_colour_rgb((WHITE * 0.75));
+        cairo_context.set_source_colour_rgb(WHITE * 0.75);
         let n_rings: u8 = 10;
         for i in 0..n_rings {
             let radius = self.radius.get() * (i as f64 + 1.0) / n_rings as f64;
