@@ -93,15 +93,16 @@ impl<A, C> PaintDisplayWithCurrentTarget<A, C, MixedPaint<C>> for MixedPaintDisp
         current_target_label.set_widget_colour(&paint.colour());
         vbox.pack_start(&current_target_label.clone(), true, true, 0);
         //
-        if let Some(colour) = paint.matched_colour() {
-            let current_target_label = gtk::Label::new("Target Colour");
-            current_target_label.set_widget_colour(&colour.clone());
-            vbox.pack_start(&current_target_label.clone(), true, true, 0);
+        let cads = A::create();
+        cads.set_colour(Some(&paint.colour()));
+        if let Some(matched_colour) = paint.matched_colour() {
+            let matched_colour_label = gtk::Label::new("Matched Colour");
+            matched_colour_label.set_widget_colour(&matched_colour.clone());
+            vbox.pack_start(&matched_colour_label.clone(), true, true, 0);
+            cads.set_target_colour(Some(&matched_colour.clone()));
         }
         //
         content_area.pack_start(&vbox, false, true, 0);
-        let cads = A::create();
-        cads.set_colour(Some(&paint.colour()));
         content_area.pack_start(&cads.pwo(), true, true, 1);
         let characteristics_display = paint.characteristics().gui_display_widget();
         content_area.pack_start(&characteristics_display, false, false, 0);
@@ -154,7 +155,11 @@ impl<A, C> PaintDisplayWithCurrentTarget<A, C, MixedPaint<C>> for MixedPaintDisp
         } else {
             self.current_target_label.set_label("");
             self.current_target_label.set_widget_colour(&self.paint.colour());
-            self.cads.set_target_colour(None);
+            if let Some(matched_colour) = self.paint.matched_colour() {
+                self.cads.set_target_colour(Some(&matched_colour));
+            } else {
+                self.cads.set_target_colour(None);
+            }
             self.components_view.set_target_colour(None);
         };
     }
