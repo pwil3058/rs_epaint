@@ -509,6 +509,13 @@ impl<A, C, MC> PaintMixerInterface<A, C, MC> for PaintMixer<A, C, MC>
             }
         );
 
+        let mixed_paint_components = paint_mixer.mixed_paints.components();
+        paint_mixer.mixed_paints.components().connect_removal_requested(
+            move |paint| {
+                mixed_paint_components.remove_paint(paint);
+            }
+        );
+
         let paint_mixer_c = paint_mixer.clone();
         paint_mixer.series_paint_manager.connect_add_paint(
             move |paint| paint_mixer_c.add_series_paint(paint)
