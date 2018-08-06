@@ -182,7 +182,7 @@ impl<A, C, MC> PaintMixerCore<A, C, MC>
         self.colour_match_area.set_target_colour(o_colour);
         self.series_paint_manager.set_target_colour(o_colour);
         self.series_paint_components.set_current_target(o_colour);
-        self.mixed_paints.components().set_current_target(o_colour);
+        self.mixed_paints.set_target_colour(o_colour);
         for wheel in self.hue_attr_wheels.iter() {
             wheel.set_target_colour(o_colour);
         }

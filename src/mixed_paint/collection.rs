@@ -269,6 +269,7 @@ impl<A, C> MixedPaintCollectionWidgetCore<A, C>
         for dialog in self.mixed_paint_dialogs.borrow().values() {
             dialog.set_current_target(o_colour);
         };
+        self.components.set_current_target(o_colour);
         if let Some(colour) = o_colour {
             *self.current_target.borrow_mut() = Some(colour.clone())
         } else {
