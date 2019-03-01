@@ -41,7 +41,9 @@ impl EntryStatus {
 
     pub fn is_saveable(&self) -> bool {
         match *self {
-            EntryStatus::EditingNoChange | EntryStatus::CreatingReady | EntryStatus::EditingReady => true,
+            EntryStatus::EditingNoChange
+            | EntryStatus::CreatingReady
+            | EntryStatus::EditingReady => true,
             _ => false,
         }
     }
@@ -52,8 +54,9 @@ pub trait CreateInterface {
 }
 
 pub struct BasicPaintSpecEntryCore<A, C>
-    where   C: CharacteristicsInterface + 'static,
-            A: ColourAttributesInterface + 'static
+where
+    C: CharacteristicsInterface + 'static,
+    A: ColourAttributesInterface + 'static,
 {
     vbox: gtk::Box,
     edited_spec: RefCell<Option<BasicPaintSpec<C>>>,
@@ -70,8 +73,9 @@ impl_widget_wrapper!(vbox: gtk::Box, BasicPaintSpecEntryCore<A, C>
 );
 
 impl<A, C> BasicPaintSpecEntryCore<A, C>
-    where   C: CharacteristicsInterface + 'static,
-            A: ColourAttributesInterface + 'static
+where
+    C: CharacteristicsInterface + 'static,
+    A: ColourAttributesInterface + 'static,
 {
     pub fn set_edited_spec(&self, o_spec: Option<BasicPaintSpec<C>>) {
         if let Some(spec) = o_spec {
@@ -79,7 +83,8 @@ impl<A, C> BasicPaintSpecEntryCore<A, C>
             self.colour_editor.set_rgb(spec.rgb);
             self.name_entry.set_text(&spec.name);
             self.notes_entry.set_text(&spec.notes);
-            self.characteristics_entry.set_characteristics(Some(&spec.characteristics));
+            self.characteristics_entry
+                .set_characteristics(Some(&spec.characteristics));
             *self.edited_spec.borrow_mut() = Some(spec);
         } else {
             self.colour_editor.reset();
@@ -94,13 +99,13 @@ impl<A, C> BasicPaintSpecEntryCore<A, C>
         if let Some(characteristics) = self.characteristics_entry.get_characteristics() {
             if let Some(name) = self.name_entry.get_text() {
                 let notes = if let Some(text) = self.notes_entry.get_text() {
-                    text
+                    String::from(text)
                 } else {
                     "".to_string()
                 };
                 let spec = BasicPaintSpec::<C> {
                     rgb: self.colour_editor.get_rgb(),
-                    name: name,
+                    name: String::from(name),
                     notes: notes,
                     characteristics: characteristics,
                 };
@@ -153,7 +158,9 @@ impl<A, C> BasicPaintSpecEntryCore<A, C>
     }
 
     pub fn connect_status_changed<F: 'static + Fn(EntryStatus)>(&self, callback: F) {
-        self.status_changed_callbacks.borrow_mut().push(Box::new(callback))
+        self.status_changed_callbacks
+            .borrow_mut()
+            .push(Box::new(callback))
     }
 
     fn inform_status_changed(&self) {
@@ -164,56 +171,66 @@ impl<A, C> BasicPaintSpecEntryCore<A, C>
     }
 }
 
-impl<A, C> CreateInterface for  Rc<BasicPaintSpecEntryCore<A, C>>
-    where   C: CharacteristicsInterface + 'static,
-            A: ColourAttributesInterface + 'static
+impl<A, C> CreateInterface for Rc<BasicPaintSpecEntryCore<A, C>>
+where
+    C: CharacteristicsInterface + 'static,
+    A: ColourAttributesInterface + 'static,
 {
     fn create(extra_buttons: &Vec<gtk::Button>) -> Self {
-        let spe = Rc::new(
-            BasicPaintSpecEntryCore::<A, C>{
-                vbox: gtk::Box::new(gtk::Orientation::Vertical, 0),
-                edited_spec: RefCell::new(None),
-                characteristics_entry: C::Entry::create(),
-                name_entry: gtk::Entry::new(),
-                notes_entry: gtk::Entry::new(),
-                colour_editor: ColourEditor::<A>::create(extra_buttons),
-                status_changed_callbacks: RefCell::new(Vec::new()),
-            }
-        );
+        let spe = Rc::new(BasicPaintSpecEntryCore::<A, C> {
+            vbox: gtk::Box::new(gtk::Orientation::Vertical, 0),
+            edited_spec: RefCell::new(None),
+            characteristics_entry: C::Entry::create(),
+            name_entry: gtk::Entry::new(),
+            notes_entry: gtk::Entry::new(),
+            colour_editor: ColourEditor::<A>::create(extra_buttons),
+            status_changed_callbacks: RefCell::new(Vec::new()),
+        });
 
         spe.name_entry.set_hexpand(true);
         spe.notes_entry.set_hexpand(true);
 
         let grid = spe.characteristics_entry.pwo();
-        grid.insert_row(0); grid.insert_row(0);
+        grid.insert_row(0);
+        grid.insert_row(0);
         let label = gtk::Label::new(Some("Name:"));
         label.set_halign(gtk::Align::End);
         grid.attach(&label, 0, 0, 1, 1);
-        grid.attach_next_to(&spe.name_entry.clone(), Some(&label), gtk::PositionType::Right, 1, 1);
+        grid.attach_next_to(
+            &spe.name_entry.clone(),
+            Some(&label),
+            gtk::PositionType::Right,
+            1,
+            1,
+        );
         let label = gtk::Label::new(Some("Notes:"));
         label.set_halign(gtk::Align::End);
         grid.attach(&label, 0, 1, 1, 1);
-        grid.attach_next_to(&spe.notes_entry.clone(), Some(&label), gtk::PositionType::Right, 1, 1);
+        grid.attach_next_to(
+            &spe.notes_entry.clone(),
+            Some(&label),
+            gtk::PositionType::Right,
+            1,
+            1,
+        );
 
         spe.vbox.pack_start(&grid, false, false, 0);
-        spe.vbox.pack_start(&spe.colour_editor.pwo(), false, false, 0);
+        spe.vbox
+            .pack_start(&spe.colour_editor.pwo(), false, false, 0);
 
         spe.vbox.show_all();
 
         let spe_c = spe.clone();
-        spe.name_entry.connect_changed(
-            move |_| spe_c.inform_status_changed()
-        );
+        spe.name_entry
+            .connect_changed(move |_| spe_c.inform_status_changed());
 
         let spe_c = spe.clone();
-        spe.characteristics_entry.connect_changed(
-            move || spe_c.inform_status_changed()
-        );
+        spe.characteristics_entry
+            .connect_changed(move || spe_c.inform_status_changed());
 
         let spe_c = spe.clone();
-        spe.colour_editor.connect_colour_changed (
-            move |_| spe_c.inform_status_changed()
-        );
+        spe.colour_editor
+            .connect_colour_changed(move |_| spe_c.inform_status_changed());
 
         spe
     }
@@ -226,7 +243,5 @@ mod tests {
     //use super::*;
 
     #[test]
-    fn it_works() {
-
-    }
+    fn it_works() {}
 }

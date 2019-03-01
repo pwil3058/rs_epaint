@@ -34,23 +34,24 @@ use super::hue_wheel::*;
 
 // FACTORY
 pub struct BasicPaintFactoryCore<C>
-    where   C: CharacteristicsInterface,
+where
+    C: CharacteristicsInterface,
 {
     paints: RefCell<Vec<BasicPaint<C>>>,
 }
 
 impl<C> BasicPaintFactoryCore<C>
-    where   C: CharacteristicsInterface,
+where
+    C: CharacteristicsInterface,
 {
     fn clear(&self) {
         self.paints.borrow_mut().clear()
     }
 
     fn find_name(&self, name: &str) -> Result<usize, usize> {
-        self.paints.borrow().binary_search_by_key(
-            &name.to_string(),
-            |paint| paint.name()
-        )
+        self.paints
+            .borrow()
+            .binary_search_by_key(&name.to_string(), |paint| paint.name())
     }
 
     pub fn len(&self) -> usize {
@@ -60,7 +61,7 @@ impl<C> BasicPaintFactoryCore<C>
     pub fn get_paint(&self, name: &str) -> Option<BasicPaint<C>> {
         match self.find_name(name) {
             Ok(index) => Some(self.paints.borrow()[index].clone()),
-            Err(_) => None
+            Err(_) => None,
         }
     }
 
@@ -116,9 +117,13 @@ impl<C> BasicPaintFactoryCore<C>
         }
     }
 
-    pub fn replace_paint(&self, paint: &BasicPaint<C>, spec: &BasicPaintSpec<C>) -> Result<BasicPaint<C>, PaintError<C>> {
+    pub fn replace_paint(
+        &self,
+        paint: &BasicPaint<C>,
+        spec: &BasicPaintSpec<C>,
+    ) -> Result<BasicPaint<C>, PaintError<C>> {
         if paint.name() != spec.name && self.has_paint_named(&spec.name) {
-            return Err(PaintErrorType::AlreadyExists(spec.name.clone()).into())
+            return Err(PaintErrorType::AlreadyExists(spec.name.clone()).into());
         };
         self.remove_paint(paint);
         self.add_paint(spec)
@@ -128,30 +133,33 @@ impl<C> BasicPaintFactoryCore<C>
 pub type BasicPaintFactory<C> = Rc<BasicPaintFactoryCore<C>>;
 
 impl<C> SimpleCreation for BasicPaintFactory<C>
-    where   C: CharacteristicsInterface,
+where
+    C: CharacteristicsInterface,
 {
     fn create() -> BasicPaintFactory<C> {
         let paints: RefCell<Vec<BasicPaint<C>>> = RefCell::new(Vec::new());
-        Rc::new(BasicPaintFactoryCore::<C>{paints})
+        Rc::new(BasicPaintFactoryCore::<C> { paints })
     }
 }
 
 // FACTORY VIEW
 pub struct BasicPaintFactoryViewCore<A, C>
-    where   A: ColourAttributesInterface + 'static,
-            C: CharacteristicsInterface + 'static,
+where
+    A: ColourAttributesInterface + 'static,
+    C: CharacteristicsInterface + 'static,
 {
     scrolled_window: gtk::ScrolledWindow,
     list_store: gtk::ListStore,
     view: gtk::TreeView,
     paint_factory: BasicPaintFactory<C>,
     chosen_paint: RefCell<Option<BasicPaint<C>>>,
-    spec: PhantomData<A>
+    spec: PhantomData<A>,
 }
 
 impl<A, C> BasicPaintFactoryViewCore<A, C>
-    where   A: ColourAttributesInterface + 'static,
-            C: CharacteristicsInterface + 'static,
+where
+    A: ColourAttributesInterface + 'static,
+    C: CharacteristicsInterface + 'static,
 {
     fn clear(&self) {
         *self.chosen_paint.borrow_mut() = None;
@@ -165,13 +173,16 @@ impl<A, C> BasicPaintFactoryViewCore<A, C>
         if let Some(location) = self.view.get_path_at_pos(x, y) {
             if let Some(path) = location.0 {
                 if let Some(iter) = self.list_store.get_iter(&path) {
-                    let name: String = self.list_store.get_value(&iter, 0).get().unwrap_or_else(
-                        || panic!("File: {:?} Line: {:?}", file!(), line!())
-                    );
-                    let paint = self.paint_factory.get_paint(&name).unwrap_or_else(
-                        || panic!("File: {:?} Line: {:?}", file!(), line!())
-                    );
-                    return Some(paint)
+                    let name: String = self
+                        .list_store
+                        .get_value(&iter, 0)
+                        .get()
+                        .unwrap_or_else(|| panic!("File: {:?} Line: {:?}", file!(), line!()));
+                    let paint = self
+                        .paint_factory
+                        .get_paint(&name)
+                        .unwrap_or_else(|| panic!("File: {:?} Line: {:?}", file!(), line!()));
+                    return Some(paint);
                 }
             }
         };
@@ -217,15 +228,14 @@ impl<A, C> BasicPaintFactoryViewCore<A, C>
             Ok(paint) => {
                 self.list_store.append_row(&paint.tv_rows());
                 Ok(paint)
-            },
-            Err(err) => Err(err)
+            }
+            Err(err) => Err(err),
         }
     }
 
     fn find_paint_named(&self, name: &str) -> Option<(i32, gtk::TreeIter)> {
-        self.list_store.find_row_where(
-            |list_store, iter| list_store.get_value(iter, 0).get() == Some(name)
-        )
+        self.list_store
+            .find_row_where(|list_store, iter| list_store.get_value(iter, 0).get() == Some(name))
     }
 
     pub fn remove_paint(&self, paint: &BasicPaint<C>) {
@@ -237,7 +247,11 @@ impl<A, C> BasicPaintFactoryViewCore<A, C>
         }
     }
 
-    pub fn replace_paint(&self, paint: &BasicPaint<C>, spec: &BasicPaintSpec<C>) -> Result<BasicPaint<C>, PaintError<C>> {
+    pub fn replace_paint(
+        &self,
+        paint: &BasicPaint<C>,
+        spec: &BasicPaintSpec<C>,
+    ) -> Result<BasicPaint<C>, PaintError<C>> {
         let new_paint = self.paint_factory.replace_paint(paint, spec)?;
         if let Some((index, iter)) = self.find_paint_named(&paint.name()) {
             self.list_store.remove(&iter);
@@ -248,7 +262,12 @@ impl<A, C> BasicPaintFactoryViewCore<A, C>
         }
     }
 
-    pub fn connect_button_press_event<F: Fn(&gtk::TreeView, &gdk::EventButton) -> Inhibit + 'static>(&self, f: F) -> SignalHandlerId {
+    pub fn connect_button_press_event<
+        F: Fn(&gtk::TreeView, &gdk::EventButton) -> Inhibit + 'static,
+    >(
+        &self,
+        f: F,
+    ) -> SignalHandlerId {
         self.view.connect_button_press_event(f)
     }
 }
@@ -261,15 +280,17 @@ impl_widget_wrapper!(scrolled_window: gtk::ScrolledWindow, BasicPaintFactoryView
 pub type BasicPaintFactoryView<A, C> = Rc<BasicPaintFactoryViewCore<A, C>>;
 
 pub trait BasicPaintFactoryViewInterface<A, C>
-    where   A: ColourAttributesInterface + 'static,
-            C: CharacteristicsInterface + 'static,
+where
+    A: ColourAttributesInterface + 'static,
+    C: CharacteristicsInterface + 'static,
 {
     fn create() -> BasicPaintFactoryView<A, C>;
 }
 
 impl<A, C> BasicPaintFactoryViewInterface<A, C> for BasicPaintFactoryView<A, C>
-    where   A: ColourAttributesInterface + 'static,
-            C: CharacteristicsInterface + 'static,
+where
+    A: ColourAttributesInterface + 'static,
+    C: CharacteristicsInterface + 'static,
 {
     fn create() -> BasicPaintFactoryView<A, C> {
         let len = BasicPaint::<C>::tv_row_len();
@@ -278,19 +299,22 @@ impl<A, C> BasicPaintFactoryViewInterface<A, C> for BasicPaintFactoryView<A, C>
         view.set_headers_visible(true);
         view.get_selection().set_mode(gtk::SelectionMode::None);
 
-        let mspl = Rc::new(
-            BasicPaintFactoryViewCore::<A, C> {
-                scrolled_window: gtk::ScrolledWindow::new(None, None),
-                list_store: list_store,
-                paint_factory: BasicPaintFactory::<C>::create(),
-                view: view,
-                chosen_paint: RefCell::new(None),
-                spec: PhantomData,
-            }
-        );
+        let adj: Option<&gtk::Adjustment> = None;
+        let mspl = Rc::new(BasicPaintFactoryViewCore::<A, C> {
+            scrolled_window: gtk::ScrolledWindow::new(adj, adj),
+            list_store: list_store,
+            paint_factory: BasicPaintFactory::<C>::create(),
+            view: view,
+            chosen_paint: RefCell::new(None),
+            spec: PhantomData,
+        });
 
-        mspl.view.append_column(&simple_text_column("Name", SP_NAME, SP_NAME, SP_RGB, SP_RGB_FG, -1, true));
-        mspl.view.append_column(&simple_text_column("Notes", SP_NOTES, SP_NOTES, SP_RGB, SP_RGB_FG, -1, true));
+        mspl.view.append_column(&simple_text_column(
+            "Name", SP_NAME, SP_NAME, SP_RGB, SP_RGB_FG, -1, true,
+        ));
+        mspl.view.append_column(&simple_text_column(
+            "Notes", SP_NOTES, SP_NOTES, SP_RGB, SP_RGB_FG, -1, true,
+        ));
         for col in A::tv_columns() {
             mspl.view.append_column(&col);
         }
@@ -309,8 +333,9 @@ impl<A, C> BasicPaintFactoryViewInterface<A, C> for BasicPaintFactoryView<A, C>
 
 // FACTORY DISPLAY CORE
 pub struct BasicPaintFactoryDisplayCore<A, C>
-    where   A: ColourAttributesInterface + 'static,
-            C: CharacteristicsInterface + 'static,
+where
+    A: ColourAttributesInterface + 'static,
+    C: CharacteristicsInterface + 'static,
 {
     notebook: gtk::Notebook,
     paint_factory_view: BasicPaintFactoryView<A, C>,
@@ -324,8 +349,9 @@ pub struct BasicPaintFactoryDisplayCore<A, C>
 }
 
 impl<A, C> BasicPaintFactoryDisplayCore<A, C>
-    where   A: ColourAttributesInterface + 'static,
-            C: CharacteristicsInterface + 'static,
+where
+    A: ColourAttributesInterface + 'static,
+    C: CharacteristicsInterface + 'static,
 {
     pub fn len(&self) -> usize {
         self.paint_factory_view.len()
@@ -334,40 +360,49 @@ impl<A, C> BasicPaintFactoryDisplayCore<A, C>
     pub fn clear(&self) {
         for dialog in self.paint_dialogs.borrow().values() {
             dialog.close();
-        };
+        }
         *self.chosen_paint.borrow_mut() = None;
         self.paint_factory_view.clear();
         for wheel in self.hue_attr_wheels.iter() {
             wheel.clear()
-        };
+        }
     }
 
     pub fn set_initiate_edit_ok(&self, value: bool) {
         self.initiate_edit_ok.set(value);
         for dialog in self.paint_dialogs.borrow().values() {
-            dialog.set_response_sensitive(0, value);
-        };
+            dialog.set_response_sensitive(gtk::ResponseType::Other(0), value);
+        }
     }
 
     fn close_dialogs_for_paint(&self, paint: &BasicPaint<C>) {
-        for dialog in self.paint_dialogs.borrow().values().filter(|d| d.paint() == *paint) {
+        for dialog in self
+            .paint_dialogs
+            .borrow()
+            .values()
+            .filter(|d| d.paint() == *paint)
+        {
             dialog.close();
-        };
+        }
     }
 
     pub fn add_paint(&self, spec: &BasicPaintSpec<C>) -> Result<BasicPaint<C>, PaintError<C>> {
         let paint = self.paint_factory_view.add_paint(spec)?;
         for wheel in self.hue_attr_wheels.iter() {
             wheel.add_paint(&paint)
-        };
+        }
         Ok(paint)
     }
 
-    pub fn replace_paint(&self, old_paint: &BasicPaint<C>, spec: &BasicPaintSpec<C>) -> Result<BasicPaint<C>, PaintError<C>> {
+    pub fn replace_paint(
+        &self,
+        old_paint: &BasicPaint<C>,
+        spec: &BasicPaintSpec<C>,
+    ) -> Result<BasicPaint<C>, PaintError<C>> {
         let new_paint = self.paint_factory_view.replace_paint(old_paint, spec)?;
         for wheel in self.hue_attr_wheels.iter() {
             wheel.replace_paint(old_paint, &new_paint)
-        };
+        }
         self.close_dialogs_for_paint(old_paint);
         Ok(new_paint)
     }
@@ -376,7 +411,7 @@ impl<A, C> BasicPaintFactoryDisplayCore<A, C>
         self.paint_factory_view.remove_paint(paint);
         for wheel in self.hue_attr_wheels.iter() {
             wheel.remove_paint(paint)
-        };
+        }
         self.close_dialogs_for_paint(paint);
         self.inform_paint_removed(paint);
     }
@@ -397,7 +432,9 @@ impl<A, C> BasicPaintFactoryDisplayCore<A, C>
     }
 
     pub fn connect_edit_paint<F: 'static + Fn(&BasicPaint<C>)>(&self, callback: F) {
-        self.edit_paint_callbacks.borrow_mut().push(Box::new(callback))
+        self.edit_paint_callbacks
+            .borrow_mut()
+            .push(Box::new(callback))
     }
 
     fn inform_edit_paint(&self, paint: &BasicPaint<C>) {
@@ -407,7 +444,9 @@ impl<A, C> BasicPaintFactoryDisplayCore<A, C>
     }
 
     pub fn connect_paint_removed<F: 'static + Fn(&BasicPaint<C>)>(&self, callback: F) {
-        self.paint_removed_callbacks.borrow_mut().push(Box::new(callback))
+        self.paint_removed_callbacks
+            .borrow_mut()
+            .push(Box::new(callback))
     }
 
     fn inform_paint_removed(&self, paint: &BasicPaint<C>) {
@@ -426,15 +465,19 @@ impl_widget_wrapper!(notebook: gtk::Notebook, BasicPaintFactoryDisplayCore<A, C>
 );
 
 impl<A, C> SimpleCreation for BasicPaintFactoryDisplay<A, C>
-    where   A: ColourAttributesInterface + 'static,
-            C: CharacteristicsInterface + 'static,
+where
+    A: ColourAttributesInterface + 'static,
+    C: CharacteristicsInterface + 'static,
 {
     fn create() -> BasicPaintFactoryDisplay<A, C> {
         let notebook = gtk::Notebook::new();
         notebook.set_scrollable(true);
         notebook.popup_enable();
         let paint_factory_view = BasicPaintFactoryView::<A, C>::create();
-        notebook.append_page(&paint_factory_view.pwo(), Some(&gtk::Label::new("Paint List")));
+        notebook.append_page(
+            &paint_factory_view.pwo(),
+            Some(&gtk::Label::new("Paint List")),
+        );
         let mut hue_attr_wheels = Vec::new();
         for attr in A::scalar_attributes().iter() {
             let wheel = BasicPaintHueAttrWheel::<C>::create(*attr);
@@ -444,118 +487,131 @@ impl<A, C> SimpleCreation for BasicPaintFactoryDisplay<A, C>
             hue_attr_wheels.push(wheel);
         }
 
-        let bpf = Rc::new(
-            BasicPaintFactoryDisplayCore::<A, C> {
-                notebook: notebook,
-                paint_factory_view: paint_factory_view,
-                hue_attr_wheels: hue_attr_wheels,
-                chosen_paint: RefCell::new(None),
-                popup_menu: WrappedMenu::new(&vec![]),
-                initiate_edit_ok: Cell::new(false),
-                paint_dialogs: RefCell::new(HashMap::new()),
-                paint_removed_callbacks: RefCell::new(Vec::new()),
-                edit_paint_callbacks: RefCell::new(Vec::new()),
-            }
-        );
+        let bpf = Rc::new(BasicPaintFactoryDisplayCore::<A, C> {
+            notebook: notebook,
+            paint_factory_view: paint_factory_view,
+            hue_attr_wheels: hue_attr_wheels,
+            chosen_paint: RefCell::new(None),
+            popup_menu: WrappedMenu::new(&vec![]),
+            initiate_edit_ok: Cell::new(false),
+            paint_dialogs: RefCell::new(HashMap::new()),
+            paint_removed_callbacks: RefCell::new(Vec::new()),
+            edit_paint_callbacks: RefCell::new(Vec::new()),
+        });
 
         let bpf_c = bpf.clone();
-        bpf.popup_menu.append_item(
-            "edit",
-            "Edit Paint",
-            "Select this paint for editing",
-        ).connect_activate(
-            move |_| {
+        bpf.popup_menu
+            .append_item("edit", "Edit Paint", "Select this paint for editing")
+            .connect_activate(move |_| {
                 if let Some(ref paint) = *bpf_c.chosen_paint.borrow() {
                     bpf_c.inform_edit_paint(paint)
                 }
-            }
-        );
+            });
 
         let bpf_c = bpf.clone();
-        bpf.popup_menu.append_item(
-            "info",
-            "Paint Information",
-            "Display this paint's information",
-        ).connect_activate(
-            move |_| {
+        bpf.popup_menu
+            .append_item(
+                "info",
+                "Paint Information",
+                "Display this paint's information",
+            )
+            .connect_activate(move |_| {
                 if let Some(ref paint) = *bpf_c.chosen_paint.borrow() {
                     let bpf_c_c = bpf_c.clone();
                     let paint_c = paint.clone();
                     let edit_btn_spec = PaintDisplayButtonSpec {
                         label: "Edit".to_string(),
                         tooltip_text: "load this paint into the editor.".to_string(),
-                        callback:  Box::new(move || bpf_c_c.inform_edit_paint(&paint_c))
+                        callback: Box::new(move || bpf_c_c.inform_edit_paint(&paint_c)),
                     };
                     let bpf_c_c = bpf_c.clone();
                     let paint_c = paint.clone();
                     let remove_btn_spec = PaintDisplayButtonSpec {
                         label: "Remove".to_string(),
                         tooltip_text: "Remove this paint from the collection.".to_string(),
-                        callback:  Box::new(move || bpf_c_c.remove_paint_after_confirmation(&paint_c))
+                        callback: Box::new(move || {
+                            bpf_c_c.remove_paint_after_confirmation(&paint_c)
+                        }),
                     };
-                    let dialog = BasicPaintDisplayDialog::<A, C>::create(&paint, &bpf_c, vec![edit_btn_spec, remove_btn_spec]);
-                    let bpf_c_c = bpf_c.clone();
-                    dialog.connect_destroyed(
-                        move |id| { bpf_c_c.paint_dialogs.borrow_mut().remove(&id); }
+                    let dialog = BasicPaintDisplayDialog::<A, C>::create(
+                        &paint,
+                        &bpf_c,
+                        vec![edit_btn_spec, remove_btn_spec],
                     );
-                    bpf_c.paint_dialogs.borrow_mut().insert(dialog.id_no(), dialog.clone());
+                    let bpf_c_c = bpf_c.clone();
+                    dialog.connect_destroyed(move |id| {
+                        bpf_c_c.paint_dialogs.borrow_mut().remove(&id);
+                    });
+                    bpf_c
+                        .paint_dialogs
+                        .borrow_mut()
+                        .insert(dialog.id_no(), dialog.clone());
                     dialog.show();
                 }
-            }
-        );
+            });
 
         let bpf_c = bpf.clone();
-        bpf.popup_menu.append_item(
-            "remove",
-            "Remove Paint",
-            "Remove this paint from the collection",
-        ).connect_activate(
-            move |_| {
+        bpf.popup_menu
+            .append_item(
+                "remove",
+                "Remove Paint",
+                "Remove this paint from the collection",
+            )
+            .connect_activate(move |_| {
                 if let Some(ref paint) = *bpf_c.chosen_paint.borrow() {
                     bpf_c.remove_paint_after_confirmation(paint)
                 }
-            }
-        );
+            });
 
         let bpf_c = bpf.clone();
-        bpf.paint_factory_view.connect_button_press_event(
-            move |_, event| {
+        bpf.paint_factory_view
+            .connect_button_press_event(move |_, event| {
                 if event.get_button() == 3 {
-                    if let Some(paint) = bpf_c.paint_factory_view.get_paint_at(event.get_position()) {
-                        bpf_c.popup_menu.set_sensitivities(bpf_c.initiate_edit_ok.get(), &["edit"]);
-                        bpf_c.popup_menu.set_sensitivities(true, &["info", "remove"]);
+                    if let Some(paint) = bpf_c.paint_factory_view.get_paint_at(event.get_position())
+                    {
+                        bpf_c
+                            .popup_menu
+                            .set_sensitivities(bpf_c.initiate_edit_ok.get(), &["edit"]);
+                        bpf_c
+                            .popup_menu
+                            .set_sensitivities(true, &["info", "remove"]);
                         *bpf_c.chosen_paint.borrow_mut() = Some(paint);
                     } else {
-                        bpf_c.popup_menu.set_sensitivities(false, &["edit", "info", "remove"]);
+                        bpf_c
+                            .popup_menu
+                            .set_sensitivities(false, &["edit", "info", "remove"]);
                         *bpf_c.chosen_paint.borrow_mut() = None;
                     };
                     bpf_c.popup_menu.popup_at_event(event);
-                    return Inhibit(true)
+                    return Inhibit(true);
                 };
                 Inhibit(false)
-            }
-        );
+            });
 
         for wheel in bpf.hue_attr_wheels.iter() {
             let bpf_c = bpf.clone();
             let wheel_c = wheel.clone();
-            wheel.connect_button_press_event(
-                move |_, event| {
-                    if event.get_button() == 3 {
-                        if let Some(paint) = wheel_c.get_paint_at(event.get_position()) {
-                        bpf_c.popup_menu.set_sensitivities(bpf_c.initiate_edit_ok.get(), &["edit"]);
-                        bpf_c.popup_menu.set_sensitivities(true, &["info", "remove"]);
-                            *bpf_c.chosen_paint.borrow_mut() = Some(paint);
-                        } else {
-                        bpf_c.popup_menu.set_sensitivities(false, &["edit", "info", "remove"]);
-                            *bpf_c.chosen_paint.borrow_mut() = None;
-                        };
-                        bpf_c.popup_menu.popup_at_event(event);
-                        return Inhibit(true)
+            wheel.connect_button_press_event(move |_, event| {
+                if event.get_button() == 3 {
+                    if let Some(paint) = wheel_c.get_paint_at(event.get_position()) {
+                        bpf_c
+                            .popup_menu
+                            .set_sensitivities(bpf_c.initiate_edit_ok.get(), &["edit"]);
+                        bpf_c
+                            .popup_menu
+                            .set_sensitivities(true, &["info", "remove"]);
+                        *bpf_c.chosen_paint.borrow_mut() = Some(paint);
+                    } else {
+                        bpf_c
+                            .popup_menu
+                            .set_sensitivities(false, &["edit", "info", "remove"]);
+                        *bpf_c.chosen_paint.borrow_mut() = None;
                     };
-                    Inhibit(false)
-                }
-            );
+                    bpf_c.popup_menu.popup_at_event(event);
+                    return Inhibit(true);
+                };
+                Inhibit(false)
+            });
         }
 
         bpf

@@ -22,14 +22,14 @@ use std::str::FromStr;
 
 use gdk;
 use gtk;
-use gtk::StaticType;
 use gtk::prelude::*;
+use gtk::StaticType;
 
 use regex::*;
 
 use pw_gix::colour::*;
-use pw_gix::rgb_math::rgb::*;
 use pw_gix::rgb_math::hue::*;
+use pw_gix::rgb_math::rgb::*;
 use pw_gix::wrapper::*;
 
 use error::*;
@@ -39,9 +39,7 @@ pub mod entry;
 pub mod factory;
 pub mod hue_wheel;
 
-pub trait CharacteristicsInterface:
-    Debug + Hash + PartialEq + Clone + Copy + ToString
-{
+pub trait CharacteristicsInterface: Debug + Hash + PartialEq + Clone + Copy + ToString {
     type Entry: CharacteristicsEntryInterface<Self>;
 
     fn tv_row_len() -> usize;
@@ -124,7 +122,8 @@ pub trait ColouredItemInterface {
 }
 
 pub trait BasicPaintInterface<C>: Clone + PartialEq + Ord + Debug + ColouredItemInterface
-    where   C: CharacteristicsInterface
+where
+    C: CharacteristicsInterface,
 {
     fn name(&self) -> String;
     fn notes(&self) -> String;
@@ -184,7 +183,7 @@ pub trait BasicPaintInterface<C>: Clone + PartialEq + Ord + Debug + ColouredItem
         ];
         for row in self.characteristics().tv_rows().iter() {
             rows.push(row.clone());
-        };
+        }
         rows
     }
 }
@@ -224,14 +223,12 @@ pub trait FromSpec<C: CharacteristicsInterface> {
 
 impl<C: CharacteristicsInterface> FromSpec<C> for BasicPaint<C> {
     fn from_spec(spec: &BasicPaintSpec<C>) -> BasicPaint<C> {
-        Rc::new(
-            BasicPaintCore::<C> {
-                colour: Colour::from(spec.rgb),
-                name: spec.name.clone(),
-                notes: spec.notes.clone(),
-                characteristics: spec.characteristics,
-            }
-        )
+        Rc::new(BasicPaintCore::<C> {
+            colour: Colour::from(spec.rgb),
+            name: spec.name.clone(),
+            notes: spec.notes.clone(),
+            characteristics: spec.characteristics,
+        })
     }
 }
 
@@ -262,7 +259,8 @@ impl<C: CharacteristicsInterface> Ord for BasicPaintCore<C> {
 }
 
 impl<C> BasicPaintInterface<C> for BasicPaint<C>
-    where   C: CharacteristicsInterface
+where
+    C: CharacteristicsInterface,
 {
     fn name(&self) -> String {
         self.name.clone()
@@ -295,35 +293,49 @@ impl<C: CharacteristicsInterface> FromStr for BasicPaintSpec<C> {
     type Err = PaintError<C>;
 
     fn from_str(string: &str) -> Result<BasicPaintSpec<C>, PaintError<C>> {
-        let captures = BASIC_PAINT_RE.captures(string).ok_or(PaintError::from(PaintErrorType::MalformedText(string.to_string())))?;
-        let c_match = captures.name("characteristics").ok_or(PaintError::from(PaintErrorType::MalformedText(string.to_string())))?;
-        let rgb_match = captures.name("rgb").ok_or(PaintError::from(PaintErrorType::MalformedText(string.to_string())))?;
-        let name_match = captures.name("name").ok_or(PaintError::from(PaintErrorType::MalformedText(string.to_string())))?;
+        let captures = BASIC_PAINT_RE.captures(string).ok_or(PaintError::from(
+            PaintErrorType::MalformedText(string.to_string()),
+        ))?;
+        let c_match = captures.name("characteristics").ok_or(PaintError::from(
+            PaintErrorType::MalformedText(string.to_string()),
+        ))?;
+        let rgb_match =
+            captures
+                .name("rgb")
+                .ok_or(PaintError::from(PaintErrorType::MalformedText(
+                    string.to_string(),
+                )))?;
+        let name_match =
+            captures
+                .name("name")
+                .ok_or(PaintError::from(PaintErrorType::MalformedText(
+                    string.to_string(),
+                )))?;
         let characteristics = C::from_str(c_match.as_str())?;
         let rgb16 = RGB16::from_str(rgb_match.as_str())?;
         let notes = match captures.name("notes") {
             Some(notes_match) => notes_match.as_str().to_string(),
-            None => "".to_string()
+            None => "".to_string(),
         };
-        Ok(
-            BasicPaintSpec::<C> {
-                rgb: RGB::from(rgb16),
-                name: name_match.as_str().to_string().replace("\\\"", "\""),
-                notes: notes.replace("\\\"", "\""),
-                characteristics: characteristics,
-            }
-        )
+        Ok(BasicPaintSpec::<C> {
+            rgb: RGB::from(rgb16),
+            name: name_match.as_str().to_string().replace("\\\"", "\""),
+            notes: notes.replace("\\\"", "\""),
+            characteristics: characteristics,
+        })
     }
 }
 
 impl<C: CharacteristicsInterface> fmt::Display for BasicPaintSpec<C> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "PaintSpec(name=\"{}\", rgb={}, {}, notes=\"{}\")",
+        write!(
+            f,
+            "PaintSpec(name=\"{}\", rgb={}, {}, notes=\"{}\")",
             self.name.replace("\"", "\\\""),
             RGB16::from(self.rgb).to_string(),
             self.characteristics.to_string(),
             self.notes.replace("\"", "\\\"")
-         )
+        )
     }
 }
 
@@ -384,9 +396,18 @@ mod tests {
         assert!(BASIC_PAINT_RE.is_match(&test_str));
         let captures = BASIC_PAINT_RE.captures(&test_str).unwrap();
         assert_eq!(captures.name("ptype").unwrap().as_str(), "ModelPaint");
-        assert_eq!(captures.name("rgb").unwrap().as_str(), "RGB16(red=0xF800, green=0xFA00, blue=0xF600)");
-        assert_eq!(captures.name("characteristics").unwrap().as_str(), ", transparency=\"O\", finish=\"F\", metallic=\"NM\", fluorescence=\"NF\"");
-        assert_eq!(captures.name("notes").unwrap().as_str(), "FS37925 RAL9016 RLM21");
+        assert_eq!(
+            captures.name("rgb").unwrap().as_str(),
+            "RGB16(red=0xF800, green=0xFA00, blue=0xF600)"
+        );
+        assert_eq!(
+            captures.name("characteristics").unwrap().as_str(),
+            ", transparency=\"O\", finish=\"F\", metallic=\"NM\", fluorescence=\"NF\""
+        );
+        assert_eq!(
+            captures.name("notes").unwrap().as_str(),
+            "FS37925 RAL9016 RLM21"
+        );
     }
 
     #[test]
@@ -395,8 +416,14 @@ mod tests {
         assert!(BASIC_PAINT_RE.is_match(&test_str));
         let captures = BASIC_PAINT_RE.captures(&test_str).unwrap();
         assert_eq!(captures.name("ptype").unwrap().as_str(), "NamedColour");
-        assert_eq!(captures.name("rgb").unwrap().as_str(), "RGB(0x2D00, 0x2B00, 0x3000)");
-        assert_eq!(captures.name("characteristics").unwrap().as_str(), ", transparency=\"O\", finish=\"F\"");
+        assert_eq!(
+            captures.name("rgb").unwrap().as_str(),
+            "RGB(0x2D00, 0x2B00, 0x3000)"
+        );
+        assert_eq!(
+            captures.name("characteristics").unwrap().as_str(),
+            ", transparency=\"O\", finish=\"F\""
+        );
         assert_eq!(captures.name("notes"), None);
     }
 }

@@ -36,8 +36,9 @@ use series_paint::*;
 use super::*;
 
 pub struct MixedPaintDisplayDialogCore<A, C>
-    where   C: CharacteristicsInterface + 'static,
-            A: ColourAttributesInterface + 'static
+where
+    C: CharacteristicsInterface + 'static,
+    A: ColourAttributesInterface + 'static,
 {
     dialog: gtk::Dialog,
     paint: MixedPaint<C>,
@@ -45,23 +46,29 @@ pub struct MixedPaintDisplayDialogCore<A, C>
     cads: Rc<A>,
     components_view: PaintComponentListView<A, C>,
     id_no: u32,
-    destroyed_callbacks: DestroyedCallbacks
+    destroyed_callbacks: DestroyedCallbacks,
 }
 
 pub type MixedPaintDisplayDialog<A, C> = Rc<MixedPaintDisplayDialogCore<A, C>>;
 
 impl<A, C> DialogWrapper for MixedPaintDisplayDialog<A, C>
-    where   A: ColourAttributesInterface + 'static,
-            C: CharacteristicsInterface + 'static,
+where
+    A: ColourAttributesInterface + 'static,
+    C: CharacteristicsInterface + 'static,
 {
-    fn dialog(&self) -> gtk::Dialog { self.dialog. clone() }
+    fn dialog(&self) -> gtk::Dialog {
+        self.dialog.clone()
+    }
 }
 
 impl<A, C> TrackedDialog for MixedPaintDisplayDialog<A, C>
-    where   A: ColourAttributesInterface + 'static,
-            C: CharacteristicsInterface + 'static,
+where
+    A: ColourAttributesInterface + 'static,
+    C: CharacteristicsInterface + 'static,
 {
-    fn id_no(&self) -> u32 { self.id_no }
+    fn id_no(&self) -> u32 {
+        self.id_no
+    }
 
     fn destroyed_callbacks(&self) -> &DestroyedCallbacks {
         &self.destroyed_callbacks
@@ -69,8 +76,9 @@ impl<A, C> TrackedDialog for MixedPaintDisplayDialog<A, C>
 }
 
 impl<A, C> PaintDisplayWithCurrentTarget<A, C, MixedPaint<C>> for MixedPaintDisplayDialog<A, C>
-    where   A: ColourAttributesInterface + 'static,
-            C: CharacteristicsInterface + 'static,
+where
+    A: ColourAttributesInterface + 'static,
+    C: CharacteristicsInterface + 'static,
 {
     fn create<W: WidgetWrapper>(
         paint: &MixedPaint<C>,
@@ -106,38 +114,38 @@ impl<A, C> PaintDisplayWithCurrentTarget<A, C, MixedPaint<C>> for MixedPaintDisp
         content_area.pack_start(&cads.pwo(), true, true, 1);
         let characteristics_display = paint.characteristics().gui_display_widget();
         content_area.pack_start(&characteristics_display, false, false, 0);
-        let components_view = PaintComponentListView::<A, C>::create(&paint.components(), current_target);
+        let components_view =
+            PaintComponentListView::<A, C>::create(&paint.components(), current_target);
         content_area.pack_start(&components_view.pwo(), true, true, 0);
         content_area.show_all();
         for (response_id, spec) in button_specs.iter().enumerate() {
-            let button = dialog.add_button(spec.label.as_str(), response_id as i32);
+            let button = dialog.add_button(
+                spec.label.as_str(),
+                gtk::ResponseType::Other(response_id as u16),
+            );
             button.set_tooltip_text(Some(spec.tooltip_text.as_str()));
-        };
-        dialog.connect_response (
-            move |_, r_id| {
-                if r_id >= 0 && r_id < button_specs.len() as i32 {
+        }
+        dialog.connect_response(move |_, r_id| {
+            if let gtk::ResponseType::Other(r_id) = r_id {
+                if (r_id as usize) < button_specs.len() {
                     (button_specs[r_id as usize].callback)()
                 }
             }
-        );
-        let spd_dialog = Rc::new(
-            MixedPaintDisplayDialogCore {
-                dialog: dialog,
-                paint: paint.clone(),
-                current_target_label: current_target_label,
-                cads: cads,
-                components_view: components_view,
-                id_no: get_id_for_dialog(),
-                destroyed_callbacks: DestroyedCallbacks::create(),
-            }
-        );
+        });
+        let spd_dialog = Rc::new(MixedPaintDisplayDialogCore {
+            dialog: dialog,
+            paint: paint.clone(),
+            current_target_label: current_target_label,
+            cads: cads,
+            components_view: components_view,
+            id_no: get_id_for_dialog(),
+            destroyed_callbacks: DestroyedCallbacks::create(),
+        });
         spd_dialog.set_current_target(current_target);
         let spd_dialog_c = spd_dialog.clone();
-        spd_dialog.dialog.connect_destroy(
-            move |_| {
-                spd_dialog_c.inform_destroyed()
-            }
-        );
+        spd_dialog
+            .dialog
+            .connect_destroy(move |_| spd_dialog_c.inform_destroyed());
 
         spd_dialog
     }
@@ -154,7 +162,8 @@ impl<A, C> PaintDisplayWithCurrentTarget<A, C, MixedPaint<C>> for MixedPaintDisp
             self.components_view.set_target_colour(Some(&colour));
         } else {
             self.current_target_label.set_label("");
-            self.current_target_label.set_widget_colour(&self.paint.colour());
+            self.current_target_label
+                .set_widget_colour(&self.paint.colour());
             if let Some(matched_colour) = self.paint.matched_colour() {
                 self.cads.set_target_colour(Some(&matched_colour));
             } else {
@@ -213,7 +222,8 @@ lazy_static! {
 }
 
 impl<C> PaintComponent<C>
-    where   C: CharacteristicsInterface + 'static,
+where
+    C: CharacteristicsInterface + 'static,
 {
     fn tv_rows(&self, index: u32) -> Vec<gtk::Value> {
         let rgba: gdk::RGBA = self.paint.rgb().into();
@@ -243,15 +253,15 @@ impl<C> PaintComponent<C>
         ];
         for row in self.paint.characteristics().tv_rows().iter() {
             rows.push(row.clone());
-        };
+        }
         rows
     }
-
 }
 
 pub struct PaintComponentListViewCore<A, C>
-    where   A: ColourAttributesInterface + 'static,
-            C: CharacteristicsInterface + 'static,
+where
+    A: ColourAttributesInterface + 'static,
+    C: CharacteristicsInterface + 'static,
 {
     scrolled_window: gtk::ScrolledWindow,
     list_store: gtk::ListStore,
@@ -262,12 +272,13 @@ pub struct PaintComponentListViewCore<A, C>
     current_target: RefCell<Option<Colour>>,
     series_paint_dialogs: RefCell<HashMap<u32, SeriesPaintDisplayDialog<A, C>>>,
     mixed_paint_dialogs: RefCell<HashMap<u32, MixedPaintDisplayDialog<A, C>>>,
-    spec: PhantomData<A>
+    spec: PhantomData<A>,
 }
 
 impl<A, C> PaintComponentListViewCore<A, C>
-    where   A: ColourAttributesInterface + 'static,
-            C: CharacteristicsInterface + 'static,
+where
+    A: ColourAttributesInterface + 'static,
+    C: CharacteristicsInterface + 'static,
 {
     fn get_paint_at(&self, posn: (f64, f64)) -> Option<Paint<C>> {
         let x = posn.0 as i32;
@@ -275,14 +286,20 @@ impl<A, C> PaintComponentListViewCore<A, C>
         if let Some(location) = self.view.get_path_at_pos(x, y) {
             if let Some(path) = location.0 {
                 if let Some(iter) = self.list_store.get_iter(&path) {
-                    let index: u32 = self.list_store.get_value(&iter, 14).get().unwrap_or_else(
-                        || panic!("File: {:?} Line: {:?}", file!(), line!())
-                    );
+                    let index: u32 = self
+                        .list_store
+                        .get_value(&iter, 14)
+                        .get()
+                        .unwrap_or_else(|| panic!("File: {:?} Line: {:?}", file!(), line!()));
                     if index as usize >= self.components.len() {
-                        panic!("File: {:?} Line: {:?} outside array bounds", file!(), line!())
+                        panic!(
+                            "File: {:?} Line: {:?} outside array bounds",
+                            file!(),
+                            line!()
+                        )
                     };
                     let paint = self.components[index as usize].paint.clone();
-                    return Some(paint)
+                    return Some(paint);
                 }
             }
         }
@@ -294,21 +311,21 @@ impl<A, C> PaintComponentListViewCore<A, C>
             Some(colour) => {
                 for dialog in self.series_paint_dialogs.borrow().values() {
                     dialog.set_current_target(Some(colour));
-                };
+                }
                 for dialog in self.mixed_paint_dialogs.borrow().values() {
                     dialog.set_current_target(Some(colour));
-                };
+                }
                 *self.current_target.borrow_mut() = Some(colour.clone())
-            },
+            }
             None => {
                 for dialog in self.series_paint_dialogs.borrow().values() {
                     dialog.set_current_target(None);
-                };
+                }
                 for dialog in self.mixed_paint_dialogs.borrow().values() {
                     dialog.set_current_target(None);
-                };
+                }
                 *self.current_target.borrow_mut() = None
-            },
+            }
         }
     }
 }
@@ -321,22 +338,24 @@ impl_widget_wrapper!(scrolled_window: gtk::ScrolledWindow, PaintComponentListVie
 pub type PaintComponentListView<A, C> = Rc<PaintComponentListViewCore<A, C>>;
 
 pub trait PaintComponentListViewInterface<A, C>
-    where   A: ColourAttributesInterface + 'static,
-            C: CharacteristicsInterface + 'static,
+where
+    A: ColourAttributesInterface + 'static,
+    C: CharacteristicsInterface + 'static,
 {
     fn create(
         components: &Rc<Vec<PaintComponent<C>>>,
-        current_target: Option<&Colour>
+        current_target: Option<&Colour>,
     ) -> PaintComponentListView<A, C>;
 }
 
 impl<A, C> PaintComponentListViewInterface<A, C> for PaintComponentListView<A, C>
-    where   A: ColourAttributesInterface + 'static,
-            C: CharacteristicsInterface + 'static,
+where
+    A: ColourAttributesInterface + 'static,
+    C: CharacteristicsInterface + 'static,
 {
     fn create(
         components: &Rc<Vec<PaintComponent<C>>>,
-        current_target: Option<&Colour>
+        current_target: Option<&Colour>,
     ) -> PaintComponentListView<A, C> {
         let len = PC_CHARS_0 as usize + C::tv_row_len();
         let list_store = gtk::ListStore::new(&PAINT_COMPONENTS_ROW_SPEC[0..len]);
@@ -353,24 +372,29 @@ impl<A, C> PaintComponentListViewInterface<A, C> for PaintComponentListView<A, C
             None
         };
 
-        let pclv = Rc::new(
-            PaintComponentListViewCore::<A, C> {
-                scrolled_window: gtk::ScrolledWindow::new(None, None),
-                list_store: list_store,
-                popup_menu: WrappedMenu::new(&vec![]),
-                components: components.clone(),
-                view: view,
-                chosen_paint: RefCell::new(None),
-                current_target: RefCell::new(my_current_target),
-                series_paint_dialogs: RefCell::new(HashMap::new()),
-                mixed_paint_dialogs: RefCell::new(HashMap::new()),
-                spec: PhantomData,
-            }
-        );
+        let adj: Option<&gtk::Adjustment> = None;
+        let pclv = Rc::new(PaintComponentListViewCore::<A, C> {
+            scrolled_window: gtk::ScrolledWindow::new(adj, adj),
+            list_store: list_store,
+            popup_menu: WrappedMenu::new(&vec![]),
+            components: components.clone(),
+            view: view,
+            chosen_paint: RefCell::new(None),
+            current_target: RefCell::new(my_current_target),
+            series_paint_dialogs: RefCell::new(HashMap::new()),
+            mixed_paint_dialogs: RefCell::new(HashMap::new()),
+            spec: PhantomData,
+        });
 
-        pclv.view.append_column(&simple_text_column("Parts", PC_PARTS, PC_PARTS, -1, -1, -1, true));
-        pclv.view.append_column(&simple_text_column("Name", PC_NAME, PC_NAME, PC_RGB, PC_RGB_FG, -1, true));
-        pclv.view.append_column(&simple_text_column("Notes", PC_NOTES, PC_NOTES, PC_RGB, PC_RGB_FG, -1, true));
+        pclv.view.append_column(&simple_text_column(
+            "Parts", PC_PARTS, PC_PARTS, -1, -1, -1, true,
+        ));
+        pclv.view.append_column(&simple_text_column(
+            "Name", PC_NAME, PC_NAME, PC_RGB, PC_RGB_FG, -1, true,
+        ));
+        pclv.view.append_column(&simple_text_column(
+            "Notes", PC_NOTES, PC_NOTES, PC_RGB, PC_RGB_FG, -1, true,
+        ));
         for col in A::tv_columns() {
             pclv.view.append_column(&col);
         }
@@ -384,12 +408,13 @@ impl<A, C> PaintComponentListViewInterface<A, C> for PaintComponentListView<A, C
         pclv.scrolled_window.show_all();
 
         let pclv_c = pclv.clone();
-        pclv.popup_menu.append_item(
-            "info",
-            "Paint Information",
-            "Display this paint's information",
-        ).connect_activate(
-            move |_| {
+        pclv.popup_menu
+            .append_item(
+                "info",
+                "Paint Information",
+                "Display this paint's information",
+            )
+            .connect_activate(move |_| {
                 if let Some(ref paint) = *pclv_c.chosen_paint.borrow() {
                     let current_target = pclv_c.current_target.borrow().clone();
                     let target = if let Some(ref colour) = current_target {
@@ -403,50 +428,55 @@ impl<A, C> PaintComponentListViewInterface<A, C> for PaintComponentListView<A, C
                                 mixed_paint,
                                 target,
                                 &pclv_c,
-                                vec![]
+                                vec![],
                             );
                             let pclv_c_c = pclv_c.clone();
-                            dialog.connect_destroyed(
-                                move |id| { pclv_c_c.mixed_paint_dialogs.borrow_mut().remove(&id); }
-                            );
-                            pclv_c.mixed_paint_dialogs.borrow_mut().insert(dialog.id_no(), dialog.clone());
+                            dialog.connect_destroyed(move |id| {
+                                pclv_c_c.mixed_paint_dialogs.borrow_mut().remove(&id);
+                            });
+                            pclv_c
+                                .mixed_paint_dialogs
+                                .borrow_mut()
+                                .insert(dialog.id_no(), dialog.clone());
                             dialog.show();
-                        },
+                        }
                         &Paint::Series(ref series_paint) => {
                             let dialog = SeriesPaintDisplayDialog::<A, C>::create(
                                 series_paint,
                                 target,
                                 &pclv_c,
-                                vec![]
+                                vec![],
                             );
                             let pclv_c_c = pclv_c.clone();
-                            dialog.connect_destroyed(
-                                move |id| { pclv_c_c.series_paint_dialogs.borrow_mut().remove(&id); }
-                            );
-                            pclv_c.series_paint_dialogs.borrow_mut().insert(dialog.id_no(), dialog.clone());
+                            dialog.connect_destroyed(move |id| {
+                                pclv_c_c.series_paint_dialogs.borrow_mut().remove(&id);
+                            });
+                            pclv_c
+                                .series_paint_dialogs
+                                .borrow_mut()
+                                .insert(dialog.id_no(), dialog.clone());
                             dialog.show();
-                        },
+                        }
                     }
                 }
-            }
-        );
+            });
 
         let pclv_c = pclv.clone();
-        pclv.view.connect_button_press_event(
-            move |_, event| {
-                if event.get_event_type() == gdk::EventType::ButtonPress {
-                    if event.get_button() == 3 {
-                        let o_paint = pclv_c.get_paint_at(event.get_position());
-                        pclv_c.popup_menu.set_sensitivities(o_paint.is_some(), &["info"]);
-                        *pclv_c.chosen_paint.borrow_mut() = o_paint;
-                        // TODO: needs v3_22: pclv_c.menu.popup_at_pointer(None);
-                        pclv_c.popup_menu.popup_at_event(event);
-                        return Inhibit(true)
-                    }
+        pclv.view.connect_button_press_event(move |_, event| {
+            if event.get_event_type() == gdk::EventType::ButtonPress {
+                if event.get_button() == 3 {
+                    let o_paint = pclv_c.get_paint_at(event.get_position());
+                    pclv_c
+                        .popup_menu
+                        .set_sensitivities(o_paint.is_some(), &["info"]);
+                    *pclv_c.chosen_paint.borrow_mut() = o_paint;
+                    // TODO: needs v3_22: pclv_c.menu.popup_at_pointer(None);
+                    pclv_c.popup_menu.popup_at_event(event);
+                    return Inhibit(true);
                 }
-                Inhibit(false)
-             }
-        );
+            }
+            Inhibit(false)
+        });
 
         pclv
     }
@@ -457,7 +487,5 @@ mod tests {
     //use super::*;
 
     #[test]
-    fn it_works() {
-
-    }
+    fn it_works() {}
 }

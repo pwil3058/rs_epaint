@@ -70,7 +70,8 @@ pub trait CollnIdInterface:
 }
 
 pub struct CollnIdEntryData<CID>
-    where   CID: CollnIdInterface
+where
+    CID: CollnIdInterface,
 {
     grid: gtk::Grid,
     colln_name_entry: gtk::Entry,
@@ -86,52 +87,62 @@ impl_widget_wrapper!(grid: gtk::Grid, CollnIdEntryData<CID>
 pub type CollnIdEntry<CID> = Rc<CollnIdEntryData<CID>>;
 
 impl<CID> SimpleCreation for CollnIdEntry<CID>
-    where   CID: CollnIdInterface + 'static
+where
+    CID: CollnIdInterface + 'static,
 {
     fn create() -> CollnIdEntry<CID> {
-        let psie = Rc::new(
-            CollnIdEntryData {
-                grid: gtk::Grid::new(),
-                colln_owner_entry: gtk::Entry::new(),
-                colln_name_entry: gtk::Entry::new(),
-                changed_callbacks: RefCell::new(Vec::new()),
-                phantom_data: PhantomData,
-            }
-        );
+        let psie = Rc::new(CollnIdEntryData {
+            grid: gtk::Grid::new(),
+            colln_owner_entry: gtk::Entry::new(),
+            colln_name_entry: gtk::Entry::new(),
+            changed_callbacks: RefCell::new(Vec::new()),
+            phantom_data: PhantomData,
+        });
         let label = gtk::Label::new(Some(CID::colln_name_label().as_str()));
         label.set_halign(gtk::Align::End);
         psie.grid.attach(&label, 0, 0, 1, 1);
         psie.colln_name_entry.set_hexpand(true);
-        psie.grid.attach_next_to(&psie.colln_name_entry.clone(), Some(&label), gtk::PositionType::Right, 1, 1);
+        psie.grid.attach_next_to(
+            &psie.colln_name_entry.clone(),
+            Some(&label),
+            gtk::PositionType::Right,
+            1,
+            1,
+        );
         let label = gtk::Label::new(Some(CID::colln_owner_label().as_str()));
         label.set_halign(gtk::Align::End);
         psie.grid.attach(&label, 0, 1, 1, 1);
         psie.colln_owner_entry.set_hexpand(true);
-        psie.grid.attach_next_to(&psie.colln_owner_entry.clone(), Some(&label), gtk::PositionType::Right, 1, 1);
-
-        let psie_c = psie.clone();
-        psie.colln_name_entry.connect_changed(
-            move |_| psie_c.inform_changed()
+        psie.grid.attach_next_to(
+            &psie.colln_owner_entry.clone(),
+            Some(&label),
+            gtk::PositionType::Right,
+            1,
+            1,
         );
 
         let psie_c = psie.clone();
-        psie.colln_owner_entry.connect_changed(
-            move |_| psie_c.inform_changed()
-        );
+        psie.colln_name_entry
+            .connect_changed(move |_| psie_c.inform_changed());
+
+        let psie_c = psie.clone();
+        psie.colln_owner_entry
+            .connect_changed(move |_| psie_c.inform_changed());
 
         psie
     }
 }
 
 impl<CID> CollnIdEntryData<CID>
-    where   CID: CollnIdInterface
+where
+    CID: CollnIdInterface,
 {
     pub fn get_colln_id(&self) -> Option<Rc<CID>> {
         if let Some(colln_name) = self.colln_name_entry.get_text() {
             if colln_name.len() > 0 {
                 if let Some(colln_owner) = self.colln_owner_entry.get_text() {
                     if colln_owner.len() > 0 {
-                        return Some(CID::rc_new(&colln_name, &colln_owner))
+                        return Some(CID::rc_new(&colln_name, &colln_owner));
                     }
                 }
             }
@@ -163,16 +174,18 @@ impl<CID> CollnIdEntryData<CID>
 // COLLECTION PAINT CORE
 #[derive(Debug, Hash, Clone)]
 pub struct CollnPaintCore<C, CID>
-    where   C: CharacteristicsInterface,
-            CID: CollnIdInterface
+where
+    C: CharacteristicsInterface,
+    CID: CollnIdInterface,
 {
     colln_id: Rc<CID>,
     paint: BasicPaint<C>,
 }
 
 impl<C, CID> PartialEq for CollnPaintCore<C, CID>
-    where   C: CharacteristicsInterface,
-            CID: CollnIdInterface
+where
+    C: CharacteristicsInterface,
+    CID: CollnIdInterface,
 {
     fn eq(&self, other: &CollnPaintCore<C, CID>) -> bool {
         if self.colln_id != other.colln_id {
@@ -184,13 +197,16 @@ impl<C, CID> PartialEq for CollnPaintCore<C, CID>
 }
 
 impl<C, CID> Eq for CollnPaintCore<C, CID>
-    where   C: CharacteristicsInterface,
-            CID: CollnIdInterface
-{}
+where
+    C: CharacteristicsInterface,
+    CID: CollnIdInterface,
+{
+}
 
 impl<C, CID> PartialOrd for CollnPaintCore<C, CID>
-    where   C: CharacteristicsInterface,
-            CID: CollnIdInterface
+where
+    C: CharacteristicsInterface,
+    CID: CollnIdInterface,
 {
     fn partial_cmp(&self, other: &CollnPaintCore<C, CID>) -> Option<Ordering> {
         if let Some(ordering) = self.colln_id.partial_cmp(&other.colln_id) {
@@ -207,8 +223,9 @@ impl<C, CID> PartialOrd for CollnPaintCore<C, CID>
 }
 
 impl<C, CID> Ord for CollnPaintCore<C, CID>
-    where   C: CharacteristicsInterface,
-            CID: CollnIdInterface
+where
+    C: CharacteristicsInterface,
+    CID: CollnIdInterface,
 {
     fn cmp(&self, other: &CollnPaintCore<C, CID>) -> Ordering {
         let ordering = self.colln_id.cmp(&other.colln_id);
@@ -224,8 +241,9 @@ impl<C, CID> Ord for CollnPaintCore<C, CID>
 pub type CollnPaint<C, CID> = Rc<CollnPaintCore<C, CID>>;
 
 impl<C, CID> ColouredItemInterface for CollnPaint<C, CID>
-    where   C: CharacteristicsInterface,
-            CID: CollnIdInterface
+where
+    C: CharacteristicsInterface,
+    CID: CollnIdInterface,
 {
     fn colour(&self) -> Colour {
         self.paint.colour()
@@ -233,8 +251,9 @@ impl<C, CID> ColouredItemInterface for CollnPaint<C, CID>
 }
 
 impl<C, CID> BasicPaintInterface<C> for CollnPaint<C, CID>
-    where   C: CharacteristicsInterface,
-            CID: CollnIdInterface
+where
+    C: CharacteristicsInterface,
+    CID: CollnIdInterface,
 {
     fn name(&self) -> String {
         self.paint.name()
@@ -245,7 +264,11 @@ impl<C, CID> BasicPaintInterface<C> for CollnPaint<C, CID>
     }
 
     fn tooltip_text(&self) -> String {
-        format!("{}\n{}", self.paint.tooltip_text(), self.colln_id.tooltip_text())
+        format!(
+            "{}\n{}",
+            self.paint.tooltip_text(),
+            self.colln_id.tooltip_text()
+        )
     }
 
     fn characteristics(&self) -> C {
@@ -254,24 +277,24 @@ impl<C, CID> BasicPaintInterface<C> for CollnPaint<C, CID>
 }
 
 pub trait CollnPaintInterface<C, CID>: BasicPaintInterface<C>
-    where   C: CharacteristicsInterface,
-            CID: CollnIdInterface
+where
+    C: CharacteristicsInterface,
+    CID: CollnIdInterface,
 {
     fn create(paint: &BasicPaint<C>, cid: &Rc<CID>) -> Self;
     fn colln_id(&self) -> Rc<CID>;
 }
 
 impl<C, CID> CollnPaintInterface<C, CID> for CollnPaint<C, CID>
-    where   C: CharacteristicsInterface,
-            CID: CollnIdInterface
+where
+    C: CharacteristicsInterface,
+    CID: CollnIdInterface,
 {
-    fn create(paint: &BasicPaint<C>, cid: &Rc<CID>) -> CollnPaint<C, CID>{
-        Rc::new(
-            CollnPaintCore::<C, CID> {
-                colln_id: cid.clone(),
-                paint: paint.clone(),
-            }
-        )
+    fn create(paint: &BasicPaint<C>, cid: &Rc<CID>) -> CollnPaint<C, CID> {
+        Rc::new(CollnPaintCore::<C, CID> {
+            colln_id: cid.clone(),
+            paint: paint.clone(),
+        })
     }
 
     fn colln_id(&self) -> Rc<CID> {
@@ -282,16 +305,18 @@ impl<C, CID> CollnPaintInterface<C, CID> for CollnPaint<C, CID>
 // PAINT COLLECTION SPECIFICATION
 #[derive(Debug)]
 pub struct PaintCollnSpec<C, CID>
-    where   C: CharacteristicsInterface,
-            CID: CollnIdInterface
+where
+    C: CharacteristicsInterface,
+    CID: CollnIdInterface,
 {
     pub colln_id: Rc<CID>,
     pub paint_specs: Vec<BasicPaintSpec<C>>, // sorted
 }
 
 impl<C, CID> PaintCollnSpec<C, CID>
-    where   C: CharacteristicsInterface,
-            CID: CollnIdInterface
+where
+    C: CharacteristicsInterface,
+    CID: CollnIdInterface,
 {
     pub fn from_file(path: &Path) -> Result<PaintCollnSpec<C, CID>, PaintError<C>> {
         let mut file = File::open(path)?;
@@ -301,16 +326,20 @@ impl<C, CID> PaintCollnSpec<C, CID>
     }
 
     pub fn get_index_for_name(&self, name: &str) -> Option<usize> {
-        match self.paint_specs.binary_search_by_key(&name.to_string(), |spec| spec.name.clone()) {
+        match self
+            .paint_specs
+            .binary_search_by_key(&name.to_string(), |spec| spec.name.clone())
+        {
             Ok(index) => Some(index),
-            Err(_) => None
+            Err(_) => None,
         }
     }
 }
 
 impl<C, CID> FromStr for PaintCollnSpec<C, CID>
-    where   C: CharacteristicsInterface,
-            CID: CollnIdInterface
+where
+    C: CharacteristicsInterface,
+    CID: CollnIdInterface,
 {
     type Err = PaintError<C>;
 
@@ -324,19 +353,19 @@ impl<C, CID> FromStr for PaintCollnSpec<C, CID>
                     if let Some(tail) = line.get(CID::colln_name_label().len()..) {
                         colln_name = tail.trim();
                     }
-                } else if line.starts_with(&CID::colln_owner_label()){
+                } else if line.starts_with(&CID::colln_owner_label()) {
                     if let Some(tail) = line.get(CID::colln_owner_label().len()..) {
                         colln_owner = tail.trim();
                     }
                 } else {
-                    return Err(PaintErrorType::MalformedText(line.to_string()).into())
+                    return Err(PaintErrorType::MalformedText(line.to_string()).into());
                 }
             } else {
-                return Err(PaintErrorType::MalformedText(string.to_string()).into())
+                return Err(PaintErrorType::MalformedText(string.to_string()).into());
             }
         }
         if colln_name.len() == 0 || colln_owner.len() == 0 {
-            return Err(PaintErrorType::MalformedText(string.to_string()).into())
+            return Err(PaintErrorType::MalformedText(string.to_string()).into());
         };
         let colln_id = Rc::new(CID::new(colln_name, colln_owner));
         let mut paint_specs: Vec<BasicPaintSpec<C>> = Vec::new();
@@ -344,21 +373,35 @@ impl<C, CID> FromStr for PaintCollnSpec<C, CID>
             let spec = BasicPaintSpec::<C>::from_str(line)?;
             match paint_specs.binary_search_by_key(&spec.name, |bps| bps.name.clone()) {
                 Ok(_) => return Err(PaintErrorType::AlreadyExists(spec.name).into()),
-                Err(index) => paint_specs.insert(index, spec)
+                Err(index) => paint_specs.insert(index, spec),
             }
         }
-        let psc = PaintCollnSpec::<C, CID>{colln_id, paint_specs};
+        let psc = PaintCollnSpec::<C, CID> {
+            colln_id,
+            paint_specs,
+        };
         Ok(psc)
     }
 }
 
 impl<C, CID> fmt::Display for PaintCollnSpec<C, CID>
-    where   C: CharacteristicsInterface,
-            CID: CollnIdInterface
+where
+    C: CharacteristicsInterface,
+    CID: CollnIdInterface,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{} {}\n", CID::colln_name_label(), self.colln_id.colln_name())?;
-        write!(f, "{} {}\n", CID::colln_owner_label(), self.colln_id.colln_owner())?;
+        write!(
+            f,
+            "{} {}\n",
+            CID::colln_name_label(),
+            self.colln_id.colln_name()
+        )?;
+        write!(
+            f,
+            "{} {}\n",
+            CID::colln_owner_label(),
+            self.colln_id.colln_owner()
+        )?;
         for paint_spec in self.paint_specs.iter() {
             write!(f, "{}\n", paint_spec)?;
         }

@@ -30,20 +30,26 @@ use basic_paint::*;
 use dialogue::PaintDisplayWithCurrentTarget;
 
 pub trait PaintPartsSpinButtonInterface<A, C, P, D>
-    where   C: CharacteristicsInterface + 'static,
-            A: ColourAttributesInterface + 'static,
-            P: BasicPaintInterface<C> + 'static,
-            D: PaintDisplayWithCurrentTarget<A, C, P> + 'static,
+where
+    C: CharacteristicsInterface + 'static,
+    A: ColourAttributesInterface + 'static,
+    P: BasicPaintInterface<C> + 'static,
+    D: PaintDisplayWithCurrentTarget<A, C, P> + 'static,
 {
-    fn create_with(paint: &P, current_target: Option<&Colour>, sensitive:bool) -> PaintPartsSpinButton<A, C, P, D>;
+    fn create_with(
+        paint: &P,
+        current_target: Option<&Colour>,
+        sensitive: bool,
+    ) -> PaintPartsSpinButton<A, C, P, D>;
     fn inform_remove_me(&self);
 }
 
 pub struct PaintPartsSpinButtonCore<A, C, P, D>
-    where   C: CharacteristicsInterface + 'static,
-            A: ColourAttributesInterface + 'static,
-            P: BasicPaintInterface<C> + 'static,
-            D: PaintDisplayWithCurrentTarget<A, C, P> + 'static,
+where
+    C: CharacteristicsInterface + 'static,
+    A: ColourAttributesInterface + 'static,
+    P: BasicPaintInterface<C> + 'static,
+    D: PaintDisplayWithCurrentTarget<A, C, P> + 'static,
 {
     event_box: gtk::EventBox,
     entry: gtk::SpinButton,
@@ -53,14 +59,15 @@ pub struct PaintPartsSpinButtonCore<A, C, P, D>
     current_target: RefCell<Option<Colour>>,
     dialog: RefCell<Option<D>>,
     parts_changed_callbacks: RefCell<Vec<Box<Fn(u32)>>>,
-    remove_me_callbacks: RefCell<Vec<Box<Fn(&PaintPartsSpinButton<A, C, P, D>)>>>
+    remove_me_callbacks: RefCell<Vec<Box<Fn(&PaintPartsSpinButton<A, C, P, D>)>>>,
 }
 
 impl<A, C, P, D> PartialEq for PaintPartsSpinButtonCore<A, C, P, D>
-    where   C: CharacteristicsInterface + 'static,
-            A: ColourAttributesInterface + 'static,
-            P: BasicPaintInterface<C> + 'static,
-            D: PaintDisplayWithCurrentTarget<A, C, P> + 'static,
+where
+    C: CharacteristicsInterface + 'static,
+    A: ColourAttributesInterface + 'static,
+    P: BasicPaintInterface<C> + 'static,
+    D: PaintDisplayWithCurrentTarget<A, C, P> + 'static,
 {
     fn eq(&self, other: &PaintPartsSpinButtonCore<A, C, P, D>) -> bool {
         self.paint == other.paint
@@ -77,32 +84,38 @@ impl_widget_wrapper!(event_box: gtk::EventBox, PaintPartsSpinButtonCore<A, C, P,
 pub type PaintPartsSpinButton<A, C, P, D> = Rc<PaintPartsSpinButtonCore<A, C, P, D>>;
 
 impl<A, C, P, D> PaintPartsSpinButtonInterface<A, C, P, D> for PaintPartsSpinButton<A, C, P, D>
-    where   C: CharacteristicsInterface + 'static,
-            A: ColourAttributesInterface + 'static,
-            P: BasicPaintInterface<C> + 'static,
-            D: PaintDisplayWithCurrentTarget<A, C, P> + 'static,
+where
+    C: CharacteristicsInterface + 'static,
+    A: ColourAttributesInterface + 'static,
+    P: BasicPaintInterface<C> + 'static,
+    D: PaintDisplayWithCurrentTarget<A, C, P> + 'static,
 {
-    fn create_with(paint: &P, current_target: Option<&Colour>, sensitive:bool) -> PaintPartsSpinButton<A, C, P, D> {
+    fn create_with(
+        paint: &P,
+        current_target: Option<&Colour>,
+        sensitive: bool,
+    ) -> PaintPartsSpinButton<A, C, P, D> {
         let adj = gtk::Adjustment::new(0.0, 0.0, 999.0, 1.0, 10.0, 0.0);
         let label_text = paint.name();
         let parts_changed_callbacks: RefCell<Vec<Box<Fn(u32)>>> = RefCell::new(Vec::new());
-        let remove_me_callbacks: RefCell<Vec<Box<Fn(&PaintPartsSpinButton<A, C, P, D>)>>> = RefCell::new(Vec::new());
-        let spin_button = Rc::new(
-            PaintPartsSpinButtonCore::<A, C, P, D> {
-                event_box: gtk::EventBox::new(),
-                entry: gtk::SpinButton::new(Some(&adj), 0.0, 0),
-                label: gtk::Label::new(Some(label_text.as_str())),
-                popup_menu: WrappedMenu::new(&vec![]),
-                paint: paint.clone(),
-                current_target: RefCell::new(None),
-                dialog: RefCell::new(None),
-                parts_changed_callbacks: parts_changed_callbacks,
-                remove_me_callbacks: remove_me_callbacks
-            }
-        );
+        let remove_me_callbacks: RefCell<Vec<Box<Fn(&PaintPartsSpinButton<A, C, P, D>)>>> =
+            RefCell::new(Vec::new());
+        let spin_button = Rc::new(PaintPartsSpinButtonCore::<A, C, P, D> {
+            event_box: gtk::EventBox::new(),
+            entry: gtk::SpinButton::new(Some(&adj), 0.0, 0),
+            label: gtk::Label::new(Some(label_text.as_str())),
+            popup_menu: WrappedMenu::new(&vec![]),
+            paint: paint.clone(),
+            current_target: RefCell::new(None),
+            dialog: RefCell::new(None),
+            parts_changed_callbacks: parts_changed_callbacks,
+            remove_me_callbacks: remove_me_callbacks,
+        });
         let events = gdk::EventMask::BUTTON_PRESS_MASK | gdk::EventMask::BUTTON_RELEASE_MASK;
-        spin_button.event_box.set_tooltip_text(Some(paint.tooltip_text().as_str()));
-        spin_button.event_box.add_events(events.bits() as i32);
+        spin_button
+            .event_box
+            .set_tooltip_text(Some(paint.tooltip_text().as_str()));
+        spin_button.event_box.add_events(events);
         spin_button.label.set_widget_colour(&paint.colour());
         spin_button.entry.set_numeric(true);
         spin_button.entry.set_adjustment(&adj);
@@ -110,12 +123,14 @@ impl<A, C, P, D> PaintPartsSpinButtonInterface<A, C, P, D> for PaintPartsSpinBut
         spin_button.set_current_target(current_target);
         // Build menu
         let spin_button_c = spin_button.clone();
-        spin_button.popup_menu.append_item(
-            "info",
-            "Paint Information",
-            "Display this paint's information",
-        ).connect_activate(
-            move |_| {
+        spin_button
+            .popup_menu
+            .append_item(
+                "info",
+                "Paint Information",
+                "Display this paint's information",
+            )
+            .connect_activate(move |_| {
                 let needs_dialog = spin_button_c.dialog.borrow().is_none();
                 if needs_dialog {
                     let target_colour = spin_button_c.get_current_target();
@@ -126,9 +141,9 @@ impl<A, C, P, D> PaintPartsSpinButtonInterface<A, C, P, D> for PaintPartsSpinBut
                     };
                     let dialog = D::create(&spin_button_c.paint, target, &spin_button_c, vec![]);
                     let spin_button_c_c = spin_button_c.clone();
-                    dialog.connect_destroy(
-                        move |_| { *spin_button_c_c.dialog.borrow_mut() = None; }
-                    );
+                    dialog.connect_destroy(move |_| {
+                        *spin_button_c_c.dialog.borrow_mut() = None;
+                    });
                     *spin_button_c.dialog.borrow_mut() = Some(dialog);
                 };
                 if let Some(ref dialog) = *spin_button_c.dialog.borrow() {
@@ -136,17 +151,15 @@ impl<A, C, P, D> PaintPartsSpinButtonInterface<A, C, P, D> for PaintPartsSpinBut
                 } else {
                     panic!("File: {} Line: {}", file!(), line!())
                 }
-            }
-        );
+            });
 
         let spin_button_c = spin_button.clone();
-        spin_button.popup_menu.append_item(
-            "remove",
-            "Remove Me",
-            "Remove this paint from the palette",
-        ).connect_activate(
-            move |_| { spin_button_c.inform_remove_me(); }
-        );
+        spin_button
+            .popup_menu
+            .append_item("remove", "Remove Me", "Remove this paint from the palette")
+            .connect_activate(move |_| {
+                spin_button_c.inform_remove_me();
+            });
         //
         let hbox = gtk::Box::new(gtk::Orientation::Horizontal, 1);
         hbox.pack_start(&spin_button.label.clone(), true, true, 0);
@@ -157,22 +170,24 @@ impl<A, C, P, D> PaintPartsSpinButtonInterface<A, C, P, D> for PaintPartsSpinBut
         frame.add(&hbox);
         spin_button.event_box.add(&frame);
         let spin_button_c = spin_button.clone();
-        spin_button.entry.connect_value_changed(
-            move |_| spin_button_c.inform_parts_changed()
-        );
+        spin_button
+            .entry
+            .connect_value_changed(move |_| spin_button_c.inform_parts_changed());
         let spin_button_c = spin_button.clone();
-        spin_button.event_box.connect_button_press_event(
-            move |_, event| {
+        spin_button
+            .event_box
+            .connect_button_press_event(move |_, event| {
                 if event.get_event_type() == gdk::EventType::ButtonPress {
                     if event.get_button() == 3 {
-                        spin_button_c.popup_menu.set_sensitivities(spin_button_c.get_parts() == 0, &["remove"]);
+                        spin_button_c
+                            .popup_menu
+                            .set_sensitivities(spin_button_c.get_parts() == 0, &["remove"]);
                         spin_button_c.popup_menu.popup_at_event(event);
-                        return Inhibit(true)
+                        return Inhibit(true);
                     }
                 }
                 Inhibit(false)
-             }
-        );
+            });
 
         spin_button
     }
@@ -186,10 +201,11 @@ impl<A, C, P, D> PaintPartsSpinButtonInterface<A, C, P, D> for PaintPartsSpinBut
 }
 
 impl<A, C, P, D> PaintPartsSpinButtonCore<A, C, P, D>
-    where   C: CharacteristicsInterface + 'static,
-            A: ColourAttributesInterface + 'static,
-            P: BasicPaintInterface<C> + 'static,
-            D: PaintDisplayWithCurrentTarget<A, C, P> + 'static,
+where
+    C: CharacteristicsInterface + 'static,
+    A: ColourAttributesInterface + 'static,
+    P: BasicPaintInterface<C> + 'static,
+    D: PaintDisplayWithCurrentTarget<A, C, P> + 'static,
 {
     fn paint(&self) -> P {
         self.paint.clone()
@@ -217,7 +233,9 @@ impl<A, C, P, D> PaintPartsSpinButtonCore<A, C, P, D>
     }
 
     fn connect_parts_changed<F: 'static + Fn(u32)>(&self, callback: F) {
-        self.parts_changed_callbacks.borrow_mut().push(Box::new(callback))
+        self.parts_changed_callbacks
+            .borrow_mut()
+            .push(Box::new(callback))
     }
 
     fn inform_parts_changed(&self) {
@@ -228,7 +246,9 @@ impl<A, C, P, D> PaintPartsSpinButtonCore<A, C, P, D>
     }
 
     fn connect_remove_me<F: 'static + Fn(&PaintPartsSpinButton<A, C, P, D>)>(&self, callback: F) {
-        self.remove_me_callbacks.borrow_mut().push(Box::new(callback))
+        self.remove_me_callbacks
+            .borrow_mut()
+            .push(Box::new(callback))
     }
 
     fn close_dialog(&self) {
@@ -258,21 +278,23 @@ impl<A, C, P, D> PaintPartsSpinButtonCore<A, C, P, D>
 }
 
 pub trait PaintComponentsBoxInterface<A, C, P, D>
-    where   C: CharacteristicsInterface + 'static,
-            A: ColourAttributesInterface + 'static,
-            P: BasicPaintInterface<C> + 'static,
-            D: PaintDisplayWithCurrentTarget<A, C, P> + 'static
+where
+    C: CharacteristicsInterface + 'static,
+    A: ColourAttributesInterface + 'static,
+    P: BasicPaintInterface<C> + 'static,
+    D: PaintDisplayWithCurrentTarget<A, C, P> + 'static,
 {
-    fn create_with(n_cols: u32, sensitive:bool) -> PaintComponentsBox<A, C, P, D>;
+    fn create_with(n_cols: u32, sensitive: bool) -> PaintComponentsBox<A, C, P, D>;
     fn add_paint(&self, paint: &P);
     fn iter_colour_components(&self) -> ColourPartsIter<A, C, P, D>;
 }
 
 pub struct PaintComponentsBoxCore<A, C, P, D>
-    where   C: CharacteristicsInterface + 'static,
-            A: ColourAttributesInterface + 'static,
-            P: BasicPaintInterface<C> + 'static,
-            D: PaintDisplayWithCurrentTarget<A, C, P> + 'static
+where
+    C: CharacteristicsInterface + 'static,
+    A: ColourAttributesInterface + 'static,
+    P: BasicPaintInterface<C> + 'static,
+    D: PaintDisplayWithCurrentTarget<A, C, P> + 'static,
 {
     vbox: gtk::Box,
     spin_buttons: RefCell<Vec<PaintPartsSpinButton<A, C, P, D>>>,
@@ -294,16 +316,17 @@ impl_widget_wrapper!(vbox: gtk::Box, PaintComponentsBoxCore<A, C, P, D>
 );
 
 impl<A, C, P, D> PaintComponentsBoxCore<A, C, P, D>
-    where   C: CharacteristicsInterface + 'static,
-            A: ColourAttributesInterface + 'static,
-            P: BasicPaintInterface<C> + 'static,
-            D: PaintDisplayWithCurrentTarget<A, C, P> + 'static
+where
+    C: CharacteristicsInterface + 'static,
+    A: ColourAttributesInterface + 'static,
+    P: BasicPaintInterface<C> + 'static,
+    D: PaintDisplayWithCurrentTarget<A, C, P> + 'static,
 {
     fn find_paint_index(&self, paint: &P) -> Result<usize, usize> {
-        let result = self.spin_buttons.borrow().binary_search_by_key(
-            paint,
-            |spinner| spinner.paint()
-        );
+        let result = self
+            .spin_buttons
+            .borrow()
+            .binary_search_by_key(paint, |spinner| spinner.paint());
         result
     }
 
@@ -313,7 +336,7 @@ impl<A, C, P, D> PaintComponentsBoxCore<A, C, P, D>
 
     pub fn is_being_used(&self, paint: &P) -> bool {
         if let Ok(index) = self.find_paint_index(paint) {
-            return self.spin_buttons.borrow()[index].get_parts() > 0
+            return self.spin_buttons.borrow()[index].get_parts() > 0;
         };
         false
     }
@@ -326,9 +349,12 @@ impl<A, C, P, D> PaintComponentsBoxCore<A, C, P, D>
     }
 
     pub fn connect_contributions_changed<F: 'static>(&self, callback: F)
-        where F: (Fn())
+    where
+        F: (Fn()),
     {
-        self.contributions_changed_callbacks.borrow_mut().push(Box::new(callback))
+        self.contributions_changed_callbacks
+            .borrow_mut()
+            .push(Box::new(callback))
     }
 
     fn inform_contributions_changed(&self) {
@@ -342,9 +368,12 @@ impl<A, C, P, D> PaintComponentsBoxCore<A, C, P, D>
     }
 
     pub fn connect_removal_requested<F: 'static>(&self, callback: F)
-        where for<'r> F: (Fn(&'r P))
+    where
+        for<'r> F: (Fn(&'r P)),
     {
-        self.removal_requested_callbacks.borrow_mut().push(Box::new(callback))
+        self.removal_requested_callbacks
+            .borrow_mut()
+            .push(Box::new(callback))
     }
 
     pub fn inform_removal_requested(&self, paint: &P) {
@@ -417,7 +446,10 @@ impl<A, C, P, D> PaintComponentsBoxCore<A, C, P, D>
     }
 
     pub fn get_gcd(&self) -> u32 {
-        self.spin_buttons.borrow().iter().fold(0, |gcd, s| gcd.gcd(&s.get_parts()))
+        self.spin_buttons
+            .borrow()
+            .iter()
+            .fold(0, |gcd, s| gcd.gcd(&s.get_parts()))
     }
 
     pub fn divide_all_parts_by(&self, gcd: u32) {
@@ -431,7 +463,12 @@ impl<A, C, P, D> PaintComponentsBoxCore<A, C, P, D>
     }
 
     pub fn get_paint_components(&self) -> Vec<(P, u32)> {
-        self.spin_buttons.borrow().iter().filter(|s| s.get_parts() > 0).map(|s| s.get_paint_component()).collect()
+        self.spin_buttons
+            .borrow()
+            .iter()
+            .filter(|s| s.get_parts() > 0)
+            .map(|s| s.get_paint_component())
+            .collect()
     }
 
     pub fn set_current_target(&self, new_current_target: Option<&Colour>) {
@@ -457,12 +494,13 @@ impl<A, C, P, D> PaintComponentsBoxCore<A, C, P, D>
 pub type PaintComponentsBox<A, C, P, D> = Rc<PaintComponentsBoxCore<A, C, P, D>>;
 
 impl<A, C, P, D> PaintComponentsBoxInterface<A, C, P, D> for PaintComponentsBox<A, C, P, D>
-    where   C: CharacteristicsInterface + 'static,
-            A: ColourAttributesInterface + 'static,
-            P: BasicPaintInterface<C> + 'static,
-            D: PaintDisplayWithCurrentTarget<A, C, P> + 'static
+where
+    C: CharacteristicsInterface + 'static,
+    A: ColourAttributesInterface + 'static,
+    P: BasicPaintInterface<C> + 'static,
+    D: PaintDisplayWithCurrentTarget<A, C, P> + 'static,
 {
-    fn create_with(n_cols: u32, sensitive:bool) -> PaintComponentsBox<A, C, P, D> {
+    fn create_with(n_cols: u32, sensitive: bool) -> PaintComponentsBox<A, C, P, D> {
         let pcb_core = PaintComponentsBoxCore::<A, C, P, D> {
             vbox: gtk::Box::new(gtk::Orientation::Vertical, 1),
             spin_buttons: RefCell::new(Vec::new()),
@@ -487,42 +525,47 @@ impl<A, C, P, D> PaintComponentsBoxInterface<A, C, P, D> for PaintComponentsBox<
             } else {
                 None
             };
-            let spin_button = PaintPartsSpinButton::<A, C, P, D>::create_with(&pc, target, self.is_sensitive.get());
+            let spin_button = PaintPartsSpinButton::<A, C, P, D>::create_with(
+                &pc,
+                target,
+                self.is_sensitive.get(),
+            );
             let spin_button_c = spin_button.clone();
             self.spin_buttons.borrow_mut().insert(index, spin_button_c);
             let self_c = self.clone();
-            spin_button.connect_parts_changed(
-                move |_| {self_c.inform_contributions_changed()}
-            );
+            spin_button.connect_parts_changed(move |_| self_c.inform_contributions_changed());
             let self_c = self.clone();
-            spin_button.connect_remove_me(
-                move |sb| { self_c.inform_removal_requested(&sb.paint()) }
-            );
+            spin_button.connect_remove_me(move |sb| self_c.inform_removal_requested(&sb.paint()));
             self.pack_append(&spin_button);
             self.vbox.show_all();
         }
     }
 
     fn iter_colour_components(&self) -> ColourPartsIter<A, C, P, D> {
-        ColourPartsIter{components: self.clone(), index: 0}
+        ColourPartsIter {
+            components: self.clone(),
+            index: 0,
+        }
     }
 }
 
 pub struct ColourPartsIter<A, C, P, D>
-    where   C: CharacteristicsInterface + 'static,
-            A: ColourAttributesInterface + 'static,
-            P: BasicPaintInterface<C> + 'static,
-            D: PaintDisplayWithCurrentTarget<A, C, P> + 'static
+where
+    C: CharacteristicsInterface + 'static,
+    A: ColourAttributesInterface + 'static,
+    P: BasicPaintInterface<C> + 'static,
+    D: PaintDisplayWithCurrentTarget<A, C, P> + 'static,
 {
     components: PaintComponentsBox<A, C, P, D>,
     index: usize,
 }
 
 impl<A, C, P, D> Iterator for ColourPartsIter<A, C, P, D>
-    where   C: CharacteristicsInterface + 'static,
-            A: ColourAttributesInterface + 'static,
-            P: BasicPaintInterface<C> + 'static,
-            D: PaintDisplayWithCurrentTarget<A, C, P> + 'static
+where
+    C: CharacteristicsInterface + 'static,
+    A: ColourAttributesInterface + 'static,
+    P: BasicPaintInterface<C> + 'static,
+    D: PaintDisplayWithCurrentTarget<A, C, P> + 'static,
 {
     type Item = (Colour, u32);
 
@@ -533,7 +576,7 @@ impl<A, C, P, D> Iterator for ColourPartsIter<A, C, P, D>
             self.index += 1;
             let parts = spin_button.get_parts();
             if parts > 0 {
-                return Some((spin_button.paint.colour(), parts))
+                return Some((spin_button.paint.colour(), parts));
             }
         }
         None

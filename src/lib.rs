@@ -27,9 +27,9 @@ extern crate xml;
 
 extern crate cairo;
 extern crate gdk;
+extern crate gdk_pixbuf;
 extern crate glib;
 extern crate gtk;
-extern crate gdk_pixbuf;
 
 pub mod struct_traits {
     pub trait SimpleCreation {
@@ -92,23 +92,36 @@ pub mod error {
         fn from(error_type: PaintErrorType<C>) -> PaintError<C> {
             let msg = match error_type {
                 PaintErrorType::AlreadyExists(ref text) => format!("{}: already exists.", text),
-                PaintErrorType::MalformedText(ref text) => format!("{}: is (or contains) malformed text.", text),
+                PaintErrorType::MalformedText(ref text) => {
+                    format!("{}: is (or contains) malformed text.", text)
+                }
                 PaintErrorType::NotFound(ref text) => format!("{}: not found.", text),
-                PaintErrorType::IOError(ref io_error) => format!("I/O Error: {}", io_error.description()),
-                PaintErrorType::NoSubstantiveComponents => "Contains no nonzero components.".to_string(),
+                PaintErrorType::IOError(ref io_error) => {
+                    format!("I/O Error: {}", io_error.description())
+                }
+                PaintErrorType::NoSubstantiveComponents => {
+                    "Contains no nonzero components.".to_string()
+                }
                 PaintErrorType::NoCollectionId => "Missing collection identifier.".to_string(),
                 PaintErrorType::UserCancelled => "Operation cancelled by the user.".to_string(),
-                PaintErrorType::BeingUsedBy(_) => "Is being used as a component by one or more paints.".to_string(),
-                PaintErrorType::PartOfCurrentMixture => "Is being used as a component of the current mixture.".to_string(),
+                PaintErrorType::BeingUsedBy(_) => {
+                    "Is being used as a component by one or more paints.".to_string()
+                }
+                PaintErrorType::PartOfCurrentMixture => {
+                    "Is being used as a component of the current mixture.".to_string()
+                }
             };
-            PaintError{error_type, msg}
+            PaintError { error_type, msg }
         }
     }
 
     impl<C: CharacteristicsInterface> From<CharacteristicError> for PaintError<C> {
         fn from(ch_error: CharacteristicError) -> PaintError<C> {
             let text = ch_error.description().to_string();
-            PaintError{error_type: PaintErrorType::MalformedText(text.clone()), msg: text}
+            PaintError {
+                error_type: PaintErrorType::MalformedText(text.clone()),
+                msg: text,
+            }
         }
     }
 
@@ -124,16 +137,16 @@ pub mod error {
                 regex::Error::Syntax(string) => PaintErrorType::MalformedText(string).into(),
                 _ => panic!("Unexpected regex error"),
             }
-
         }
     }
 
     impl<C: CharacteristicsInterface> From<rgb::RGBError> for PaintError<C> {
         fn from(rgb_error: rgb::RGBError) -> PaintError<C> {
             match rgb_error {
-                rgb::RGBError::MalformedText(string) => PaintErrorType::MalformedText(string).into(),
+                rgb::RGBError::MalformedText(string) => {
+                    PaintErrorType::MalformedText(string).into()
+                }
             }
-
         }
     }
 
@@ -158,29 +171,36 @@ pub mod dialogue {
     use std::rc::Rc;
 
     use glib::signal::SignalHandlerId;
-    use gtk::{self, DialogExt, GtkWindowExt, WidgetExt, GtkWindowExtManual};
+    use gtk::{self, DialogExt, GtkWindowExt, GtkWindowExtManual, WidgetExt};
 
     use pw_gix::colour::*;
     use pw_gix::wrapper::{parent_none, WidgetWrapper};
 
     use super::app_name;
-    use super::basic_paint::{BasicPaintInterface, CharacteristicsInterface, ColourAttributesInterface};
+    use super::basic_paint::{
+        BasicPaintInterface, CharacteristicsInterface, ColourAttributesInterface,
+    };
 
     pub struct PaintDisplayButtonSpec {
         pub label: String,
         pub tooltip_text: String,
-        pub callback: Box<Fn()>
+        pub callback: Box<Fn()>,
     }
 
-    pub fn new_display_dialog<W>(title: &str, caller: &Rc<W>, buttons: &[(&str, i32)]) -> gtk::Dialog
-        where   W: WidgetWrapper
+    pub fn new_display_dialog<W>(
+        title: &str,
+        caller: &Rc<W>,
+        buttons: &[(&str, gtk::ResponseType)],
+    ) -> gtk::Dialog
+    where
+        W: WidgetWrapper,
     {
         let title = format!("{}: {}", app_name(), title);
         let dialog = gtk::Dialog::new_with_buttons(
             Some(title.as_str()),
             parent_none(),
             gtk::DialogFlags::USE_HEADER_BAR,
-            buttons
+            buttons,
         );
         if let Some(tlw) = caller.get_toplevel_gtk_window() {
             dialog.set_transient_for(Some(&tlw));
@@ -206,7 +226,7 @@ pub mod dialogue {
             self.dialog().close()
         }
 
-        fn set_response_sensitive(&self, response_id: i32, setting: bool) {
+        fn set_response_sensitive(&self, response_id: gtk::ResponseType, setting: bool) {
             self.dialog().set_response_sensitive(response_id, setting);
         }
 
@@ -237,7 +257,9 @@ pub mod dialogue {
     }
 
     impl DestroyedCallbacksIfce for DestroyedCallbacks {
-        fn create() -> DestroyedCallbacks { RefCell::new(Vec::new()) }
+        fn create() -> DestroyedCallbacks {
+            RefCell::new(Vec::new())
+        }
     }
 
     pub trait TrackedDialog {
@@ -245,7 +267,9 @@ pub mod dialogue {
         fn destroyed_callbacks(&self) -> &DestroyedCallbacks;
 
         fn connect_destroyed<F: 'static + Fn(u32)>(&self, callback: F) {
-            self.destroyed_callbacks().borrow_mut().push(Box::new(callback))
+            self.destroyed_callbacks()
+                .borrow_mut()
+                .push(Box::new(callback))
         }
 
         fn inform_destroyed(&self) {
@@ -256,9 +280,10 @@ pub mod dialogue {
     }
 
     pub trait PaintDisplay<A, C, P>: DialogWrapper + TrackedDialog
-        where   C: CharacteristicsInterface + 'static,
-                A: ColourAttributesInterface + 'static,
-                P: BasicPaintInterface<C> + 'static,
+    where
+        C: CharacteristicsInterface + 'static,
+        A: ColourAttributesInterface + 'static,
+        P: BasicPaintInterface<C> + 'static,
     {
         fn create<W: WidgetWrapper>(
             paint: &P,
@@ -270,9 +295,10 @@ pub mod dialogue {
     }
 
     pub trait PaintDisplayWithCurrentTarget<A, C, P>: DialogWrapper + TrackedDialog
-        where   C: CharacteristicsInterface + 'static,
-                A: ColourAttributesInterface + 'static,
-                P: BasicPaintInterface<C> + 'static,
+    where
+        C: CharacteristicsInterface + 'static,
+        A: ColourAttributesInterface + 'static,
+        P: BasicPaintInterface<C> + 'static,
     {
         fn create<W: WidgetWrapper>(
             paint: &P,
@@ -292,8 +318,8 @@ pub mod characteristics;
 pub mod colln_paint;
 pub mod colour_edit;
 pub mod colour_mix;
-pub mod icons;
 pub mod graticule;
+pub mod icons;
 pub mod mixed_paint;
 pub mod model_paint;
 pub mod series_paint;

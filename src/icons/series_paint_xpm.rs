@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use gdk_pixbuf::{self, PixbufExt};
+use gdk_pixbuf;
 use gtk;
 
 /* XPM */
@@ -409,7 +409,9 @@ pub fn series_paint_pixbuf() -> gdk_pixbuf::Pixbuf {
 }
 
 pub fn series_paint_image(size: i32) -> gtk::Image {
-    if let Some(pixbuf) = series_paint_pixbuf().scale_simple(size, size, gdk_pixbuf::InterpType::Bilinear) {
+    if let Some(pixbuf) =
+        series_paint_pixbuf().scale_simple(size, size, gdk_pixbuf::InterpType::Bilinear)
+    {
         gtk::Image::new_from_pixbuf(Some(&pixbuf))
     } else {
         panic!("File: {:?} Line: {:?}", file!(), line!())
@@ -810,7 +812,9 @@ pub fn series_paint_load_pixbuf() -> gdk_pixbuf::Pixbuf {
 }
 
 pub fn series_paint_load_image(size: i32) -> gtk::Image {
-    if let Some(pixbuf) = series_paint_load_pixbuf().scale_simple(size, size, gdk_pixbuf::InterpType::Bilinear) {
+    if let Some(pixbuf) =
+        series_paint_load_pixbuf().scale_simple(size, size, gdk_pixbuf::InterpType::Bilinear)
+    {
         gtk::Image::new_from_pixbuf(Some(&pixbuf))
     } else {
         panic!("File: {:?} Line: {:?}", file!(), line!())

@@ -38,25 +38,24 @@ use self::target::TargetColour;
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum MixingMode {
     MatchTarget,
-    MatchSamples
+    MatchSamples,
 }
 
 #[derive(Debug, Clone)]
 pub enum Paint<C: CharacteristicsInterface> {
     Series(SeriesPaint<C>),
-    Mixed(MixedPaint<C>)
+    Mixed(MixedPaint<C>),
 }
 
 impl<C: CharacteristicsInterface> Paint<C> {
-    pub fn is_series(&self) ->bool {
+    pub fn is_series(&self) -> bool {
         match *self {
             Paint::Series(_) => true,
-            Paint::Mixed(_) => false
+            Paint::Mixed(_) => false,
         }
-
     }
 
-    pub fn is_mixed(&self) ->bool {
+    pub fn is_mixed(&self) -> bool {
         !self.is_series()
     }
 }
@@ -64,19 +63,14 @@ impl<C: CharacteristicsInterface> Paint<C> {
 impl<C: CharacteristicsInterface> PartialEq for Paint<C> {
     fn eq(&self, other: &Paint<C>) -> bool {
         match *self {
-            Paint::Series(ref paint) => {
-                match *other {
-                    Paint::Series(ref opaint) => paint == opaint,
-                    Paint::Mixed(_) => false,
-                }
+            Paint::Series(ref paint) => match *other {
+                Paint::Series(ref opaint) => paint == opaint,
+                Paint::Mixed(_) => false,
             },
-            Paint::Mixed(ref paint) => {
-                match *other {
-                    Paint::Series(_) => false,
-                    Paint::Mixed(ref opaint) => paint == opaint,
-                }
-
-            }
+            Paint::Mixed(ref paint) => match *other {
+                Paint::Series(_) => false,
+                Paint::Mixed(ref opaint) => paint == opaint,
+            },
         }
     }
 }
@@ -86,19 +80,14 @@ impl<C: CharacteristicsInterface> Eq for Paint<C> {}
 impl<C: CharacteristicsInterface> PartialOrd for Paint<C> {
     fn partial_cmp(&self, other: &Paint<C>) -> Option<Ordering> {
         match *self {
-            Paint::Series(ref paint) => {
-                match *other {
-                    Paint::Series(ref opaint) => paint.partial_cmp(opaint),
-                    Paint::Mixed(_) => Some(Ordering::Less),
-                }
+            Paint::Series(ref paint) => match *other {
+                Paint::Series(ref opaint) => paint.partial_cmp(opaint),
+                Paint::Mixed(_) => Some(Ordering::Less),
             },
-            Paint::Mixed(ref paint) => {
-                match *other {
-                    Paint::Series(_) => Some(Ordering::Greater),
-                    Paint::Mixed(ref opaint) => paint.partial_cmp(opaint),
-                }
-
-            }
+            Paint::Mixed(ref paint) => match *other {
+                Paint::Series(_) => Some(Ordering::Greater),
+                Paint::Mixed(ref opaint) => paint.partial_cmp(opaint),
+            },
         }
     }
 }
@@ -106,19 +95,14 @@ impl<C: CharacteristicsInterface> PartialOrd for Paint<C> {
 impl<C: CharacteristicsInterface> Ord for Paint<C> {
     fn cmp(&self, other: &Paint<C>) -> Ordering {
         match *self {
-            Paint::Series(ref paint) => {
-                match *other {
-                    Paint::Series(ref opaint) => paint.cmp(opaint),
-                    Paint::Mixed(_) => Ordering::Less,
-                }
+            Paint::Series(ref paint) => match *other {
+                Paint::Series(ref opaint) => paint.cmp(opaint),
+                Paint::Mixed(_) => Ordering::Less,
             },
-            Paint::Mixed(ref paint) => {
-                match *other {
-                    Paint::Series(_) => Ordering::Greater,
-                    Paint::Mixed(ref opaint) => paint.cmp(opaint),
-                }
-
-            }
+            Paint::Mixed(ref paint) => match *other {
+                Paint::Series(_) => Ordering::Greater,
+                Paint::Mixed(ref opaint) => paint.cmp(opaint),
+            },
         }
     }
 }
@@ -165,7 +149,7 @@ impl<C: CharacteristicsInterface> BasicPaintInterface<C> for Paint<C> {
 #[derive(Debug, PartialEq, Clone)]
 pub struct PaintComponent<C: CharacteristicsInterface> {
     pub paint: Paint<C>,
-    pub parts: u32
+    pub parts: u32,
 }
 
 pub const MP_NAME: i32 = SP_NAME;
@@ -222,7 +206,7 @@ pub struct MixedPaintCore<C: CharacteristicsInterface> {
     notes: RefCell<String>,
     characteristics: C,
     target_colour: Option<TargetColour>,
-    components: Rc<Vec<PaintComponent<C>>>
+    components: Rc<Vec<PaintComponent<C>>>,
 }
 
 impl<C: CharacteristicsInterface> PartialEq for MixedPaintCore<C> {
@@ -235,13 +219,13 @@ impl<C: CharacteristicsInterface> Eq for MixedPaintCore<C> {}
 
 impl<C: CharacteristicsInterface> PartialOrd for MixedPaintCore<C> {
     fn partial_cmp(&self, other: &MixedPaintCore<C>) -> Option<Ordering> {
-       self.name.partial_cmp(&other.name)
+        self.name.partial_cmp(&other.name)
     }
 }
 
 impl<C: CharacteristicsInterface> Ord for MixedPaintCore<C> {
     fn cmp(&self, other: &MixedPaintCore<C>) -> Ordering {
-       self.name.cmp(&other.name)
+        self.name.cmp(&other.name)
     }
 }
 
@@ -256,10 +240,10 @@ impl<C: CharacteristicsInterface> MixedPaintCore<C> {
                 return true;
             } else if let Paint::Mixed(ref mixed_paint) = component.paint {
                 if mixed_paint.uses_paint(paint) {
-                    return true
+                    return true;
                 }
             }
-        };
+        }
         false
     }
 
@@ -280,7 +264,7 @@ impl<C: CharacteristicsInterface> MixedPaintCore<C> {
                         // NB: Ok case means paint already in the list
                         spu.insert(index, series_paint.clone())
                     }
-                },
+                }
                 Paint::Mixed(ref mixed_paint) => {
                     for series_paint in mixed_paint.series_paints_used().iter() {
                         if let Err(index) = spu.binary_search(series_paint) {
@@ -288,7 +272,7 @@ impl<C: CharacteristicsInterface> MixedPaintCore<C> {
                             spu.insert(index, series_paint.clone())
                         }
                     }
-                },
+                }
             }
         }
 
@@ -325,7 +309,8 @@ impl<C: CharacteristicsInterface> ColouredItemInterface for MixedPaint<C> {
 }
 
 impl<C> BasicPaintInterface<C> for MixedPaint<C>
-    where   C: CharacteristicsInterface
+where
+    C: CharacteristicsInterface,
 {
     fn name(&self) -> String {
         self.name.clone()
@@ -385,7 +370,7 @@ impl<C> BasicPaintInterface<C> for MixedPaint<C>
         ];
         for row in self.characteristics().tv_rows().iter() {
             rows.push(row.clone());
-        };
+        }
         rows
     }
 }
@@ -395,7 +380,5 @@ mod tests {
     //use super::*;
 
     #[test]
-    fn it_works() {
-
-    }
+    fn it_works() {}
 }

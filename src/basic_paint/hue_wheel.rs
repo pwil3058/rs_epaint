@@ -31,7 +31,8 @@ use shape::*;
 
 // BASIC PAINT
 pub struct BasicPaintShape<C>
-    where   C: CharacteristicsInterface + 'static,
+where
+    C: CharacteristicsInterface + 'static,
 {
     paint: BasicPaint<C>,
     xy: Point,
@@ -39,7 +40,8 @@ pub struct BasicPaintShape<C>
 }
 
 impl<C> ColourShapeInterface for BasicPaintShape<C>
-    where   C: CharacteristicsInterface + 'static,
+where
+    C: CharacteristicsInterface + 'static,
 {
     fn xy(&self) -> Point {
         self.xy
@@ -55,12 +57,13 @@ impl<C> ColourShapeInterface for BasicPaintShape<C>
 }
 
 impl<C> ColouredItemShapeInterface<BasicPaint<C>> for BasicPaintShape<C>
-    where   C: CharacteristicsInterface,
+where
+    C: CharacteristicsInterface,
 {
     fn new(paint: &BasicPaint<C>, attr: ScalarAttribute) -> BasicPaintShape<C> {
         let radius = paint.scalar_attribute(attr);
         let angle = paint.hue().angle();
-        BasicPaintShape::<C>{
+        BasicPaintShape::<C> {
             paint: paint.clone(),
             xy: Point::from((angle, radius)),
             phantom: PhantomData,
@@ -74,10 +77,10 @@ impl<C> ColouredItemShapeInterface<BasicPaint<C>> for BasicPaintShape<C>
 
 pub type BasicPaintShapeList<C> = ColouredItemSpapeList<BasicPaint<C>, BasicPaintShape<C>>;
 
-
 // WHEEL
 pub struct BasicPaintHueAttrWheelCore<C>
-    where   C: CharacteristicsInterface + 'static,
+where
+    C: CharacteristicsInterface + 'static,
 {
     paints: BasicPaintShapeList<C>,
     chosen_paint: RefCell<Option<BasicPaint<C>>>,
@@ -91,30 +94,32 @@ impl_widget_wrapper!(graticule.drawing_area() -> gtk::DrawingArea, BasicPaintHue
 pub type BasicPaintHueAttrWheel<C> = Rc<BasicPaintHueAttrWheelCore<C>>;
 
 pub trait BasicPaintHueAttrWheelInterface<C>
-    where   C: CharacteristicsInterface + 'static,
+where
+    C: CharacteristicsInterface + 'static,
 {
     fn create(attr: ScalarAttribute) -> BasicPaintHueAttrWheel<C>;
 }
 
 impl<C> BasicPaintHueAttrWheelInterface<C> for BasicPaintHueAttrWheel<C>
-    where   C: CharacteristicsInterface + 'static,
+where
+    C: CharacteristicsInterface + 'static,
 {
     fn create(attr: ScalarAttribute) -> BasicPaintHueAttrWheel<C> {
-        let wheel = Rc::new(
-            BasicPaintHueAttrWheelCore::<C> {
-                paints: BasicPaintShapeList::<C>::new(attr),
-                graticule: Graticule::create(attr),
-                chosen_paint: RefCell::new(None),
-            }
-        );
+        let wheel = Rc::new(BasicPaintHueAttrWheelCore::<C> {
+            paints: BasicPaintShapeList::<C>::new(attr),
+            graticule: Graticule::create(attr),
+            chosen_paint: RefCell::new(None),
+        });
         let wheel_c = wheel.clone();
-        wheel.paints.connect_changed(
-            move || wheel_c.graticule.queue_draw()
-        );
+        wheel
+            .paints
+            .connect_changed(move || wheel_c.graticule.queue_draw());
 
         let wheel_c = wheel.clone();
-        wheel.graticule.drawing_area().connect_query_tooltip(
-            move |_, x, y, _, tooltip| {
+        wheel
+            .graticule
+            .drawing_area()
+            .connect_query_tooltip(move |_, x, y, _, tooltip| {
                 // TODO: find out why tooltip.set_tip_area() nobbles tooltips
                 //let rectangle = gtk::Rectangle{x: x, y: y, width: 10, height: -10};
                 //println!("Rectangle: {:?}", rectangle);
@@ -123,25 +128,25 @@ impl<C> BasicPaintHueAttrWheelInterface<C> for BasicPaintHueAttrWheel<C>
                     Some(paint) => {
                         tooltip.set_text(Some(paint.tooltip_text().as_str()));
                         true
-                    },
+                    }
                     None => false,
                 }
-             }
-        );
+            });
 
         let wheel_c = wheel.clone();
-        wheel.graticule.connect_draw(
-            move |graticule, cairo_context| {
+        wheel
+            .graticule
+            .connect_draw(move |graticule, cairo_context| {
                 cairo_context.set_line_width(2.0);
                 wheel_c.paints.draw(graticule, cairo_context);
-            }
-        );
+            });
         wheel
     }
 }
 
 impl<C> BasicPaintHueAttrWheelCore<C>
-    where   C: CharacteristicsInterface + 'static,
+where
+    C: CharacteristicsInterface + 'static,
 {
     pub fn clear(&self) {
         *self.chosen_paint.borrow_mut() = None;
@@ -188,7 +193,12 @@ impl<C> BasicPaintHueAttrWheelCore<C>
         }
     }
 
-    pub fn connect_button_press_event<F: Fn(&gtk::DrawingArea, &gdk::EventButton) -> Inhibit + 'static>(&self, f: F) -> SignalHandlerId {
+    pub fn connect_button_press_event<
+        F: Fn(&gtk::DrawingArea, &gdk::EventButton) -> Inhibit + 'static,
+    >(
+        &self,
+        f: F,
+    ) -> SignalHandlerId {
         self.graticule.connect_button_press_event(f)
     }
 }
@@ -198,7 +208,5 @@ mod tests {
     //use super::*;
 
     #[test]
-    fn it_works() {
-
-    }
+    fn it_works() {}
 }

@@ -17,8 +17,8 @@ use std::collections::HashMap;
 use std::marker::PhantomData;
 use std::rc::Rc;
 
-use glib::signal::SignalHandlerId;
 use gdk;
+use glib::signal::SignalHandlerId;
 use gtk;
 use gtk::prelude::*;
 
@@ -33,27 +33,27 @@ use basic_paint::*;
 use graticule::*;
 use shape::*;
 
-use super::*;
 use super::display::*;
+use super::*;
 
 // COLLECTION
 pub struct CollnPaintCollnCore<C, CID>
-    where   C: CharacteristicsInterface,
-            CID: CollnIdInterface,
+where
+    C: CharacteristicsInterface,
+    CID: CollnIdInterface,
 {
     colln_id: Rc<CID>,
     paints: Rc<Vec<CollnPaint<C, CID>>>,
 }
 
 impl<C, CID> CollnPaintCollnCore<C, CID>
-    where   C: CharacteristicsInterface,
-            CID: CollnIdInterface,
+where
+    C: CharacteristicsInterface,
+    CID: CollnIdInterface,
 {
     fn find_name(&self, name: &str) -> Result<usize, usize> {
-        self.paints.binary_search_by_key(
-            &name.to_string(),
-            |paint| paint.name()
-        )
+        self.paints
+            .binary_search_by_key(&name.to_string(), |paint| paint.name())
     }
 
     pub fn colln_id(&self) -> Rc<CID> {
@@ -67,7 +67,7 @@ impl<C, CID> CollnPaintCollnCore<C, CID>
     pub fn get_paint(&self, name: &str) -> Option<CollnPaint<C, CID>> {
         match self.find_name(name) {
             Ok(index) => Some(self.paints[index].clone()),
-            Err(_) => None
+            Err(_) => None,
         }
     }
 
@@ -83,16 +83,17 @@ impl<C, CID> CollnPaintCollnCore<C, CID>
 pub type CollnPaintColln<C, CID> = Rc<CollnPaintCollnCore<C, CID>>;
 
 pub trait CollnPaintCollnInterface<C, CID>
-    where   C: CharacteristicsInterface,
-            CID: CollnIdInterface,
+where
+    C: CharacteristicsInterface,
+    CID: CollnIdInterface,
 {
     fn from_spec(colln_spec: &PaintCollnSpec<C, CID>) -> CollnPaintColln<C, CID>;
 }
 
-
 impl<C, CID> CollnPaintCollnInterface<C, CID> for CollnPaintColln<C, CID>
-    where   C: CharacteristicsInterface,
-            CID: CollnIdInterface,
+where
+    C: CharacteristicsInterface,
+    CID: CollnIdInterface,
 {
     fn from_spec(colln_spec: &PaintCollnSpec<C, CID>) -> CollnPaintColln<C, CID> {
         let colln_id = colln_spec.colln_id.clone();
@@ -103,31 +104,31 @@ impl<C, CID> CollnPaintCollnInterface<C, CID> for CollnPaintColln<C, CID>
             let colln_paint = CollnPaint::<C, CID>::create(&basic_paint, &colln_id);
             paints.push(colln_paint);
         }
-        Rc::new(
-            CollnPaintCollnCore::<C, CID>{
-                colln_id: colln_id,
-                paints: Rc::new(paints),
-            }
-        )
+        Rc::new(CollnPaintCollnCore::<C, CID> {
+            colln_id: colln_id,
+            paints: Rc::new(paints),
+        })
     }
 }
 
 pub struct CollnPaintCollnViewCore<A, C, CID>
-    where   A: ColourAttributesInterface + 'static,
-            C: CharacteristicsInterface + 'static,
-            CID: CollnIdInterface,
+where
+    A: ColourAttributesInterface + 'static,
+    C: CharacteristicsInterface + 'static,
+    CID: CollnIdInterface,
 {
     scrolled_window: gtk::ScrolledWindow,
     list_store: gtk::ListStore,
     view: gtk::TreeView,
     colln: CollnPaintColln<C, CID>,
-    phantom_data: PhantomData<A>
+    phantom_data: PhantomData<A>,
 }
 
 impl<A, C, CID> CollnPaintCollnViewCore<A, C, CID>
-    where   A: ColourAttributesInterface + 'static,
-            C: CharacteristicsInterface + 'static,
-            CID: CollnIdInterface,
+where
+    A: ColourAttributesInterface + 'static,
+    C: CharacteristicsInterface + 'static,
+    CID: CollnIdInterface,
 {
     pub fn get_paint_at(&self, posn: (f64, f64)) -> Option<CollnPaint<C, CID>> {
         let x = posn.0 as i32;
@@ -135,13 +136,16 @@ impl<A, C, CID> CollnPaintCollnViewCore<A, C, CID>
         if let Some(location) = self.view.get_path_at_pos(x, y) {
             if let Some(path) = location.0 {
                 if let Some(iter) = self.list_store.get_iter(&path) {
-                    let name: String = self.list_store.get_value(&iter, 0).get().unwrap_or_else(
-                        || panic!("File: {:?} Line: {:?}", file!(), line!())
-                    );
-                    let paint = self.colln.get_paint(&name).unwrap_or_else(
-                        || panic!("File: {:?} Line: {:?}", file!(), line!())
-                    );
-                    return Some(paint)
+                    let name: String = self
+                        .list_store
+                        .get_value(&iter, 0)
+                        .get()
+                        .unwrap_or_else(|| panic!("File: {:?} Line: {:?}", file!(), line!()));
+                    let paint = self
+                        .colln
+                        .get_paint(&name)
+                        .unwrap_or_else(|| panic!("File: {:?} Line: {:?}", file!(), line!()));
+                    return Some(paint);
                 }
             }
         };
@@ -168,7 +172,12 @@ impl<A, C, CID> CollnPaintCollnViewCore<A, C, CID>
         self.colln.has_paint_named(name)
     }
 
-    pub fn connect_button_press_event<F: Fn(&gtk::TreeView, &gdk::EventButton) -> Inhibit + 'static>(&self, f: F) -> SignalHandlerId {
+    pub fn connect_button_press_event<
+        F: Fn(&gtk::TreeView, &gdk::EventButton) -> Inhibit + 'static,
+    >(
+        &self,
+        f: F,
+    ) -> SignalHandlerId {
         self.view.connect_button_press_event(f)
     }
 }
@@ -182,17 +191,19 @@ impl_widget_wrapper!(scrolled_window: gtk::ScrolledWindow, CollnPaintCollnViewCo
 pub type CollnPaintCollnView<A, C, CID> = Rc<CollnPaintCollnViewCore<A, C, CID>>;
 
 pub trait CollnPaintCollnViewInterface<A, C, CID>
-    where   A: ColourAttributesInterface + 'static,
-            C: CharacteristicsInterface + 'static,
-            CID: CollnIdInterface,
+where
+    A: ColourAttributesInterface + 'static,
+    C: CharacteristicsInterface + 'static,
+    CID: CollnIdInterface,
 {
     fn create(colln: &CollnPaintColln<C, CID>) -> CollnPaintCollnView<A, C, CID>;
 }
 
 impl<A, C, CID> CollnPaintCollnViewInterface<A, C, CID> for CollnPaintCollnView<A, C, CID>
-    where   A: ColourAttributesInterface + 'static,
-            C: CharacteristicsInterface + 'static,
-            CID: CollnIdInterface,
+where
+    A: ColourAttributesInterface + 'static,
+    C: CharacteristicsInterface + 'static,
+    CID: CollnIdInterface,
 {
     fn create(colln: &CollnPaintColln<C, CID>) -> CollnPaintCollnView<A, C, CID> {
         let len = CollnPaint::<C, CID>::tv_row_len();
@@ -204,18 +215,21 @@ impl<A, C, CID> CollnPaintCollnViewInterface<A, C, CID> for CollnPaintCollnView<
         view.set_headers_visible(true);
         view.get_selection().set_mode(gtk::SelectionMode::None);
 
-        let mspl = Rc::new(
-            CollnPaintCollnViewCore::<A, C, CID> {
-                scrolled_window: gtk::ScrolledWindow::new(None, None),
-                list_store: list_store,
-                colln: colln.clone(),
-                view: view,
-                phantom_data: PhantomData,
-            }
-        );
+        let adj: Option<&gtk::Adjustment> = None;
+        let mspl = Rc::new(CollnPaintCollnViewCore::<A, C, CID> {
+            scrolled_window: gtk::ScrolledWindow::new(adj, adj),
+            list_store: list_store,
+            colln: colln.clone(),
+            view: view,
+            phantom_data: PhantomData,
+        });
 
-        mspl.view.append_column(&simple_text_column("Name", SP_NAME, SP_NAME, SP_RGB, SP_RGB_FG, -1, true));
-        mspl.view.append_column(&simple_text_column("Notes", SP_NOTES, SP_NOTES, SP_RGB, SP_RGB_FG, -1, true));
+        mspl.view.append_column(&simple_text_column(
+            "Name", SP_NAME, SP_NAME, SP_RGB, SP_RGB_FG, -1, true,
+        ));
+        mspl.view.append_column(&simple_text_column(
+            "Notes", SP_NOTES, SP_NOTES, SP_RGB, SP_RGB_FG, -1, true,
+        ));
         for col in A::tv_columns() {
             mspl.view.append_column(&col);
         }
@@ -235,16 +249,18 @@ impl<A, C, CID> CollnPaintCollnViewInterface<A, C, CID> for CollnPaintCollnView<
 // SHAPE
 
 pub struct CollnPaintShape<C, CID>
-    where   C: CharacteristicsInterface + 'static,
-            CID: CollnIdInterface,
+where
+    C: CharacteristicsInterface + 'static,
+    CID: CollnIdInterface,
 {
     paint: CollnPaint<C, CID>,
     xy: Point,
 }
 
 impl<C, CID> ColourShapeInterface for CollnPaintShape<C, CID>
-    where   C: CharacteristicsInterface + 'static,
-            CID: CollnIdInterface,
+where
+    C: CharacteristicsInterface + 'static,
+    CID: CollnIdInterface,
 {
     fn xy(&self) -> Point {
         self.xy
@@ -260,13 +276,14 @@ impl<C, CID> ColourShapeInterface for CollnPaintShape<C, CID>
 }
 
 impl<C, CID> ColouredItemShapeInterface<CollnPaint<C, CID>> for CollnPaintShape<C, CID>
-    where   C: CharacteristicsInterface,
-            CID: CollnIdInterface,
+where
+    C: CharacteristicsInterface,
+    CID: CollnIdInterface,
 {
     fn new(paint: &CollnPaint<C, CID>, attr: ScalarAttribute) -> CollnPaintShape<C, CID> {
         let radius = paint.scalar_attribute(attr);
         let angle = paint.hue().angle();
-        CollnPaintShape::<C, CID>{
+        CollnPaintShape::<C, CID> {
             paint: paint.clone(),
             xy: Point::from((angle, radius)),
         }
@@ -277,13 +294,14 @@ impl<C, CID> ColouredItemShapeInterface<CollnPaint<C, CID>> for CollnPaintShape<
     }
 }
 
-pub type CollnPaintShapeList<C, CID> = ColouredItemSpapeList<CollnPaint<C, CID>, CollnPaintShape<C, CID>>;
-
+pub type CollnPaintShapeList<C, CID> =
+    ColouredItemSpapeList<CollnPaint<C, CID>, CollnPaintShape<C, CID>>;
 
 // WHEEL
 pub struct CollnPaintHueAttrWheelCore<C, CID>
-    where   C: CharacteristicsInterface + 'static,
-            CID: CollnIdInterface + 'static,
+where
+    C: CharacteristicsInterface + 'static,
+    CID: CollnIdInterface + 'static,
 {
     paints: CollnPaintShapeList<C, CID>,
     graticule: Graticule,
@@ -297,30 +315,38 @@ impl_widget_wrapper!(graticule.drawing_area() -> gtk::DrawingArea, CollnPaintHue
 pub type CollnPaintHueAttrWheel<C, CID> = Rc<CollnPaintHueAttrWheelCore<C, CID>>;
 
 pub trait CollnPaintHueAttrWheelInterface<C, CID>
-    where   C: CharacteristicsInterface + 'static,
-            CID: CollnIdInterface + 'static,
+where
+    C: CharacteristicsInterface + 'static,
+    CID: CollnIdInterface + 'static,
 {
-    fn create(attr: ScalarAttribute, paints: Rc<Vec<CollnPaint<C, CID>>>) -> CollnPaintHueAttrWheel<C, CID>;
+    fn create(
+        attr: ScalarAttribute,
+        paints: Rc<Vec<CollnPaint<C, CID>>>,
+    ) -> CollnPaintHueAttrWheel<C, CID>;
 }
 
 impl<C, CID> CollnPaintHueAttrWheelInterface<C, CID> for CollnPaintHueAttrWheel<C, CID>
-    where   C: CharacteristicsInterface + 'static,
-            CID: CollnIdInterface + 'static,
+where
+    C: CharacteristicsInterface + 'static,
+    CID: CollnIdInterface + 'static,
 {
-    fn create(attr: ScalarAttribute, paints: Rc<Vec<CollnPaint<C, CID>>>) -> CollnPaintHueAttrWheel<C, CID> {
-        let wheel = Rc::new(
-            CollnPaintHueAttrWheelCore::<C, CID> {
-                paints: CollnPaintShapeList::<C, CID>::new(attr),
-                graticule: Graticule::create(attr),
-            }
-        );
+    fn create(
+        attr: ScalarAttribute,
+        paints: Rc<Vec<CollnPaint<C, CID>>>,
+    ) -> CollnPaintHueAttrWheel<C, CID> {
+        let wheel = Rc::new(CollnPaintHueAttrWheelCore::<C, CID> {
+            paints: CollnPaintShapeList::<C, CID>::new(attr),
+            graticule: Graticule::create(attr),
+        });
         for paint in paints.iter() {
             wheel.add_paint(paint)
         }
 
         let wheel_c = wheel.clone();
-        wheel.graticule.drawing_area().connect_query_tooltip(
-            move |_, x, y, _, tooltip| {
+        wheel
+            .graticule
+            .drawing_area()
+            .connect_query_tooltip(move |_, x, y, _, tooltip| {
                 // TODO: find out why tooltip.set_tip_area() nobbles tooltips
                 //let rectangle = gtk::Rectangle{x: x, y: y, width: 10, height: -10};
                 //println!("Rectangle: {:?}", rectangle);
@@ -329,25 +355,25 @@ impl<C, CID> CollnPaintHueAttrWheelInterface<C, CID> for CollnPaintHueAttrWheel<
                     Some(paint) => {
                         tooltip.set_text(Some(paint.tooltip_text().as_str()));
                         true
-                    },
+                    }
                     None => false,
                 }
-             }
-        );
+            });
         let wheel_c = wheel.clone();
-        wheel.graticule.connect_draw(
-            move |graticule, cairo_context| {
+        wheel
+            .graticule
+            .connect_draw(move |graticule, cairo_context| {
                 cairo_context.set_line_width(2.0);
                 wheel_c.paints.draw(graticule, cairo_context);
-            }
-        );
+            });
         wheel
     }
 }
 
 impl<C, CID> CollnPaintHueAttrWheelCore<C, CID>
-    where   C: CharacteristicsInterface + 'static,
-            CID: CollnIdInterface + 'static,
+where
+    C: CharacteristicsInterface + 'static,
+    CID: CollnIdInterface + 'static,
 {
     fn add_paint(&self, paint: &CollnPaint<C, CID>) {
         self.paints.add_coloured_item(paint);
@@ -371,16 +397,22 @@ impl<C, CID> CollnPaintHueAttrWheelCore<C, CID>
         }
     }
 
-    pub fn connect_button_press_event<F: Fn(&gtk::DrawingArea, &gdk::EventButton) -> Inhibit + 'static>(&self, f: F) -> SignalHandlerId {
+    pub fn connect_button_press_event<
+        F: Fn(&gtk::DrawingArea, &gdk::EventButton) -> Inhibit + 'static,
+    >(
+        &self,
+        f: F,
+    ) -> SignalHandlerId {
         self.graticule.connect_button_press_event(f)
     }
 }
 
 // WIDGET
 pub struct CollnPaintCollnWidgetCore<A, C, CID>
-    where   A: ColourAttributesInterface + 'static,
-            C: CharacteristicsInterface + 'static,
-            CID: CollnIdInterface + 'static,
+where
+    A: ColourAttributesInterface + 'static,
+    C: CharacteristicsInterface + 'static,
+    CID: CollnIdInterface + 'static,
 {
     vbox: gtk::Box,
     hue_attr_wheels: Vec<CollnPaintHueAttrWheel<C, CID>>,
@@ -402,17 +434,19 @@ impl_widget_wrapper!(vbox: gtk::Box, CollnPaintCollnWidgetCore<A, C, CID>
 pub type CollnPaintCollnWidget<A, C, CID> = Rc<CollnPaintCollnWidgetCore<A, C, CID>>;
 
 pub trait CollnPaintCollnWidgetInterface<A, C, CID>
-    where   A: ColourAttributesInterface + 'static,
-            C: CharacteristicsInterface + 'static,
-            CID: CollnIdInterface + 'static,
+where
+    A: ColourAttributesInterface + 'static,
+    C: CharacteristicsInterface + 'static,
+    CID: CollnIdInterface + 'static,
 {
     fn create(colln_spec: &PaintCollnSpec<C, CID>) -> CollnPaintCollnWidget<A, C, CID>;
 }
 
 impl<A, C, CID> CollnPaintCollnWidgetCore<A, C, CID>
-    where   A: ColourAttributesInterface + 'static,
-            C: CharacteristicsInterface + 'static,
-            CID: CollnIdInterface + 'static,
+where
+    A: ColourAttributesInterface + 'static,
+    C: CharacteristicsInterface + 'static,
+    CID: CollnIdInterface + 'static,
 {
     pub fn colln_id(&self) -> Rc<CID> {
         self.paint_colln_view.colln_id()
@@ -427,12 +461,14 @@ impl<A, C, CID> CollnPaintCollnWidgetCore<A, C, CID>
     pub fn set_initiate_select_ok(&self, value: bool) {
         self.initiate_select_ok.set(value);
         for dialog in self.paint_dialogs.borrow().values() {
-            dialog.set_response_sensitive(0, value);
-        };
+            dialog.set_response_sensitive(gtk::ResponseType::Other(0), value);
+        }
     }
 
     pub fn connect_paint_selected<F: 'static + Fn(&CollnPaint<C, CID>)>(&self, callback: F) {
-        self.paint_selected_callbacks.borrow_mut().push(Box::new(callback))
+        self.paint_selected_callbacks
+            .borrow_mut()
+            .push(Box::new(callback))
     }
 
     pub fn set_target_colour(&self, o_colour: Option<&Colour>) {
@@ -451,33 +487,43 @@ impl<A, C, CID> CollnPaintCollnWidgetCore<A, C, CID>
 }
 
 impl<A, C, CID> CollnPaintCollnWidgetInterface<A, C, CID> for CollnPaintCollnWidget<A, C, CID>
-    where   A: ColourAttributesInterface + 'static,
-            C: CharacteristicsInterface + 'static,
-            CID: CollnIdInterface + 'static,
+where
+    A: ColourAttributesInterface + 'static,
+    C: CharacteristicsInterface + 'static,
+    CID: CollnIdInterface + 'static,
 {
     fn create(colln_spec: &PaintCollnSpec<C, CID>) -> CollnPaintCollnWidget<A, C, CID> {
         let paint_colln = CollnPaintColln::<C, CID>::from_spec(colln_spec);
-        let mut view_attr_wheels:Vec<CollnPaintHueAttrWheel<C, CID>> = Vec::new();
+        let mut view_attr_wheels: Vec<CollnPaintHueAttrWheel<C, CID>> = Vec::new();
         for attr in A::scalar_attributes().iter() {
-            view_attr_wheels.push(CollnPaintHueAttrWheel::<C, CID>::create(*attr, paint_colln.get_paints()));
+            view_attr_wheels.push(CollnPaintHueAttrWheel::<C, CID>::create(
+                *attr,
+                paint_colln.get_paints(),
+            ));
         }
-        let cpcw = Rc::new(
-            CollnPaintCollnWidgetCore::<A, C, CID> {
-                vbox: gtk::Box::new(gtk::Orientation::Vertical, 0),
-                hue_attr_wheels: view_attr_wheels,
-                paint_colln_view: CollnPaintCollnView::<A, C, CID>::create(&paint_colln),
-                paint_dialogs: RefCell::new(HashMap::new()),
-                popup_menu: WrappedMenu::new(&vec![]),
-                initiate_select_ok: Cell::new(false),
-                chosen_paint: RefCell::new(None),
-                current_target: RefCell::new(None),
-                paint_selected_callbacks: RefCell::new(Vec::new()),
-            }
-        );
+        let cpcw = Rc::new(CollnPaintCollnWidgetCore::<A, C, CID> {
+            vbox: gtk::Box::new(gtk::Orientation::Vertical, 0),
+            hue_attr_wheels: view_attr_wheels,
+            paint_colln_view: CollnPaintCollnView::<A, C, CID>::create(&paint_colln),
+            paint_dialogs: RefCell::new(HashMap::new()),
+            popup_menu: WrappedMenu::new(&vec![]),
+            initiate_select_ok: Cell::new(false),
+            chosen_paint: RefCell::new(None),
+            current_target: RefCell::new(None),
+            paint_selected_callbacks: RefCell::new(Vec::new()),
+        });
         let hbox = gtk::Box::new(gtk::Orientation::Horizontal, 0);
-        let colln_name = format!("{} {}", CID::colln_name_label(), colln_spec.colln_id.colln_name());
+        let colln_name = format!(
+            "{} {}",
+            CID::colln_name_label(),
+            colln_spec.colln_id.colln_name()
+        );
         hbox.pack_start(&gtk::Label::new(Some(colln_name.as_str())), true, true, 0);
-        let colln_owner = format!("{} {}", CID::colln_owner_label(), colln_spec.colln_id.colln_owner());
+        let colln_owner = format!(
+            "{} {}",
+            CID::colln_owner_label(),
+            colln_spec.colln_id.colln_owner()
+        );
         hbox.pack_start(&gtk::Label::new(Some(colln_owner.as_str())), true, true, 0);
 
         let notebook = gtk::Notebook::new();
@@ -490,24 +536,25 @@ impl<A, C, CID> CollnPaintCollnWidgetInterface<A, C, CID> for CollnPaintCollnWid
         notebook.popup_enable();
         let hpaned = gtk::Paned::new(gtk::Orientation::Horizontal);
         hpaned.pack1(&notebook, true, true);
-        hpaned.pack2(&cpcw.paint_colln_view.pwo() , true, true);
+        hpaned.pack2(&cpcw.paint_colln_view.pwo(), true, true);
         hpaned.set_position_from_recollections("colln_paint_colln_widget", 200);
         cpcw.vbox.pack_start(&hpaned, true, true, 0);
 
         let cpcw_c = cpcw.clone();
-        cpcw.popup_menu.append_item(
-            "info",
-            "Paint Information",
-            "Display this paint's information",
-        ).connect_activate(
-            move |_| {
+        cpcw.popup_menu
+            .append_item(
+                "info",
+                "Paint Information",
+                "Display this paint's information",
+            )
+            .connect_activate(move |_| {
                 if let Some(ref paint) = *cpcw_c.chosen_paint.borrow() {
                     let cpcw_c_c = cpcw_c.clone();
                     let paint_c = paint.clone();
                     let select_btn_spec = PaintDisplayButtonSpec {
                         label: CID::paint_select_label().to_string(),
                         tooltip_text: CID::paint_select_tooltip_text().to_string(),
-                        callback:  Box::new(move || cpcw_c_c.inform_paint_selected(&paint_c))
+                        callback: Box::new(move || cpcw_c_c.inform_paint_selected(&paint_c)),
                     };
                     let dialog = if CID::display_current_target() {
                         let target_colour = cpcw_c.current_target.borrow().clone();
@@ -516,73 +563,94 @@ impl<A, C, CID> CollnPaintCollnWidgetInterface<A, C, CID> for CollnPaintCollnWid
                         } else {
                             None
                         };
-                        CollnPaintDisplayDialog::<A, C, CID>::create(&paint, target, &cpcw_c, vec![select_btn_spec])
+                        CollnPaintDisplayDialog::<A, C, CID>::create(
+                            &paint,
+                            target,
+                            &cpcw_c,
+                            vec![select_btn_spec],
+                        )
                     } else {
-                        CollnPaintDisplayDialog::<A, C, CID>::create(&paint, None, &cpcw_c, vec![select_btn_spec])
+                        CollnPaintDisplayDialog::<A, C, CID>::create(
+                            &paint,
+                            None,
+                            &cpcw_c,
+                            vec![select_btn_spec],
+                        )
                     };
-                    dialog.set_response_sensitive(0, cpcw_c.initiate_select_ok.get());
-                    let cpcw_c_c = cpcw_c.clone();
-                    dialog.connect_destroyed(
-                        move |id| { cpcw_c_c.paint_dialogs.borrow_mut().remove(&id); }
+                    dialog.set_response_sensitive(
+                        gtk::ResponseType::Other(0),
+                        cpcw_c.initiate_select_ok.get(),
                     );
-                    cpcw_c.paint_dialogs.borrow_mut().insert(dialog.id_no(), dialog.clone());
+                    let cpcw_c_c = cpcw_c.clone();
+                    dialog.connect_destroyed(move |id| {
+                        cpcw_c_c.paint_dialogs.borrow_mut().remove(&id);
+                    });
+                    cpcw_c
+                        .paint_dialogs
+                        .borrow_mut()
+                        .insert(dialog.id_no(), dialog.clone());
                     dialog.show();
                 }
-            }
-        );
+            });
 
         let cpcw_c = cpcw.clone();
-        cpcw.popup_menu.append_item(
-            "select",
-            &CID::paint_select_label(),
-            &CID::paint_select_tooltip_text(),
-        ).connect_activate(
-            move |_| {
+        cpcw.popup_menu
+            .append_item(
+                "select",
+                &CID::paint_select_label(),
+                &CID::paint_select_tooltip_text(),
+            )
+            .connect_activate(move |_| {
                 if let Some(ref paint) = *cpcw_c.chosen_paint.borrow() {
                     cpcw_c.inform_paint_selected(paint)
                 }
-            }
-        );
+            });
 
         let cpcw_c = cpcw.clone();
-        cpcw.paint_colln_view.connect_button_press_event(
-            move |_, event| {
+        cpcw.paint_colln_view
+            .connect_button_press_event(move |_, event| {
                 if event.get_button() == 3 {
-                    if let Some(paint) = cpcw_c.paint_colln_view.get_paint_at(event.get_position()) {
-                        cpcw_c.popup_menu.set_sensitivities(cpcw_c.initiate_select_ok.get(), &["select"]);
+                    if let Some(paint) = cpcw_c.paint_colln_view.get_paint_at(event.get_position())
+                    {
+                        cpcw_c
+                            .popup_menu
+                            .set_sensitivities(cpcw_c.initiate_select_ok.get(), &["select"]);
                         cpcw_c.popup_menu.set_sensitivities(true, &["info"]);
                         *cpcw_c.chosen_paint.borrow_mut() = Some(paint);
                     } else {
-                        cpcw_c.popup_menu.set_sensitivities(false, &["info", "select"]);
+                        cpcw_c
+                            .popup_menu
+                            .set_sensitivities(false, &["info", "select"]);
                         *cpcw_c.chosen_paint.borrow_mut() = None;
                     };
                     cpcw_c.popup_menu.popup_at_event(event);
-                    return Inhibit(true)
+                    return Inhibit(true);
                 };
                 Inhibit(false)
-            }
-        );
+            });
 
         for wheel in cpcw.hue_attr_wheels.iter() {
             let cpcw_c = cpcw.clone();
             let wheel_c = wheel.clone();
-            wheel.connect_button_press_event(
-                move |_, event| {
-                    if event.get_button() == 3 {
-                        if let Some(paint) = wheel_c.get_paint_at(event.get_position()) {
-                            cpcw_c.popup_menu.set_sensitivities(cpcw_c.initiate_select_ok.get(), &["select"]);
-                            cpcw_c.popup_menu.set_sensitivities(true, &["info"]);
-                            *cpcw_c.chosen_paint.borrow_mut() = Some(paint);
-                        } else {
-                            cpcw_c.popup_menu.set_sensitivities(false, &["info", "select"]);
-                            *cpcw_c.chosen_paint.borrow_mut() = None;
-                        };
-                        cpcw_c.popup_menu.popup_at_event(event);
-                        return Inhibit(true)
+            wheel.connect_button_press_event(move |_, event| {
+                if event.get_button() == 3 {
+                    if let Some(paint) = wheel_c.get_paint_at(event.get_position()) {
+                        cpcw_c
+                            .popup_menu
+                            .set_sensitivities(cpcw_c.initiate_select_ok.get(), &["select"]);
+                        cpcw_c.popup_menu.set_sensitivities(true, &["info"]);
+                        *cpcw_c.chosen_paint.borrow_mut() = Some(paint);
+                    } else {
+                        cpcw_c
+                            .popup_menu
+                            .set_sensitivities(false, &["info", "select"]);
+                        *cpcw_c.chosen_paint.borrow_mut() = None;
                     };
-                    Inhibit(false)
-                }
-            );
+                    cpcw_c.popup_menu.popup_at_event(event);
+                    return Inhibit(true);
+                };
+                Inhibit(false)
+            });
         }
 
         cpcw

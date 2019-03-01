@@ -22,10 +22,10 @@ use gtk::prelude::*;
 
 use pw_gix::cairox::*;
 
-pub use pw_gix::wrapper::*;
 use pw_gix::colour::*;
 use pw_gix::gtkx::menu::*;
 use pw_gix::rgb_math::rgb::*;
+pub use pw_gix::wrapper::*;
 
 use super::*;
 
@@ -49,11 +49,7 @@ impl ColourMatchAreaCore {
         self.mixing_mode
     }
 
-    fn draw(
-        &self,
-        drawing_area: &gtk::DrawingArea,
-        cairo_context: &cairo::Context
-    ) {
+    fn draw(&self, drawing_area: &gtk::DrawingArea, cairo_context: &cairo::Context) {
         if let Some(ref colour) = *self.mixed_colour.borrow() {
             cairo_context.set_source_colour(&colour);
         } else {
@@ -64,9 +60,7 @@ impl ColourMatchAreaCore {
             cairo_context.set_source_colour(&colour);
             let width = drawing_area.get_allocated_width() as f64;
             let height = drawing_area.get_allocated_height() as f64;
-            cairo_context.rectangle(
-                width / 4.0, height / 4.0, width / 2.0, height / 2.0
-            );
+            cairo_context.rectangle(width / 4.0, height / 4.0, width / 2.0, height / 2.0);
             cairo_context.fill();
         }
         for sample in self.samples.borrow().iter() {
@@ -111,7 +105,6 @@ impl ColourMatchAreaCore {
         self.samples.borrow_mut().clear();
         self.drawing_area.queue_draw();
     }
-
 }
 
 pub type ColourMatchArea = Rc<ColourMatchAreaCore>;
@@ -128,80 +121,86 @@ impl ColourMatchAreaInterface for ColourMatchArea {
     type ColourMatchAreaType = ColourMatchArea;
 
     fn create(mixing_mode: MixingMode) -> ColourMatchArea {
-        let colour_match_area = Rc::new(
-            ColourMatchAreaCore {
-                drawing_area: gtk::DrawingArea::new(),
-                mixed_colour: RefCell::new(None),
-                target_colour: RefCell::new(None),
-                popup_menu: WrappedMenu::new(&vec![]),
-                samples: RefCell::new(Vec::new()),
-                popup_menu_position: Cell::new(Point(0.0, 0.0)),
-                mixing_mode: mixing_mode
-            }
-        );
+        let colour_match_area = Rc::new(ColourMatchAreaCore {
+            drawing_area: gtk::DrawingArea::new(),
+            mixed_colour: RefCell::new(None),
+            target_colour: RefCell::new(None),
+            popup_menu: WrappedMenu::new(&vec![]),
+            samples: RefCell::new(Vec::new()),
+            popup_menu_position: Cell::new(Point(0.0, 0.0)),
+            mixing_mode: mixing_mode,
+        });
 
         if mixing_mode == MixingMode::MatchSamples {
             let events = gdk::EventMask::BUTTON_PRESS_MASK | gdk::EventMask::BUTTON_RELEASE_MASK;
-            colour_match_area.drawing_area.add_events(events.bits() as i32);
+            colour_match_area.drawing_area.add_events(events);
 
             let colour_match_area_c = colour_match_area.clone();
-            colour_match_area.popup_menu.append_item(
-                "paste",
-                "Paste Sample",
-                "Paste image sample from the clipboard at this position",
-            ).connect_activate(
-                move |_| {
+            colour_match_area
+                .popup_menu
+                .append_item(
+                    "paste",
+                    "Paste Sample",
+                    "Paste image sample from the clipboard at this position",
+                )
+                .connect_activate(move |_| {
                     let cbd = gtk::Clipboard::get(&gdk::SELECTION_CLIPBOARD);
                     if let Some(pixbuf) = cbd.wait_for_image() {
-                        let sample = Sample{pix_buf: pixbuf, position: colour_match_area_c.popup_menu_position.get()};
+                        let sample = Sample {
+                            pix_buf: pixbuf,
+                            position: colour_match_area_c.popup_menu_position.get(),
+                        };
                         colour_match_area_c.samples.borrow_mut().push(sample);
                         colour_match_area_c.drawing_area.queue_draw();
                     } else {
                         colour_match_area_c.inform_user("No image data on clipboard.", None);
                     }
-                }
-            );
+                });
 
             let colour_match_area_c = colour_match_area.clone();
-            colour_match_area.popup_menu.append_item(
-                "remove",
-                "Remove Sample(s)",
-                "Remove all image samples from the sample area",
-            ).connect_activate(
-                move |_| {
+            colour_match_area
+                .popup_menu
+                .append_item(
+                    "remove",
+                    "Remove Sample(s)",
+                    "Remove all image samples from the sample area",
+                )
+                .connect_activate(move |_| {
                     colour_match_area_c.remove_samples();
-                }
-            );
+                });
 
             let colour_match_area_c = colour_match_area.clone();
-            colour_match_area.drawing_area.connect_button_press_event(
-                move |_, event| {
+            colour_match_area
+                .drawing_area
+                .connect_button_press_event(move |_, event| {
                     if event.get_event_type() == gdk::EventType::ButtonPress {
                         if event.get_button() == 3 {
                             let position = Point::from(event.get_position());
                             colour_match_area_c.popup_menu_position.set(position);
                             let cbd = gtk::Clipboard::get(&gdk::SELECTION_CLIPBOARD);
                             let pastable = cbd.wait_is_image_available();
-                            colour_match_area_c.popup_menu.set_sensitivities(pastable, &["paste"]);
+                            colour_match_area_c
+                                .popup_menu
+                                .set_sensitivities(pastable, &["paste"]);
                             let have_samples = colour_match_area_c.samples.borrow().len() > 0;
-                            colour_match_area_c.popup_menu.set_sensitivities(have_samples, &["remove"]);
+                            colour_match_area_c
+                                .popup_menu
+                                .set_sensitivities(have_samples, &["remove"]);
                             colour_match_area_c.popup_menu.popup_at_event(event);
-                            return Inhibit(true)
+                            return Inhibit(true);
                         }
                     }
                     Inhibit(false)
-                 }
-            );
+                });
         };
 
         let colour_match_area_c = colour_match_area.clone();
-        colour_match_area.drawing_area.connect_draw(
-            move |da, ctxt|
-            {
+        colour_match_area
+            .drawing_area
+            .connect_draw(move |da, ctxt| {
                 colour_match_area_c.draw(da, ctxt);
                 Inhibit(false)
-            }
-        );
+            });
         colour_match_area
     }
 }

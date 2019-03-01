@@ -18,7 +18,7 @@ use std::rc::Rc;
 use std::str::FromStr;
 
 use gtk;
-use gtk::{ComboBoxExt, ComboBoxTextExt};
+use gtk::{ComboBoxExtManual, ComboBoxTextExt};
 
 use regex::*;
 
@@ -29,7 +29,9 @@ pub struct CharacteristicError {
 
 impl CharacteristicError {
     pub fn new(text: &str) -> CharacteristicError {
-        CharacteristicError{msg: format!("{}: is a malformed characteristic value.", text)}
+        CharacteristicError {
+            msg: format!("{}: is a malformed characteristic value.", text),
+        }
     }
 }
 
@@ -58,7 +60,7 @@ pub trait CharacteristicInterface: FromStr + PartialEq {
 }
 
 pub trait CharacteristicEntryInterface {
-    type Characteristic: CharacteristicInterface +'static;
+    type Characteristic: CharacteristicInterface + 'static;
 
     fn combo_box_text(&self) -> gtk::ComboBoxText;
     fn create() -> Self;
@@ -67,7 +69,12 @@ pub trait CharacteristicEntryInterface {
         if let Some(text) = self.combo_box_text().get_active_text() {
             match Self::Characteristic::from_str(&text) {
                 Ok(value) => Some(value),
-                Err(_) => panic!("File: {:?} Line: {:?} illegal value: {:?}", file!(), line!(), text)
+                Err(_) => panic!(
+                    "File: {:?} Line: {:?} illegal value: {:?}",
+                    file!(),
+                    line!(),
+                    text
+                ),
             }
         } else {
             None
@@ -78,12 +85,12 @@ pub trait CharacteristicEntryInterface {
         if let Some(value) = o_value {
             for (i, f_value) in Self::Characteristic::values().iter().enumerate() {
                 if value == *f_value {
-                    self.combo_box_text().set_active(i as i32);
+                    self.combo_box_text().set_active(Some(i as u32));
                     break;
                 }
             }
         } else {
-            self.combo_box_text().set_active(-1);
+            self.combo_box_text().set_active(None);
         }
     }
 }
@@ -107,10 +114,10 @@ macro_rules! implement_entry_core {
                     combo_box_text.append_text(value.description());
                 }
                 combo_box_text.set_active(0);
-                Rc::new($entry_core{combo_box_text})
+                Rc::new($entry_core { combo_box_text })
             }
         }
-    }
+    };
 }
 
 // FINISH
@@ -119,19 +126,17 @@ pub enum Finish {
     Gloss,
     SemiGloss,
     SemiFlat,
-    Flat
+    Flat,
 }
 
-static FINISH_VALUES: &[Finish] =
-    &[
-        Finish::Gloss,
-        Finish::SemiGloss,
-        Finish::SemiFlat,
-        Finish::Flat
-    ];
+static FINISH_VALUES: &[Finish] = &[
+    Finish::Gloss,
+    Finish::SemiGloss,
+    Finish::SemiFlat,
+    Finish::Flat,
+];
 
-impl Finish {
-}
+impl Finish {}
 
 impl CharacteristicInterface for Finish {
     fn name() -> &'static str {
@@ -162,9 +167,7 @@ impl CharacteristicInterface for Finish {
 }
 
 lazy_static! {
-    pub static ref FINISH_RE: Regex = Regex::new(
-        r#"finish\s*=\s*"(?P<finish>\w+)""#
-    ).unwrap();
+    pub static ref FINISH_RE: Regex = Regex::new(r#"finish\s*=\s*"(?P<finish>\w+)""#).unwrap();
 }
 
 impl FromStr for Finish {
@@ -182,7 +185,7 @@ impl FromStr for Finish {
             "SG" | "Semi-gloss" => Ok(Finish::SemiGloss),
             "SF" | "Semi-flat" => Ok(Finish::SemiFlat),
             "F" | "Flat" => Ok(Finish::Flat),
-            _ => Err(CharacteristicError::new(string))
+            _ => Err(CharacteristicError::new(string)),
         }
     }
 }
@@ -194,7 +197,7 @@ impl From<f64> for Finish {
             3 => Finish::SemiGloss,
             2 => Finish::SemiFlat,
             1 => Finish::Flat,
-            _ => panic!("{:?}: out of bounds Finish", float)
+            _ => panic!("{:?}: out of bounds Finish", float),
         }
     }
 }
@@ -227,17 +230,16 @@ pub enum Transparency {
     SemiOpaque,
     SemiTransparent,
     Transparent,
-    Clear
+    Clear,
 }
 
-static TRANSPARENCY_VALUES: &[Transparency] =
-    &[
-        Transparency::Opaque,
-        Transparency::SemiOpaque,
-        Transparency::SemiTransparent,
-        Transparency::Transparent,
-        Transparency::Clear
-    ];
+static TRANSPARENCY_VALUES: &[Transparency] = &[
+    Transparency::Opaque,
+    Transparency::SemiOpaque,
+    Transparency::SemiTransparent,
+    Transparency::Transparent,
+    Transparency::Clear,
+];
 
 impl CharacteristicInterface for Transparency {
     fn name() -> &'static str {
@@ -270,9 +272,8 @@ impl CharacteristicInterface for Transparency {
 }
 
 lazy_static! {
-    pub static ref TRANSPARENCY_RE: Regex = Regex::new(
-        r#"transparency\s*=\s*"(?P<transparency>\w+)""#
-    ).unwrap();
+    pub static ref TRANSPARENCY_RE: Regex =
+        Regex::new(r#"transparency\s*=\s*"(?P<transparency>\w+)""#).unwrap();
 }
 
 impl FromStr for Transparency {
@@ -291,7 +292,7 @@ impl FromStr for Transparency {
             "ST" | "Semi-transparent" => Ok(Transparency::SemiTransparent),
             "T" | "Transparent" => Ok(Transparency::Transparent),
             "Cl" | "Clear" => Ok(Transparency::Clear),
-            _ => Err(CharacteristicError::new(string))
+            _ => Err(CharacteristicError::new(string)),
         }
     }
 }
@@ -304,7 +305,7 @@ impl From<f64> for Transparency {
             3 => Transparency::SemiTransparent,
             2 => Transparency::Transparent,
             1 => Transparency::Clear,
-            _ => panic!("{:?}: out of bounds Transparency", float)
+            _ => panic!("{:?}: out of bounds Transparency", float),
         }
     }
 }
@@ -340,13 +341,12 @@ pub enum Permanence {
     Fugitive,
 }
 
-static PERMANENCE_VALUES: &[Permanence] =
-    &[
-        Permanence::ExtremelyPermanent,
-        Permanence::Permanent,
-        Permanence::ModeratelyDurable,
-        Permanence::Fugitive,
-    ];
+static PERMANENCE_VALUES: &[Permanence] = &[
+    Permanence::ExtremelyPermanent,
+    Permanence::Permanent,
+    Permanence::ModeratelyDurable,
+    Permanence::Fugitive,
+];
 
 impl CharacteristicInterface for Permanence {
     fn name() -> &'static str {
@@ -377,9 +377,8 @@ impl CharacteristicInterface for Permanence {
 }
 
 lazy_static! {
-    pub static ref PERMANENCE_RE: Regex = Regex::new(
-        r#"permanence\s*=\s*"(?P<permanence>\w+)""#
-    ).unwrap();
+    pub static ref PERMANENCE_RE: Regex =
+        Regex::new(r#"permanence\s*=\s*"(?P<permanence>\w+)""#).unwrap();
 }
 
 impl FromStr for Permanence {
@@ -397,7 +396,7 @@ impl FromStr for Permanence {
             "A" | "Permanent" => Ok(Permanence::Permanent),
             "B" | "Moderately Durable" => Ok(Permanence::ModeratelyDurable),
             "T" | "Fugitive" => Ok(Permanence::Fugitive),
-            _ => Err(CharacteristicError::new(string))
+            _ => Err(CharacteristicError::new(string)),
         }
     }
 }
@@ -409,7 +408,7 @@ impl From<f64> for Permanence {
             3 => Permanence::Permanent,
             2 => Permanence::ModeratelyDurable,
             1 => Permanence::Fugitive,
-            _ => panic!("{:?}: out of bounds Permanence", float)
+            _ => panic!("{:?}: out of bounds Permanence", float),
         }
     }
 }
@@ -441,16 +440,15 @@ pub enum Fluorescence {
     Fluorescent,
     SemiFluorescent,
     SemiNonfluorescent,
-    Nonfluorescent
+    Nonfluorescent,
 }
 
-static FLUORENCE_VALUES: &[Fluorescence] =
-    &[
-        Fluorescence::Fluorescent,
-        Fluorescence::SemiFluorescent,
-        Fluorescence::SemiNonfluorescent,
-        Fluorescence::Nonfluorescent,
-    ];
+static FLUORENCE_VALUES: &[Fluorescence] = &[
+    Fluorescence::Fluorescent,
+    Fluorescence::SemiFluorescent,
+    Fluorescence::SemiNonfluorescent,
+    Fluorescence::Nonfluorescent,
+];
 
 impl CharacteristicInterface for Fluorescence {
     fn name() -> &'static str {
@@ -481,9 +479,8 @@ impl CharacteristicInterface for Fluorescence {
 }
 
 lazy_static! {
-    pub static ref FLUORESCENCE_RE: Regex = Regex::new(
-        r#"fluorescence\s*=\s*"(?P<fluorescence>\w+)""#
-    ).unwrap();
+    pub static ref FLUORESCENCE_RE: Regex =
+        Regex::new(r#"fluorescence\s*=\s*"(?P<fluorescence>\w+)""#).unwrap();
 }
 
 impl FromStr for Fluorescence {
@@ -501,7 +498,7 @@ impl FromStr for Fluorescence {
             "SF" | "Semi-fluorescent" => Ok(Fluorescence::SemiFluorescent),
             "SN" | "Semi-nonfluorescent" => Ok(Fluorescence::SemiNonfluorescent),
             "NF" | "Nonfluorescent" => Ok(Fluorescence::Nonfluorescent),
-            _ => Err(CharacteristicError::new(string))
+            _ => Err(CharacteristicError::new(string)),
         }
     }
 }
@@ -513,7 +510,7 @@ impl From<f64> for Fluorescence {
             3 => Fluorescence::SemiFluorescent,
             2 => Fluorescence::SemiNonfluorescent,
             1 => Fluorescence::Nonfluorescent,
-            _ => panic!("{:?}: out of bounds Fluorescence", float)
+            _ => panic!("{:?}: out of bounds Fluorescence", float),
         }
     }
 }
@@ -545,16 +542,15 @@ pub enum Metallic {
     Metal,
     Metallic,
     SemiMetallic,
-    Nonmetallic
+    Nonmetallic,
 }
 
-static METALLIC_VALUES: &[Metallic] =
-    &[
-        Metallic::Metal,
-        Metallic::Metallic,
-        Metallic::SemiMetallic,
-        Metallic::Nonmetallic,
-    ];
+static METALLIC_VALUES: &[Metallic] = &[
+    Metallic::Metal,
+    Metallic::Metallic,
+    Metallic::SemiMetallic,
+    Metallic::Nonmetallic,
+];
 
 impl CharacteristicInterface for Metallic {
     fn name() -> &'static str {
@@ -585,9 +581,8 @@ impl CharacteristicInterface for Metallic {
 }
 
 lazy_static! {
-    pub static ref METALLIC_RE: Regex = Regex::new(
-        r#"metallic\s*=\s*"(?P<metallic>\w+)""#
-    ).unwrap();
+    pub static ref METALLIC_RE: Regex =
+        Regex::new(r#"metallic\s*=\s*"(?P<metallic>\w+)""#).unwrap();
 }
 
 impl FromStr for Metallic {
@@ -605,7 +600,7 @@ impl FromStr for Metallic {
             "Mc" | "Semi-metallic" => Ok(Metallic::Metallic),
             "SM" | "Semi-nonmetallic" => Ok(Metallic::SemiMetallic),
             "NM" | "Nonmetallic" => Ok(Metallic::Nonmetallic),
-            _ => Err(CharacteristicError::new(string))
+            _ => Err(CharacteristicError::new(string)),
         }
     }
 }
@@ -617,7 +612,7 @@ impl From<f64> for Metallic {
             3 => Metallic::Metallic,
             2 => Metallic::SemiMetallic,
             1 => Metallic::Nonmetallic,
-            _ => panic!("{:?}: out of bounds Metallic", float)
+            _ => panic!("{:?}: out of bounds Metallic", float),
         }
     }
 }
@@ -652,13 +647,28 @@ mod tests {
         assert_eq!(Finish::from_str("Flat").unwrap(), Finish::Flat);
         assert_eq!(Finish::from_str(" finish = \"G\"").unwrap(), Finish::Gloss);
 
-        assert_eq!(Transparency::from_str("Opaque").unwrap(), Transparency::Opaque);
-        assert_eq!(Transparency::from_str(" transparency = \"ST\"").unwrap(), Transparency::SemiTransparent);
+        assert_eq!(
+            Transparency::from_str("Opaque").unwrap(),
+            Transparency::Opaque
+        );
+        assert_eq!(
+            Transparency::from_str(" transparency = \"ST\"").unwrap(),
+            Transparency::SemiTransparent
+        );
 
-        assert_eq!(Fluorescence::from_str("Fluorescent").unwrap(), Fluorescence::Fluorescent);
-        assert_eq!(Fluorescence::from_str(" fluorescence = \"NF\"").unwrap(), Fluorescence::Nonfluorescent);
+        assert_eq!(
+            Fluorescence::from_str("Fluorescent").unwrap(),
+            Fluorescence::Fluorescent
+        );
+        assert_eq!(
+            Fluorescence::from_str(" fluorescence = \"NF\"").unwrap(),
+            Fluorescence::Nonfluorescent
+        );
 
         assert_eq!(Metallic::from_str("Metal").unwrap(), Metallic::Metal);
-        assert_eq!(Metallic::from_str(" metallic = \"NM\"").unwrap(), Metallic::Nonmetallic);
+        assert_eq!(
+            Metallic::from_str(" metallic = \"NM\"").unwrap(),
+            Metallic::Nonmetallic
+        );
     }
 }

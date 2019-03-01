@@ -35,7 +35,7 @@ pub enum ShapeType {
 pub trait GeometryInterface {
     fn transform(&self, point: Point) -> Point;
     fn reverse_transform(&self, point: Point) -> Point;
-    fn scaled(&self, value: f64) -> f64 ;
+    fn scaled(&self, value: f64) -> f64;
 }
 
 const SHAPE_SIDE: f64 = 0.06;
@@ -51,14 +51,12 @@ pub trait ColourShapeInterface {
             ShapeType::Square => {
                 let delta_xy = self.xy() - xy;
                 delta_xy.x().abs() < SHAPE_RADIUS && delta_xy.y().abs() < SHAPE_RADIUS
-            },
+            }
             ShapeType::Diamond => {
                 let delta_xy = (self.xy() - xy).rotate_45_deg();
                 delta_xy.x().abs() < SHAPE_RADIUS && delta_xy.y().abs() < SHAPE_RADIUS
-            },
-            _ => {
-                (self.xy() - xy).hypot() < SHAPE_RADIUS
-            },
+            }
+            _ => (self.xy() - xy).hypot() < SHAPE_RADIUS,
         }
     }
 
@@ -72,25 +70,25 @@ pub trait ColourShapeInterface {
         let point = canvas.transform(self.xy());
         let side = canvas.scaled(SHAPE_SIDE);
         match self.shape_type() {
-           ShapeType::Square => {
+            ShapeType::Square => {
                 cairo_context.set_source_colour_rgb(fill_rgb);
                 cairo_context.draw_square(point, side, true);
                 cairo_context.set_source_colour_rgb(outline_rgb);
                 cairo_context.draw_square(point, side, false);
-            },
+            }
             ShapeType::Diamond => {
                 cairo_context.set_source_colour_rgb(fill_rgb);
                 cairo_context.draw_diamond(point, side, true);
                 cairo_context.set_source_colour_rgb(outline_rgb);
                 cairo_context.draw_diamond(point, side, false);
-            },
+            }
             ShapeType::Circle => {
                 let radius = canvas.scaled(SHAPE_RADIUS);
                 cairo_context.set_source_colour_rgb(fill_rgb);
                 cairo_context.draw_circle(point, radius, true);
                 cairo_context.set_source_colour_rgb(outline_rgb);
                 cairo_context.draw_circle(point, radius, false);
-            },
+            }
             ShapeType::BackSight => {
                 let radius = canvas.scaled(SHAPE_RADIUS);
                 cairo_context.set_source_colour_rgb(fill_rgb);
@@ -103,21 +101,23 @@ pub trait ColourShapeInterface {
                 cairo_context.draw_line(point + rel_end, point - rel_end);
                 let rel_end = Point(0.0, half_len);
                 cairo_context.draw_line(point + rel_end, point - rel_end);
-            },
+            }
         }
     }
 }
 
 pub trait ColouredItemShapeInterface<CI>: ColourShapeInterface
-    where   CI: ColouredItemInterface + Ord
+where
+    CI: ColouredItemInterface + Ord,
 {
     fn new(paint: &CI, attr: ScalarAttribute) -> Self;
     fn coloured_item(&self) -> CI;
 }
 
 pub struct ColouredItemSpapeList<CI, PS>
-    where   CI: ColouredItemInterface + Ord,
-            PS: ColouredItemShapeInterface<CI>,
+where
+    CI: ColouredItemInterface + Ord,
+    PS: ColouredItemShapeInterface<CI>,
 {
     attr: ScalarAttribute,
     shapes: RefCell<Vec<PS>>,
@@ -126,15 +126,16 @@ pub struct ColouredItemSpapeList<CI, PS>
 }
 
 impl<CI, PS> ColouredItemSpapeList<CI, PS>
-        where   CI: ColouredItemInterface + Ord + Debug,
-                PS: ColouredItemShapeInterface<CI>,
+where
+    CI: ColouredItemInterface + Ord + Debug,
+    PS: ColouredItemShapeInterface<CI>,
 {
     pub fn new(attr: ScalarAttribute) -> ColouredItemSpapeList<CI, PS> {
         ColouredItemSpapeList::<CI, PS> {
             attr: attr,
             shapes: RefCell::new(Vec::new()),
             changed_callbacks: RefCell::new(Vec::new()),
-            pc: PhantomData
+            pc: PhantomData,
         }
     }
 
@@ -147,10 +148,9 @@ impl<CI, PS> ColouredItemSpapeList<CI, PS>
     }
 
     fn find_coloured_item(&self, coloured_item: &CI) -> Result<usize, usize> {
-        self.shapes.borrow().binary_search_by_key(
-            coloured_item,
-            |shape| shape.coloured_item()
-        )
+        self.shapes
+            .borrow()
+            .binary_search_by_key(coloured_item, |shape| shape.coloured_item())
     }
 
     pub fn contains_coloured_item(&self, coloured_item: &CI) -> bool {
@@ -172,8 +172,13 @@ impl<CI, PS> ColouredItemSpapeList<CI, PS>
             Ok(index) => {
                 self.shapes.borrow_mut().remove(index);
                 self.inform_changed();
-            },
-            Err(_) => panic!("File: {:?} Line: {:?} not found: {:?}", file!(), line!(), coloured_item)
+            }
+            Err(_) => panic!(
+                "File: {:?} Line: {:?} not found: {:?}",
+                file!(),
+                line!(),
+                coloured_item
+            ),
         }
     }
 
@@ -203,7 +208,10 @@ impl<CI, PS> ColouredItemSpapeList<CI, PS>
             let mut index = candidates[0];
             for i in candidates[1..].iter() {
                 let r = shapes[*i].distance_to(xy);
-                if r < range { range = r;  index = *i; }
+                if r < range {
+                    range = r;
+                    index = *i;
+                }
             }
             Some((self.shapes.borrow()[index].coloured_item(), range))
         }
@@ -225,7 +233,5 @@ mod tests {
     //use super::*;
 
     #[test]
-    fn it_works() {
-
-    }
+    fn it_works() {}
 }

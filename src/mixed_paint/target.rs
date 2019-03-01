@@ -14,8 +14,8 @@
 
 use std::marker::PhantomData;
 
-use gtk::{self, WidgetExt};
 use gtk::prelude::*;
+use gtk::{self, WidgetExt};
 
 use std::cmp::*;
 use std::rc::Rc;
@@ -84,19 +84,17 @@ pub trait TargetColourInterface {
 
 impl TargetColourInterface for TargetColour {
     fn create(colour: &Colour, name: &str, notes: &str) -> TargetColour {
-        Rc::new(
-            TargetColourCore{
-                colour: colour.clone(),
-                name: name.to_string(),
-                notes: notes.to_string(),
-            }
-        )
+        Rc::new(TargetColourCore {
+            colour: colour.clone(),
+            name: name.to_string(),
+            notes: notes.to_string(),
+        })
     }
 }
 
-
 pub struct TargetColourDisplayDialogCore<A>
-    where   A: ColourAttributesInterface
+where
+    A: ColourAttributesInterface,
 {
     dialog: gtk::Dialog,
     cads: PhantomData<A>,
@@ -105,7 +103,8 @@ pub struct TargetColourDisplayDialogCore<A>
 pub type TargetColourDisplayDialog<A> = Rc<TargetColourDisplayDialogCore<A>>;
 
 impl<A> DialogWrapper for TargetColourDisplayDialog<A>
-    where   A: ColourAttributesInterface
+where
+    A: ColourAttributesInterface,
 {
     fn dialog(&self) -> gtk::Dialog {
         self.dialog.clone()
@@ -113,7 +112,8 @@ impl<A> DialogWrapper for TargetColourDisplayDialog<A>
 }
 
 pub trait TargetColourDisplayDialogInterface<A>
-    where   A: ColourAttributesInterface
+where
+    A: ColourAttributesInterface,
 {
     fn create<W: WidgetWrapper>(
         colour: &TargetColour,
@@ -122,7 +122,8 @@ pub trait TargetColourDisplayDialogInterface<A>
 }
 
 impl<A> TargetColourDisplayDialogInterface<A> for TargetColourDisplayDialog<A>
-    where   A: ColourAttributesInterface + 'static
+where
+    A: ColourAttributesInterface + 'static,
 {
     fn create<W: WidgetWrapper>(
         colour: &TargetColour,
@@ -143,18 +144,17 @@ impl<A> TargetColourDisplayDialogInterface<A> for TargetColourDisplayDialog<A>
         cads.set_colour(Some(&colour.colour()));
         content_area.pack_start(&cads.pwo(), true, true, 1);
         content_area.show_all();
-        Rc::new(
-            TargetColourDisplayDialogCore {
-                dialog: dialog,
-                cads: PhantomData,
-            }
-        )
+        Rc::new(TargetColourDisplayDialogCore {
+            dialog: dialog,
+            cads: PhantomData,
+        })
     }
 }
 
 // Entry for setting a new target colour
 pub struct NewTargetColourDialogCore<A>
-    where   A: ColourAttributesInterface + 'static
+where
+    A: ColourAttributesInterface + 'static,
 {
     dialog: gtk::Dialog,
     colour_editor: ColourEditor<A>,
@@ -164,17 +164,23 @@ pub struct NewTargetColourDialogCore<A>
 pub type NewTargetColourDialog<A> = Rc<NewTargetColourDialogCore<A>>;
 
 pub trait NewTargetColourDialogInterface<A>
-    where   A: ColourAttributesInterface
+where
+    A: ColourAttributesInterface,
 {
     fn create<W: WidgetWrapper>(caller: &Rc<W>) -> NewTargetColourDialog<A>;
 }
 
 impl<A> NewTargetColourDialogInterface<A> for NewTargetColourDialog<A>
-    where   A: ColourAttributesInterface
+where
+    A: ColourAttributesInterface,
 {
     fn create<W: WidgetWrapper>(caller: &Rc<W>) -> NewTargetColourDialog<A> {
         let title = format!("{}: New Mixed Paint Target Colour", app_name());
-        let dialog = caller.new_dialog_with_buttons(Some(&title), gtk::DialogFlags::DESTROY_WITH_PARENT, CANCEL_OK_BUTTONS);
+        let dialog = caller.new_dialog_with_buttons(
+            Some(&title),
+            gtk::DialogFlags::DESTROY_WITH_PARENT,
+            CANCEL_OK_BUTTONS,
+        );
         let colour_editor = ColourEditor::<A>::create(&vec![]);
         let notes = gtk::Entry::new();
 
@@ -186,34 +192,38 @@ impl<A> NewTargetColourDialogInterface<A> for NewTargetColourDialog<A>
         content_area.pack_start(&colour_editor.pwo(), true, true, 0);
         content_area.show_all();
 
-        let ntcd = Rc::new(
-            NewTargetColourDialogCore::<A>{dialog, colour_editor, notes}
-        );
+        let ntcd = Rc::new(NewTargetColourDialogCore::<A> {
+            dialog,
+            colour_editor,
+            notes,
+        });
         let ntcd_c = ntcd.clone();
-        ntcd.notes.connect_changed(
-            move |entry| {
-                if let Some(text) = entry.get_text() {
-                    ntcd_c.dialog.set_response_sensitive(gtk::ResponseType::Accept.into(), text.len() > 0)
-                } else {
-                    ntcd_c.dialog.set_response_sensitive(gtk::ResponseType::Accept.into(), false)
-                }
+        ntcd.notes.connect_changed(move |entry| {
+            if let Some(text) = entry.get_text() {
+                ntcd_c
+                    .dialog
+                    .set_response_sensitive(gtk::ResponseType::Accept.into(), text.len() > 0)
+            } else {
+                ntcd_c
+                    .dialog
+                    .set_response_sensitive(gtk::ResponseType::Accept.into(), false)
             }
-        );
+        });
 
         ntcd
     }
 }
 
-impl <A> NewTargetColourDialogCore<A>
-    where   A: ColourAttributesInterface
+impl<A> NewTargetColourDialogCore<A>
+where
+    A: ColourAttributesInterface,
 {
     pub fn get_new_target(&self) -> Option<(String, Colour)> {
-        let ok: i32 = CANCEL_OK_BUTTONS[1].1;
-        if self.dialog.run() == ok {
+        if gtk::ResponseType::from(self.dialog.run()) == gtk::ResponseType::Ok {
             if let Some(notes) = self.notes.get_text() {
                 let colour = self.colour_editor.get_colour();
                 self.dialog.destroy();
-                return Some((notes, colour));
+                return Some((String::from(notes), colour));
             }
         };
         self.dialog.destroy();
@@ -226,7 +236,5 @@ mod tests {
     //use super::*;
 
     #[test]
-    fn it_works() {
-
-    }
+    fn it_works() {}
 }

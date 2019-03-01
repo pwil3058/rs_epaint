@@ -20,7 +20,7 @@ use pw_gix::rgb_math::rgb::*;
 #[derive(Debug, PartialEq)]
 pub struct ColourComponent {
     pub colour: Colour,
-    pub parts: u32
+    pub parts: u32,
 }
 
 #[derive(Debug, PartialEq)]
@@ -31,7 +31,10 @@ pub struct ColourMixer {
 
 impl ColourMixer {
     pub fn new() -> ColourMixer {
-        ColourMixer{rgb_sum: RGB::from((0.0, 0.0, 0.0)), total_parts: 0}
+        ColourMixer {
+            rgb_sum: RGB::from((0.0, 0.0, 0.0)),
+            total_parts: 0,
+        }
     }
 
     pub fn reset(&mut self) {
@@ -59,7 +62,7 @@ impl From<Vec<(Colour, u32)>> for ColourMixer {
         let mut colour_mixer = ColourMixer::new();
         for (ref colour, parts) in colour_components {
             colour_mixer.add(colour, parts);
-        };
+        }
         colour_mixer
     }
 }

@@ -25,9 +25,9 @@ use gdk_pixbuf::Pixbuf;
 use gtk;
 use gtk::prelude::*;
 
-pub use pw_gix::wrapper::*;
 use pw_gix::colour::*;
 use pw_gix::gtkx::paned::*;
+pub use pw_gix::wrapper::*;
 
 use basic_paint::*;
 use colour_mix::*;
@@ -35,31 +35,37 @@ use icons::mixtures_print_xpm;
 use series_paint::*;
 use standards::*;
 
-use super::*;
 use super::collection::*;
 use super::components::*;
 use super::hue_wheel::*;
 use super::match_area::*;
 use super::target::*;
+use super::*;
 
 pub trait MixerConfig {
     fn mixing_mode() -> MixingMode;
 }
 
 pub trait PaintMixerInterface<A, C, MC>
-    where   A: ColourAttributesInterface + 'static,
-            C: CharacteristicsInterface + 'static,
-            MC: MixerConfig + 'static,
+where
+    A: ColourAttributesInterface + 'static,
+    C: CharacteristicsInterface + 'static,
+    MC: MixerConfig + 'static,
 {
-    fn create(series_paint_data_path: &Path, paint_standards_data_path: Option<&Path>) -> PaintMixer<A, C, MC>;
+    fn create(
+        series_paint_data_path: &Path,
+        paint_standards_data_path: Option<&Path>,
+    ) -> PaintMixer<A, C, MC>;
 }
 
-pub type SeriesPaintComponentBox<A, C> = PaintComponentsBox<A, C, SeriesPaint<C>, SeriesPaintDisplayDialog<A, C>>;
+pub type SeriesPaintComponentBox<A, C> =
+    PaintComponentsBox<A, C, SeriesPaint<C>, SeriesPaintDisplayDialog<A, C>>;
 
 pub struct PaintMixerCore<A, C, MC>
-    where   A: ColourAttributesInterface + 'static,
-            C: CharacteristicsInterface + 'static,
-            MC: MixerConfig + 'static,
+where
+    A: ColourAttributesInterface + 'static,
+    C: CharacteristicsInterface + 'static,
+    MC: MixerConfig + 'static,
 {
     vbox: gtk::Box,
     cads: Rc<A>,
@@ -85,9 +91,10 @@ pub struct PaintMixerCore<A, C, MC>
 }
 
 impl<A, C, MC> PaintMixerCore<A, C, MC>
-    where   A: ColourAttributesInterface + 'static,
-            C: CharacteristicsInterface + 'static,
-            MC: MixerConfig + 'static,
+where
+    A: ColourAttributesInterface + 'static,
+    C: CharacteristicsInterface + 'static,
+    MC: MixerConfig + 'static,
 {
     pub fn set_manager_icons(&self, icon: &Pixbuf) {
         self.series_paint_manager.set_icon(icon);
@@ -120,7 +127,10 @@ impl<A, C, MC> PaintMixerCore<A, C, MC>
                 wheel.remove_series_paint(paint);
             }
         } else {
-            let expln = format!("\"{}\" is being used in one or more mixtures.", paint.name());
+            let expln = format!(
+                "\"{}\" is being used in one or more mixtures.",
+                paint.name()
+            );
             self.warn_user("Removal aborted!", Some(&expln))
         }
     }
@@ -128,11 +138,15 @@ impl<A, C, MC> PaintMixerCore<A, C, MC>
     fn remove_unused_paints_from_mixing_area(&self) {
         //TODO: implement different policies for what "unused" means
         let series_paints_in_use = self.mixed_paints.series_paints_used();
-        for paint in self.series_paint_components.remove_unused_spin_buttons(&series_paints_in_use).iter() {
+        for paint in self
+            .series_paint_components
+            .remove_unused_spin_buttons(&series_paints_in_use)
+            .iter()
+        {
             for wheel in self.hue_attr_wheels.iter() {
                 wheel.remove_series_paint(paint);
             }
-        };
+        }
     }
 
     fn remove_mixed_paint(&self, paint: &MixedPaint<C>) {
@@ -150,18 +164,20 @@ impl<A, C, MC> PaintMixerCore<A, C, MC>
     }
 
     fn set_button_sensitivities(&self) {
-        let has_colour = self.series_paint_components.has_contributions() ||
-            self.mixed_paints.components().has_contributions();
+        let has_colour = self.series_paint_components.has_contributions()
+            || self.mixed_paints.components().has_contributions();
         self.simplify_parts_btn.set_sensitive(has_colour);
         self.reset_parts_btn.set_sensitive(has_colour);
         if MC::mixing_mode() == MixingMode::MatchSamples {
-            self.accept_mixture_btn.set_sensitive(has_colour && self.has_notes());
+            self.accept_mixture_btn
+                .set_sensitive(has_colour && self.has_notes());
         } else if self.colour_match_area.has_target_colour() {
             self.series_paint_components.set_sensitive(true);
             self.mixed_paints.components().set_sensitive(true);
             self.new_mixture_btn.set_sensitive(false);
             self.cancel_btn.set_sensitive(true);
-            self.accept_mixture_btn.set_sensitive(has_colour && self.has_notes());
+            self.accept_mixture_btn
+                .set_sensitive(has_colour && self.has_notes());
             if let Some(ref paint_standards_manager) = self.o_paint_standards_manager {
                 paint_standards_manager.set_initiate_select_ok(false)
             };
@@ -203,15 +219,18 @@ impl<A, C, MC> PaintMixerCore<A, C, MC>
     }
 
     fn accept_new_mixture(&self) {
-        let notes = if let Some(text) = self.mixed_paint_notes.get_text() {
-            text
+        let notes: String = if let Some(text) = self.mixed_paint_notes.get_text() {
+            String::from(text)
         } else {
             "".to_string()
         };
         let o_matched_colour = self.colour_match_area.get_target_colour();
         let sp_components = self.series_paint_components.get_paint_components();
         let mp_components = self.mixed_paints.components().get_paint_components();
-        if let Ok(mixed_paint) = self.mixed_paints.add_paint(&notes, sp_components, mp_components, o_matched_colour) {
+        if let Ok(mixed_paint) =
+            self.mixed_paints
+                .add_paint(&notes, sp_components, mp_components, o_matched_colour)
+        {
             for wheel in self.hue_attr_wheels.iter() {
                 wheel.add_mixed_paint(&mixed_paint);
             }
@@ -259,7 +278,7 @@ impl<A, C, MC> PaintMixerCore<A, C, MC>
         let series_paints_used = self.mixed_paints.series_paints_used();
 
         if series_paints_used.len() == 0 {
-            return vec![escape_str_attribute("Empty Mix/Match Description").to_string()]
+            return vec![escape_str_attribute("Empty Mix/Match Description").to_string()];
         }
 
         let mut text = format!("<b>{}</b> ", escape_str_attribute("Mix/Match Description:"));
@@ -273,7 +292,10 @@ impl<A, C, MC> PaintMixerCore<A, C, MC>
 
         let mut text = format!("<b>{}</b>\n\n", escape_str_attribute("Paint Colours:"));
         for series_paint in series_paints_used.iter() {
-            text += &format!("<span background=\"{}\">\t</span> ", series_paint.rgb().pango_string());
+            text += &format!(
+                "<span background=\"{}\">\t</span> ",
+                series_paint.rgb().pango_string()
+            );
             text += &format!("{}", escape_str_attribute(&series_paint.name()));
             if series_paint.notes().len() > 0 {
                 text += &format!(" {}\n", escape_str_attribute(&series_paint.notes()));
@@ -285,9 +307,18 @@ impl<A, C, MC> PaintMixerCore<A, C, MC>
 
         let mut text = format!("<b>{}</b>\n\n", escape_str_attribute("Mixed Colours:"));
         for mixed_paint in self.mixed_paints.get_paints().iter() {
-            text += &format!("<span background=\"{}\">\t</span> ", mixed_paint.rgb().pango_string());
-            text += &format!("<span background=\"{}\">\t</span> ", mixed_paint.monotone_rgb().pango_string());
-            text += &format!("<span background=\"{}\">\t</span> ", mixed_paint.max_chroma_rgb().pango_string());
+            text += &format!(
+                "<span background=\"{}\">\t</span> ",
+                mixed_paint.rgb().pango_string()
+            );
+            text += &format!(
+                "<span background=\"{}\">\t</span> ",
+                mixed_paint.monotone_rgb().pango_string()
+            );
+            text += &format!(
+                "<span background=\"{}\">\t</span> ",
+                mixed_paint.max_chroma_rgb().pango_string()
+            );
             text += &format!("{}", escape_str_attribute(&mixed_paint.name()));
             if mixed_paint.notes().len() > 0 {
                 text += &format!(" {}\n", escape_str_attribute(&mixed_paint.notes()));
@@ -295,13 +326,25 @@ impl<A, C, MC> PaintMixerCore<A, C, MC>
                 text += "\n";
             };
             if let Some(matched_colour) = mixed_paint.matched_colour() {
-                text += &format!("<span background=\"{}\">\t</span> ", matched_colour.rgb().pango_string());
-                text += &format!("<span background=\"{}\">\t</span> ", matched_colour.monotone_rgb().pango_string());
-                text += &format!("<span background=\"{}\">\t</span> Matched Colour\n", matched_colour.max_chroma_rgb().pango_string());
+                text += &format!(
+                    "<span background=\"{}\">\t</span> ",
+                    matched_colour.rgb().pango_string()
+                );
+                text += &format!(
+                    "<span background=\"{}\">\t</span> ",
+                    matched_colour.monotone_rgb().pango_string()
+                );
+                text += &format!(
+                    "<span background=\"{}\">\t</span> Matched Colour\n",
+                    matched_colour.max_chroma_rgb().pango_string()
+                );
             };
             for component in mixed_paint.components().iter() {
                 text += &format!("{:7}: ", component.parts);
-                text += &format!("<span background=\"{}\">\t</span> ", component.paint.rgb().pango_string());
+                text += &format!(
+                    "<span background=\"{}\">\t</span> ",
+                    component.paint.rgb().pango_string()
+                );
                 text += &format!("{}\n", escape_str_attribute(&component.paint.name()));
             }
             chunks.push(text);
@@ -321,13 +364,19 @@ impl_widget_wrapper!(vbox: gtk::Box, PaintMixerCore<A, C, MC>
 pub type PaintMixer<A, C, MC> = Rc<PaintMixerCore<A, C, MC>>;
 
 impl<A, C, MC> PaintMixerInterface<A, C, MC> for PaintMixer<A, C, MC>
-    where   A: ColourAttributesInterface + 'static,
-            C: CharacteristicsInterface + 'static,
-            MC: MixerConfig + 'static,
+where
+    A: ColourAttributesInterface + 'static,
+    C: CharacteristicsInterface + 'static,
+    MC: MixerConfig + 'static,
 {
-    fn create(series_paint_data_path: &Path, paint_standards_data_path: Option<&Path>) -> PaintMixer<A, C, MC> {
-        assert!(paint_standards_data_path.is_none() || MC::mixing_mode() == MixingMode::MatchTarget);
-        let mut view_attr_wheels:Vec<MixerHueAttrWheel<A, C>> = Vec::new();
+    fn create(
+        series_paint_data_path: &Path,
+        paint_standards_data_path: Option<&Path>,
+    ) -> PaintMixer<A, C, MC> {
+        assert!(
+            paint_standards_data_path.is_none() || MC::mixing_mode() == MixingMode::MatchTarget
+        );
+        let mut view_attr_wheels: Vec<MixerHueAttrWheel<A, C>> = Vec::new();
         for attr in A::scalar_attributes().iter() {
             view_attr_wheels.push(MixerHueAttrWheel::<A, C>::create(*attr));
         }
@@ -336,31 +385,29 @@ impl<A, C, MC> PaintMixerInterface<A, C, MC> for PaintMixer<A, C, MC>
         } else {
             None
         };
-        let paint_mixer = Rc::new(
-            PaintMixerCore::<A, C, MC> {
-                vbox: gtk::Box::new(gtk::Orientation::Vertical, 1),
-                cads: A::create(),
-                hue_attr_wheels: view_attr_wheels,
-                colour_match_area: ColourMatchArea::create(MC::mixing_mode()),
-                series_paint_components: SeriesPaintComponentBox::<A, C>::create_with(4, true),
-                mixed_paints: MixedPaintCollectionWidget::<A, C>::create(MC::mixing_mode()),
-                notes: gtk::Entry::new(),
-                next_name_label: gtk::Label::new(Some("#???:")),
-                mixed_paint_notes: gtk::Entry::new(),
-                // Buttons
-                print_report_btn: gtk::Button::new(),
-                new_mixture_btn: gtk::Button::new_with_label("New"),
-                accept_mixture_btn: gtk::Button::new_with_label("Accept"),
-                cancel_btn: gtk::Button::new_with_label("Cancel"),
-                reset_parts_btn: gtk::Button::new_with_label("Reset"),
-                remove_unused_btn: gtk::Button::new_with_label("Remove Unused Paints"),
-                simplify_parts_btn: gtk::Button::new_with_label("Simplify Parts"),
-                // Managers
-                series_paint_manager: SeriesPaintManager::<A, C>::create(series_paint_data_path),
-                o_paint_standards_manager: o_paint_standards_manager,
-                phantom: PhantomData,
-            }
-        );
+        let paint_mixer = Rc::new(PaintMixerCore::<A, C, MC> {
+            vbox: gtk::Box::new(gtk::Orientation::Vertical, 1),
+            cads: A::create(),
+            hue_attr_wheels: view_attr_wheels,
+            colour_match_area: ColourMatchArea::create(MC::mixing_mode()),
+            series_paint_components: SeriesPaintComponentBox::<A, C>::create_with(4, true),
+            mixed_paints: MixedPaintCollectionWidget::<A, C>::create(MC::mixing_mode()),
+            notes: gtk::Entry::new(),
+            next_name_label: gtk::Label::new(Some("#???:")),
+            mixed_paint_notes: gtk::Entry::new(),
+            // Buttons
+            print_report_btn: gtk::Button::new(),
+            new_mixture_btn: gtk::Button::new_with_label("New"),
+            accept_mixture_btn: gtk::Button::new_with_label("Accept"),
+            cancel_btn: gtk::Button::new_with_label("Cancel"),
+            reset_parts_btn: gtk::Button::new_with_label("Reset"),
+            remove_unused_btn: gtk::Button::new_with_label("Remove Unused Paints"),
+            simplify_parts_btn: gtk::Button::new_with_label("Simplify Parts"),
+            // Managers
+            series_paint_manager: SeriesPaintManager::<A, C>::create(series_paint_data_path),
+            o_paint_standards_manager: o_paint_standards_manager,
+            phantom: PhantomData,
+        });
 
         // TODO: Consider redoing this when Toolbar bug fixed.
         //let toolbar = gtk::Toolbar::new();
@@ -427,119 +474,134 @@ impl<A, C, MC> PaintMixerInterface<A, C, MC> for PaintMixer<A, C, MC>
         frame.add(&paint_mixer.mixed_paints.pwo());
         paint_mixer.vbox.pack_start(&frame, true, true, 0);
 
-        paint_mixer.print_report_btn.set_image(&mixtures_print_xpm::mixtures_print_image(24));
-        paint_mixer.print_report_btn.set_tooltip_text("Print a report of the mixtures and paints used");
+        paint_mixer
+            .print_report_btn
+            .set_image(&mixtures_print_xpm::mixtures_print_image(24));
+        paint_mixer
+            .print_report_btn
+            .set_tooltip_text("Print a report of the mixtures and paints used");
         let paint_mixer_c = paint_mixer.clone();
-        paint_mixer.print_report_btn.connect_clicked(
-            move |_| {
-                if let Err(ref err) = paint_mixer_c.print_markup_chunks(paint_mixer_c.pango_markup_chunks()) {
-                    paint_mixer_c.report_error("Failure", err);
-                };
-            }
-        );
+        paint_mixer.print_report_btn.connect_clicked(move |_| {
+            if let Err(ref err) =
+                paint_mixer_c.print_markup_chunks(paint_mixer_c.pango_markup_chunks())
+            {
+                paint_mixer_c.report_error("Failure", err);
+            };
+        });
 
         if MC::mixing_mode() == MixingMode::MatchTarget {
-            paint_mixer.new_mixture_btn.set_tooltip_text("Start mixing a new colour.");
+            paint_mixer
+                .new_mixture_btn
+                .set_tooltip_text("Start mixing a new colour.");
             let paint_mixer_c = paint_mixer.clone();
-            paint_mixer.new_mixture_btn.connect_clicked(
-                move |_| {
-                    let dialog = NewTargetColourDialog::<A>::create(&paint_mixer_c);
-                    if let Some((ref notes, ref colour)) = dialog.get_new_target() {
-                        paint_mixer_c.start_new_mixture(Some(&notes), Some(&colour))
-                    }
+            paint_mixer.new_mixture_btn.connect_clicked(move |_| {
+                let dialog = NewTargetColourDialog::<A>::create(&paint_mixer_c);
+                if let Some((ref notes, ref colour)) = dialog.get_new_target() {
+                    paint_mixer_c.start_new_mixture(Some(&notes), Some(&colour))
                 }
-            );
+            });
 
-            paint_mixer.cancel_btn.set_tooltip_text("Cancel the current mixture.");
+            paint_mixer
+                .cancel_btn
+                .set_tooltip_text("Cancel the current mixture.");
             let paint_mixer_c = paint_mixer.clone();
-            paint_mixer.cancel_btn.connect_clicked(
-                move |_| paint_mixer_c.cancel_current_mixture()
-            );
+            paint_mixer
+                .cancel_btn
+                .connect_clicked(move |_| paint_mixer_c.cancel_current_mixture());
         };
 
-        paint_mixer.accept_mixture_btn.set_tooltip_text("Accept the current mixture and add it to the list of mixed colours.");
-        let paint_mixer_c = paint_mixer.clone();
-        paint_mixer.accept_mixture_btn.connect_clicked(
-            move |_| paint_mixer_c.accept_new_mixture()
+        paint_mixer.accept_mixture_btn.set_tooltip_text(
+            "Accept the current mixture and add it to the list of mixed colours.",
         );
+        let paint_mixer_c = paint_mixer.clone();
+        paint_mixer
+            .accept_mixture_btn
+            .connect_clicked(move |_| paint_mixer_c.accept_new_mixture());
 
-        paint_mixer.simplify_parts_btn.set_tooltip_text("Divide all paints' parts by their greatest common denominator.");
+        paint_mixer
+            .simplify_parts_btn
+            .set_tooltip_text("Divide all paints' parts by their greatest common denominator.");
         let paint_mixer_c = paint_mixer.clone();
-        paint_mixer.simplify_parts_btn.connect_clicked(
-            move |_| paint_mixer_c.simplify_parts()
-        );
+        paint_mixer
+            .simplify_parts_btn
+            .connect_clicked(move |_| paint_mixer_c.simplify_parts());
 
-        paint_mixer.reset_parts_btn.set_tooltip_text("Reset parts of all paints in mixing part to zero.");
+        paint_mixer
+            .reset_parts_btn
+            .set_tooltip_text("Reset parts of all paints in mixing part to zero.");
         let paint_mixer_c = paint_mixer.clone();
-        paint_mixer.reset_parts_btn.connect_clicked(
-            move |_| {
-                paint_mixer_c.series_paint_components.reset_all_parts_to_zero();
-                paint_mixer_c.mixed_paints.components().reset_all_parts_to_zero();
-                paint_mixer_c.set_button_sensitivities();
-            }
-        );
+        paint_mixer.reset_parts_btn.connect_clicked(move |_| {
+            paint_mixer_c
+                .series_paint_components
+                .reset_all_parts_to_zero();
+            paint_mixer_c
+                .mixed_paints
+                .components()
+                .reset_all_parts_to_zero();
+            paint_mixer_c.set_button_sensitivities();
+        });
 
         // TODO: be more sophisticated about removing series paints
-        paint_mixer.remove_unused_btn.set_tooltip_text("Remove paints not being used from the mixing area.");
+        paint_mixer
+            .remove_unused_btn
+            .set_tooltip_text("Remove paints not being used from the mixing area.");
         let paint_mixer_c = paint_mixer.clone();
-        paint_mixer.remove_unused_btn.connect_clicked(
-            move |_| {
-                paint_mixer_c.remove_unused_paints_from_mixing_area();
-            }
-        );
+        paint_mixer.remove_unused_btn.connect_clicked(move |_| {
+            paint_mixer_c.remove_unused_paints_from_mixing_area();
+        });
 
         let paint_mixer_c = paint_mixer.clone();
-        paint_mixer.series_paint_components.connect_contributions_changed(
-            move || {
+        paint_mixer
+            .series_paint_components
+            .connect_contributions_changed(move || {
                 paint_mixer_c.update_mixed_colour();
-            }
-        );
+            });
 
         let paint_mixer_c = paint_mixer.clone();
-        paint_mixer.mixed_paints.components().connect_contributions_changed(
-            move || {
+        paint_mixer
+            .mixed_paints
+            .components()
+            .connect_contributions_changed(move || {
                 paint_mixer_c.update_mixed_colour();
-            }
-        );
+            });
 
         let paint_mixer_c = paint_mixer.clone();
-        paint_mixer.series_paint_components.connect_removal_requested(
-            move |paint| {
+        paint_mixer
+            .series_paint_components
+            .connect_removal_requested(move |paint| {
                 paint_mixer_c.handle_series_paint_removal_request(paint);
-            }
-        );
+            });
 
         let mixed_paint_components = paint_mixer.mixed_paints.components();
-        paint_mixer.mixed_paints.components().connect_removal_requested(
-            move |paint| {
+        paint_mixer
+            .mixed_paints
+            .components()
+            .connect_removal_requested(move |paint| {
                 mixed_paint_components.remove_paint(paint);
-            }
-        );
+            });
 
         let paint_mixer_c = paint_mixer.clone();
-        paint_mixer.series_paint_manager.connect_add_paint(
-            move |paint| paint_mixer_c.add_series_paint(paint)
-        );
+        paint_mixer
+            .series_paint_manager
+            .connect_add_paint(move |paint| paint_mixer_c.add_series_paint(paint));
 
         let paint_mixer_c = paint_mixer.clone();
-        paint_mixer.mixed_paints.connect_remove_paint(
-            move |paint| paint_mixer_c.remove_mixed_paint(paint)
-        );
+        paint_mixer
+            .mixed_paints
+            .connect_remove_paint(move |paint| paint_mixer_c.remove_mixed_paint(paint));
 
         if let Some(ref paint_standards_manager) = paint_mixer.o_paint_standards_manager {
             let paint_mixer_c = paint_mixer.clone();
-            paint_standards_manager.connect_set_target_from(
-                move |paint| {
-                    let paint_notes = paint.notes();
-                    let notes = if paint_notes.len() > 0 {
-                        format!("{} ({})", paint.name(), paint_notes)
-                    } else {
-                        paint.name()
-                    };
-                    let colour = paint.colour();
-                    paint_mixer_c.start_new_mixture(Some(&notes), Some(&colour));
-                }
-            );
+            paint_standards_manager.connect_set_target_from(move |paint| {
+                let paint_notes = paint.notes();
+                let notes = if paint_notes.len() > 0 {
+                    format!("{} ({})", paint.name(), paint_notes)
+                } else {
+                    paint.name()
+                };
+                let colour = paint.colour();
+                paint_mixer_c.start_new_mixture(Some(&notes), Some(&colour));
+            });
         };
 
         paint_mixer.set_button_sensitivities();

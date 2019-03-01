@@ -17,7 +17,7 @@ use std::rc::Rc;
 
 use cairo;
 use gdk;
-use gdk_pixbuf::{self, PixbufExt};
+use gdk_pixbuf;
 use gtk;
 use gtk::prelude::*;
 
@@ -38,7 +38,7 @@ use basic_paint::*;
 enum DeltaSize {
     Small,
     Normal,
-    Large
+    Large,
 }
 
 impl DeltaSize {
@@ -77,7 +77,8 @@ pub trait ColourEditorInterface {
 }
 
 pub struct ColourEditorCore<A>
-    where   A: ColourAttributesInterface + 'static
+where
+    A: ColourAttributesInterface + 'static,
 {
     vbox: gtk::Box,
     rgb_manipulator: RGBManipulator,
@@ -106,14 +107,16 @@ impl_widget_wrapper!(vbox: gtk::Box, ColourEditorCore<A>
 );
 
 impl<A> ColourEditorCore<A>
-    where   A: ColourAttributesInterface + 'static
+where
+    A: ColourAttributesInterface + 'static,
 {
     pub fn set_rgb(&self, rgb: RGB) -> Colour {
         let colour = Colour::from(rgb);
         self.rgb_entry.set_rgb(rgb);
         self.rgb_manipulator.set_rgb(rgb);
         self.cads.set_colour(Some(&colour));
-        self.incr_value_btn.set_widget_colour_rgb(rgb * 0.8 + WHITE * 0.2);
+        self.incr_value_btn
+            .set_widget_colour_rgb(rgb * 0.8 + WHITE * 0.2);
         self.decr_value_btn.set_widget_colour_rgb(rgb * 0.8);
         if colour.is_grey() {
             self.incr_greyness_btn.set_widget_colour_rgb(rgb);
@@ -126,12 +129,15 @@ impl<A> ColourEditorCore<A>
             let low_chroma_rgb = rgb * 0.8 + colour.monotone_rgb() * 0.2;
             let high_chroma_rgb = rgb * 0.8 + colour.max_chroma_rgb() * 0.2;
             self.incr_greyness_btn.set_widget_colour_rgb(low_chroma_rgb);
-            self.decr_greyness_btn.set_widget_colour_rgb(high_chroma_rgb);
+            self.decr_greyness_btn
+                .set_widget_colour_rgb(high_chroma_rgb);
             self.incr_chroma_btn.set_widget_colour_rgb(high_chroma_rgb);
             self.decr_chroma_btn.set_widget_colour_rgb(low_chroma_rgb);
 
-            self.hue_left_btn.set_widget_colour_rgb(rgb.components_rotated(DEG_30));
-            self.hue_right_btn.set_widget_colour_rgb(rgb.components_rotated(-DEG_30));
+            self.hue_left_btn
+                .set_widget_colour_rgb(rgb.components_rotated(DEG_30));
+            self.hue_right_btn
+                .set_widget_colour_rgb(rgb.components_rotated(-DEG_30));
         }
         self.drawing_area.queue_draw();
         colour
@@ -145,18 +151,14 @@ impl<A> ColourEditorCore<A>
         self.rgb_manipulator.get_rgb().into()
     }
 
-    fn set_rgb_and_inform(&self, rgb:RGB) {
+    fn set_rgb_and_inform(&self, rgb: RGB) {
         let colour = self.set_rgb(rgb);
         for callback in self.colour_changed_callbacks.borrow().iter() {
             callback(&colour);
         }
     }
 
-    fn draw(
-        &self,
-        _drawing_area: &gtk::DrawingArea,
-        cairo_context: &cairo::Context
-    ) {
+    fn draw(&self, _drawing_area: &gtk::DrawingArea, cairo_context: &cairo::Context) {
         let rgb = self.rgb_manipulator.get_rgb();
         cairo_context.set_source_colour_rgb(rgb);
         cairo_context.paint();
@@ -200,47 +202,49 @@ impl<A> ColourEditorCore<A>
     }
 
     pub fn connect_colour_changed<F: 'static + Fn(&Colour)>(&self, callback: F) {
-        self.colour_changed_callbacks.borrow_mut().push(Box::new(callback))
+        self.colour_changed_callbacks
+            .borrow_mut()
+            .push(Box::new(callback))
     }
 }
 
-impl<A> ColourEditorInterface for  Rc<ColourEditorCore<A>>
-    where   A: ColourAttributesInterface + 'static
+impl<A> ColourEditorInterface for Rc<ColourEditorCore<A>>
+where
+    A: ColourAttributesInterface + 'static,
 {
     fn create(extra_buttons: &Vec<gtk::Button>) -> Self {
-        let ced = Rc::new(
-            ColourEditorCore::<A>{
-                vbox: gtk::Box::new(gtk::Orientation::Vertical, 0),
-                rgb_manipulator: RGBManipulator::new(),
-                cads: A::create(),
-                rgb_entry: RGBHexEntryBox::create(),
-                drawing_area: gtk::DrawingArea::new(),
-                incr_value_btn: gtk::Button::new_with_label("Value++"),
-                decr_value_btn: gtk::Button::new_with_label("Value--"),
-                hue_left_btn: gtk::Button::new_with_label("<"),
-                hue_right_btn: gtk::Button::new_with_label(">"),
-                decr_greyness_btn: gtk::Button::new_with_label("Greyness--"),
-                incr_greyness_btn: gtk::Button::new_with_label("Greyness++"),
-                decr_chroma_btn: gtk::Button::new_with_label("Chroma--"),
-                incr_chroma_btn: gtk::Button::new_with_label("Chroma++"),
-                popup_menu: WrappedMenu::new(&vec![]),
-                samples: RefCell::new(Vec::new()),
-                delta_size: Cell::new(DeltaSize::Normal),
-                auto_match_btn: gtk::Button::new_with_label("Auto Match"),
-                auto_match_on_paste_btn: gtk::CheckButton::new_with_label("On Paste?"),
-                popup_menu_position: Cell::new(Point(0.0, 0.0)),
-                colour_changed_callbacks: RefCell::new(Vec::new()),
-            }
-        );
+        let ced = Rc::new(ColourEditorCore::<A> {
+            vbox: gtk::Box::new(gtk::Orientation::Vertical, 0),
+            rgb_manipulator: RGBManipulator::new(),
+            cads: A::create(),
+            rgb_entry: RGBHexEntryBox::create(),
+            drawing_area: gtk::DrawingArea::new(),
+            incr_value_btn: gtk::Button::new_with_label("Value++"),
+            decr_value_btn: gtk::Button::new_with_label("Value--"),
+            hue_left_btn: gtk::Button::new_with_label("<"),
+            hue_right_btn: gtk::Button::new_with_label(">"),
+            decr_greyness_btn: gtk::Button::new_with_label("Greyness--"),
+            incr_greyness_btn: gtk::Button::new_with_label("Greyness++"),
+            decr_chroma_btn: gtk::Button::new_with_label("Chroma--"),
+            incr_chroma_btn: gtk::Button::new_with_label("Chroma++"),
+            popup_menu: WrappedMenu::new(&vec![]),
+            samples: RefCell::new(Vec::new()),
+            delta_size: Cell::new(DeltaSize::Normal),
+            auto_match_btn: gtk::Button::new_with_label("Auto Match"),
+            auto_match_on_paste_btn: gtk::CheckButton::new_with_label("On Paste?"),
+            popup_menu_position: Cell::new(Point(0.0, 0.0)),
+            colour_changed_callbacks: RefCell::new(Vec::new()),
+        });
 
         let events = gdk::EventMask::BUTTON_PRESS_MASK;
-        ced.drawing_area.add_events(events.bits() as i32);
+        ced.drawing_area.add_events(events);
         ced.drawing_area.set_size_request(200, 200);
 
         ced.vbox.pack_start(&ced.rgb_entry.pwo(), false, false, 0);
         ced.vbox.pack_start(&ced.cads.pwo(), false, false, 0);
 
-        ced.vbox.pack_start(&ced.incr_value_btn.clone(), false, false, 0);
+        ced.vbox
+            .pack_start(&ced.incr_value_btn.clone(), false, false, 0);
 
         let hbox = gtk::Box::new(gtk::Orientation::Horizontal, 0);
         hbox.pack_start(&ced.hue_left_btn.clone(), false, false, 0);
@@ -248,7 +252,8 @@ impl<A> ColourEditorInterface for  Rc<ColourEditorCore<A>>
         hbox.pack_start(&ced.hue_right_btn.clone(), false, false, 0);
         ced.vbox.pack_start(&hbox, true, true, 0);
 
-        ced.vbox.pack_start(&ced.decr_value_btn.clone(), false, false, 0);
+        ced.vbox
+            .pack_start(&ced.decr_value_btn.clone(), false, false, 0);
 
         let hbox = gtk::Box::new(gtk::Orientation::Horizontal, 0);
         if A::scalar_attributes().contains(&ScalarAttribute::Greyness) {
@@ -270,139 +275,146 @@ impl<A> ColourEditorInterface for  Rc<ColourEditorCore<A>>
 
         ced.vbox.show_all();
 
-        let events = gdk::EventMask::KEY_PRESS_MASK | gdk::EventMask::KEY_RELEASE_MASK | gdk::EventMask::ENTER_NOTIFY_MASK;
-        ced.vbox.add_events(events.bits() as i32);
+        let events = gdk::EventMask::KEY_PRESS_MASK
+            | gdk::EventMask::KEY_RELEASE_MASK
+            | gdk::EventMask::ENTER_NOTIFY_MASK;
+        ced.vbox.add_events(events);
         ced.vbox.set_receives_default(true);
         let ced_c = ced.clone();
-        ced.vbox.connect_key_press_event(
-            move |_, event| {
-                let key = event.get_keyval();
-                if key == gdk::enums::key::Shift_L || key == gdk::enums::key::Shift_R {
-                    ced_c.delta_size.set(DeltaSize::Large);
-                } else if key == gdk::enums::key::Control_L || key == gdk::enums::key::Control_R {
-                    ced_c.delta_size.set(DeltaSize::Small);
-                };
-                gtk::Inhibit(false)
-            }
-        );
+        ced.vbox.connect_key_press_event(move |_, event| {
+            let key = event.get_keyval();
+            if key == gdk::enums::key::Shift_L || key == gdk::enums::key::Shift_R {
+                ced_c.delta_size.set(DeltaSize::Large);
+            } else if key == gdk::enums::key::Control_L || key == gdk::enums::key::Control_R {
+                ced_c.delta_size.set(DeltaSize::Small);
+            };
+            gtk::Inhibit(false)
+        });
         let ced_c = ced.clone();
-        ced.vbox.connect_key_release_event(
-            move |_, event| {
-                let key = event.get_keyval();
-                if key == gdk::enums::key::Shift_L || key == gdk::enums::key::Shift_R ||
-                   key == gdk::enums::key::Control_L || key == gdk::enums::key::Control_R
-                {
-                    ced_c.delta_size.set(DeltaSize::Normal);
-                };
-                gtk::Inhibit(false)
-            }
-        );
-        let ced_c = ced.clone();
-        ced.vbox.connect_enter_notify_event(
-            move |_, _| {
+        ced.vbox.connect_key_release_event(move |_, event| {
+            let key = event.get_keyval();
+            if key == gdk::enums::key::Shift_L
+                || key == gdk::enums::key::Shift_R
+                || key == gdk::enums::key::Control_L
+                || key == gdk::enums::key::Control_R
+            {
                 ced_c.delta_size.set(DeltaSize::Normal);
-                gtk::Inhibit(false)
-            }
-        );
+            };
+            gtk::Inhibit(false)
+        });
+        let ced_c = ced.clone();
+        ced.vbox.connect_enter_notify_event(move |_, _| {
+            ced_c.delta_size.set(DeltaSize::Normal);
+            gtk::Inhibit(false)
+        });
 
         if A::scalar_attributes().contains(&ScalarAttribute::Greyness) {
             let ced_c = ced.clone();
-            ced.incr_greyness_btn.connect_clicked(
-                move |_| {
-                    if ced_c.rgb_manipulator.decr_chroma(ced_c.delta_size.get().for_chroma()) {
-                        ced_c.set_rgb_and_inform(ced_c.rgb_manipulator.get_rgb());
-                    };
-                }
-            );
+            ced.incr_greyness_btn.connect_clicked(move |_| {
+                if ced_c
+                    .rgb_manipulator
+                    .decr_chroma(ced_c.delta_size.get().for_chroma())
+                {
+                    ced_c.set_rgb_and_inform(ced_c.rgb_manipulator.get_rgb());
+                };
+            });
             let ced_c = ced.clone();
-            ced.decr_greyness_btn.connect_clicked(
-                move |_| {
-                    if ced_c.rgb_manipulator.incr_chroma(ced_c.delta_size.get().for_chroma()) {
-                        ced_c.set_rgb_and_inform(ced_c.rgb_manipulator.get_rgb());
-                    };
-                }
-            );
+            ced.decr_greyness_btn.connect_clicked(move |_| {
+                if ced_c
+                    .rgb_manipulator
+                    .incr_chroma(ced_c.delta_size.get().for_chroma())
+                {
+                    ced_c.set_rgb_and_inform(ced_c.rgb_manipulator.get_rgb());
+                };
+            });
         } else {
             let ced_c = ced.clone();
-            ced.decr_chroma_btn.connect_clicked(
-                move |_| {
-                    if ced_c.rgb_manipulator.decr_chroma(ced_c.delta_size.get().for_chroma()) {
-                        ced_c.set_rgb_and_inform(ced_c.rgb_manipulator.get_rgb());
-                    };
-                }
-            );
+            ced.decr_chroma_btn.connect_clicked(move |_| {
+                if ced_c
+                    .rgb_manipulator
+                    .decr_chroma(ced_c.delta_size.get().for_chroma())
+                {
+                    ced_c.set_rgb_and_inform(ced_c.rgb_manipulator.get_rgb());
+                };
+            });
             let ced_c = ced.clone();
-            ced.incr_chroma_btn.connect_clicked(
-                move |_| {
-                    if ced_c.rgb_manipulator.incr_chroma(ced_c.delta_size.get().for_chroma()) {
-                        ced_c.set_rgb_and_inform(ced_c.rgb_manipulator.get_rgb());
-                    };
-                }
-            );
+            ced.incr_chroma_btn.connect_clicked(move |_| {
+                if ced_c
+                    .rgb_manipulator
+                    .incr_chroma(ced_c.delta_size.get().for_chroma())
+                {
+                    ced_c.set_rgb_and_inform(ced_c.rgb_manipulator.get_rgb());
+                };
+            });
         }
 
         let ced_c = ced.clone();
-        ced.decr_value_btn.connect_clicked(
-            move |_| {
-                if ced_c.rgb_manipulator.decr_value(ced_c.delta_size.get().for_value()) {
-                    ced_c.set_rgb_and_inform(ced_c.rgb_manipulator.get_rgb());
-                };
-            }
-        );
+        ced.decr_value_btn.connect_clicked(move |_| {
+            if ced_c
+                .rgb_manipulator
+                .decr_value(ced_c.delta_size.get().for_value())
+            {
+                ced_c.set_rgb_and_inform(ced_c.rgb_manipulator.get_rgb());
+            };
+        });
         let ced_c = ced.clone();
-        ced.incr_value_btn.connect_clicked(
-            move |_| {
-                if ced_c.rgb_manipulator.incr_value(ced_c.delta_size.get().for_value()) {
-                    ced_c.set_rgb_and_inform(ced_c.rgb_manipulator.get_rgb());
-                };
-            }
-        );
+        ced.incr_value_btn.connect_clicked(move |_| {
+            if ced_c
+                .rgb_manipulator
+                .incr_value(ced_c.delta_size.get().for_value())
+            {
+                ced_c.set_rgb_and_inform(ced_c.rgb_manipulator.get_rgb());
+            };
+        });
 
         let ced_c = ced.clone();
-        ced.hue_left_btn.connect_clicked(
-            move |_| {
-                if ced_c.rgb_manipulator.rotate(ced_c.delta_size.get().for_hue()) {
-                    ced_c.set_rgb_and_inform(ced_c.rgb_manipulator.get_rgb());
-                };
-            }
-        );
+        ced.hue_left_btn.connect_clicked(move |_| {
+            if ced_c
+                .rgb_manipulator
+                .rotate(ced_c.delta_size.get().for_hue())
+            {
+                ced_c.set_rgb_and_inform(ced_c.rgb_manipulator.get_rgb());
+            };
+        });
         let ced_c = ced.clone();
-        ced.hue_right_btn.connect_clicked(
-            move |_| {
-                if ced_c.rgb_manipulator.rotate(-ced_c.delta_size.get().for_hue()) {
-                    ced_c.set_rgb_and_inform(ced_c.rgb_manipulator.get_rgb());
-                };
-            }
-        );
+        ced.hue_right_btn.connect_clicked(move |_| {
+            if ced_c
+                .rgb_manipulator
+                .rotate(-ced_c.delta_size.get().for_hue())
+            {
+                ced_c.set_rgb_and_inform(ced_c.rgb_manipulator.get_rgb());
+            };
+        });
 
         let ced_c = ced.clone();
-        ced.rgb_entry.connect_value_changed(
-            move |rgb| {ced_c.set_rgb_and_inform(rgb);}
-        );
+        ced.rgb_entry.connect_value_changed(move |rgb| {
+            ced_c.set_rgb_and_inform(rgb);
+        });
 
         let ced_c = ced.clone();
-        ced.auto_match_btn.connect_clicked(
-            move |_| ced_c.auto_match_samples()
-        );
+        ced.auto_match_btn
+            .connect_clicked(move |_| ced_c.auto_match_samples());
 
         let ced_c = ced.clone();
-        ced.drawing_area.connect_draw(
-            move |da,cctx| {
-                ced_c.draw(da, cctx);
-                gtk::Inhibit(true)
-            }
-        );
+        ced.drawing_area.connect_draw(move |da, cctx| {
+            ced_c.draw(da, cctx);
+            gtk::Inhibit(true)
+        });
 
         let ced_c = ced.clone();
-        ced.popup_menu.append_item(
-            "paste",
-            "Paste Sample",
-            "Paste image sample from the clipboard at this position",
-        ).connect_activate(
-            move |_| {
+        ced.popup_menu
+            .append_item(
+                "paste",
+                "Paste Sample",
+                "Paste image sample from the clipboard at this position",
+            )
+            .connect_activate(move |_| {
                 let cbd = gtk::Clipboard::get(&gdk::SELECTION_CLIPBOARD);
                 if let Some(pixbuf) = cbd.wait_for_image() {
-                    let sample = Sample{pix_buf: pixbuf, position: ced_c.popup_menu_position.get()};
+                    let sample = Sample {
+                        pix_buf: pixbuf,
+                        position: ced_c.popup_menu_position.get(),
+                    };
                     ced_c.samples.borrow_mut().push(sample);
                     if ced_c.auto_match_on_paste_btn.get_active() {
                         ced_c.auto_match_samples();
@@ -413,40 +425,42 @@ impl<A> ColourEditorInterface for  Rc<ColourEditorCore<A>>
                 } else {
                     ced_c.inform_user("No image data on clipboard.", None);
                 }
-            }
-        );
+            });
 
         let ced_c = ced.clone();
-        ced.popup_menu.append_item(
-            "remove",
-            "Remove Sample(s)",
-            "Remove all image samples from the sample area",
-        ).connect_activate(
-            move |_| {
+        ced.popup_menu
+            .append_item(
+                "remove",
+                "Remove Sample(s)",
+                "Remove all image samples from the sample area",
+            )
+            .connect_activate(move |_| {
                 ced_c.samples.borrow_mut().clear();
                 ced_c.drawing_area.queue_draw();
                 ced_c.auto_match_btn.set_sensitive(false);
-            }
-        );
+            });
 
         let ced_c = ced.clone();
-        ced.drawing_area.connect_button_press_event(
-            move |_, event| {
+        ced.drawing_area
+            .connect_button_press_event(move |_, event| {
                 if event.get_event_type() == gdk::EventType::ButtonPress {
                     if event.get_button() == 3 {
                         let position = Point::from(event.get_position());
                         let n_samples = ced_c.samples.borrow().len();
                         let cbd = gtk::Clipboard::get(&gdk::SELECTION_CLIPBOARD);
-                        ced_c.popup_menu.set_sensitivities(cbd.wait_is_image_available(), &["paste"]);
-                        ced_c.popup_menu.set_sensitivities(n_samples > 0, &["remove"]);
+                        ced_c
+                            .popup_menu
+                            .set_sensitivities(cbd.wait_is_image_available(), &["paste"]);
+                        ced_c
+                            .popup_menu
+                            .set_sensitivities(n_samples > 0, &["remove"]);
                         ced_c.popup_menu_position.set(position);
                         ced_c.popup_menu.popup_at_event(event);
-                        return Inhibit(true)
+                        return Inhibit(true);
                     }
                 }
                 Inhibit(false)
-             }
-        );
+            });
 
         ced.reset();
 
@@ -461,7 +475,5 @@ mod tests {
     //use super::*;
 
     #[test]
-    fn it_works() {
-
-    }
+    fn it_works() {}
 }

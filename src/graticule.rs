@@ -17,7 +17,6 @@ use std::rc::Rc;
 
 use cairo;
 use gdk;
-use gdk::prelude::*;
 use glib::signal::SignalHandlerId;
 use gtk;
 use gtk::prelude::*;
@@ -33,7 +32,7 @@ use shape::*;
 // CURRENT TARGET SHAPE
 pub struct CurrentTargetShape {
     colour: Colour,
-    xy: Point
+    xy: Point,
 }
 
 impl ColourShapeInterface for CurrentTargetShape {
@@ -151,7 +150,7 @@ impl GraticuleCore {
         for i in 0..n_rings {
             let radius = self.radius.get() * (i as f64 + 1.0) / n_rings as f64;
             cairo_context.draw_circle(self.centre.get(), radius, false);
-        };
+        }
 
         cairo_context.set_line_width(4.0);
         for i in 0..6 {
@@ -161,9 +160,9 @@ impl GraticuleCore {
             let eol = self.transform(Point::from((angle, 1.0)));
             cairo_context.draw_line(self.centre.get(), eol);
             cairo_context.stroke();
-        };
+        }
         cairo_context.set_line_width(2.0);
-        for callback in self.draw_callbacks.borrow().iter(){
+        for callback in self.draw_callbacks.borrow().iter() {
             callback(self, cairo_context);
         }
         if let Some(ref current_target) = *self.current_target.borrow() {
@@ -181,7 +180,8 @@ impl GraticuleCore {
 
     pub fn set_current_target_colour(&self, o_colour: Option<&Colour>) {
         if let Some(colour) = o_colour {
-            *self.current_target.borrow_mut() = Some(CurrentTargetShape::create(&colour, self.attr));
+            *self.current_target.borrow_mut() =
+                Some(CurrentTargetShape::create(&colour, self.attr));
         } else {
             *self.current_target.borrow_mut() = None;
         };
@@ -196,7 +196,12 @@ impl GraticuleCore {
         }
     }
 
-    pub fn connect_button_press_event<F: Fn(&gtk::DrawingArea, &gdk::EventButton) -> Inhibit + 'static>(&self, f: F) -> SignalHandlerId {
+    pub fn connect_button_press_event<
+        F: Fn(&gtk::DrawingArea, &gdk::EventButton) -> Inhibit + 'static,
+    >(
+        &self,
+        f: F,
+    ) -> SignalHandlerId {
         self.drawing_area.connect_button_press_event(f)
     }
 }
@@ -206,38 +211,41 @@ impl GraticuleInterface for Rc<GraticuleCore> {
         let drawing_area = gtk::DrawingArea::new();
         drawing_area.set_size_request(300, 300);
         drawing_area.set_has_tooltip(true);
-        let events = gdk::EventMask::SCROLL_MASK | gdk::EventMask::BUTTON_PRESS_MASK |
-            gdk::EventMask::BUTTON_MOTION_MASK | gdk::EventMask::LEAVE_NOTIFY_MASK |
-            gdk::EventMask::BUTTON_RELEASE_MASK;
-        drawing_area.add_events(events.bits() as i32);
-        let graticule = Rc::new(
-            GraticuleCore{
-                drawing_area: drawing_area,
-                attr: attr,
-                raw_centre: Cell::new(Point(0.0, 0.0)),
-                centre: Cell::new(Point(0.0, 0.0)),
-                offset: Cell::new(Point(0.0, 0.0)),
-                radius: Cell::new(0.0),
-                scaled_one: Cell::new(0.0),
-                zoom: Cell::new(1.0),
-                current_target: RefCell::new(None),
-                motion_enabled: Cell::new(false),
-                last_xy: Cell::new(Point(0.0, 0.0)),
-                draw_callbacks: RefCell::new(Vec::new()),
-            }
-        );
+        let events = gdk::EventMask::SCROLL_MASK
+            | gdk::EventMask::BUTTON_PRESS_MASK
+            | gdk::EventMask::BUTTON_MOTION_MASK
+            | gdk::EventMask::LEAVE_NOTIFY_MASK
+            | gdk::EventMask::BUTTON_RELEASE_MASK;
+        drawing_area.add_events(events);
+        let graticule = Rc::new(GraticuleCore {
+            drawing_area: drawing_area,
+            attr: attr,
+            raw_centre: Cell::new(Point(0.0, 0.0)),
+            centre: Cell::new(Point(0.0, 0.0)),
+            offset: Cell::new(Point(0.0, 0.0)),
+            radius: Cell::new(0.0),
+            scaled_one: Cell::new(0.0),
+            zoom: Cell::new(1.0),
+            current_target: RefCell::new(None),
+            motion_enabled: Cell::new(false),
+            last_xy: Cell::new(Point(0.0, 0.0)),
+            draw_callbacks: RefCell::new(Vec::new()),
+        });
         graticule.update_drawing_area();
         let graticule_c = graticule.clone();
-        graticule.drawing_area.connect_draw(
-            move |_, cc| { graticule_c.draw(cc); Inhibit(false) }
-        );
+        graticule.drawing_area.connect_draw(move |_, cc| {
+            graticule_c.draw(cc);
+            Inhibit(false)
+        });
         let graticule_c = graticule.clone();
-        graticule.drawing_area.connect_configure_event(
-            move |_, _| {graticule_c.update_drawing_area(); false}
-        );
+        graticule.drawing_area.connect_configure_event(move |_, _| {
+            graticule_c.update_drawing_area();
+            false
+        });
         let graticule_c = graticule.clone();
-        graticule.drawing_area.connect_scroll_event(
-            move |da, scroll_event| {
+        graticule
+            .drawing_area
+            .connect_scroll_event(move |da, scroll_event| {
                 if let Some(device) = scroll_event.get_device() {
                     if device.get_source() == gdk::InputSource::Mouse {
                         match scroll_event.get_direction() {
@@ -245,37 +253,37 @@ impl GraticuleInterface for Rc<GraticuleCore> {
                                 graticule_c.decr_zoom();
                                 da.queue_draw();
                                 return Inhibit(true);
-                            },
+                            }
                             gdk::ScrollDirection::Down => {
                                 graticule_c.incr_zoom();
                                 da.queue_draw();
                                 return Inhibit(true);
-                            },
-                            _ => return Inhibit(false)
+                            }
+                            _ => return Inhibit(false),
                         }
                     }
                 }
                 Inhibit(false)
-            }
-        );
+            });
 
         let graticule_c = graticule.clone();
-        graticule.drawing_area.connect_button_press_event(
-            move |_, event| {
+        graticule
+            .drawing_area
+            .connect_button_press_event(move |_, event| {
                 if event.get_event_type() == gdk::EventType::ButtonPress {
                     if event.get_button() == 1 {
                         let point = Point::from(event.get_position());
                         graticule_c.last_xy.set(point);
                         graticule_c.motion_enabled.set(true);
-                        return Inhibit(true)
+                        return Inhibit(true);
                     }
                 }
                 Inhibit(false)
-             }
-        );
+            });
         let graticule_c = graticule.clone();
-        graticule.drawing_area.connect_motion_notify_event(
-            move |da, event| {
+        graticule
+            .drawing_area
+            .connect_motion_notify_event(move |da, event| {
                 if graticule_c.motion_enabled.get() {
                     let (x, y) = event.get_position();
                     let this_xy = Point(x, y);
@@ -287,27 +295,26 @@ impl GraticuleInterface for Rc<GraticuleCore> {
                 } else {
                     Inhibit(false)
                 }
-             }
-        );
+            });
         let graticule_c = graticule.clone();
-        graticule.drawing_area.connect_button_release_event(
-            move |_, event| {
+        graticule
+            .drawing_area
+            .connect_button_release_event(move |_, event| {
                 if event.get_event_type() == gdk::EventType::ButtonRelease {
                     if event.get_button() == 1 {
                         graticule_c.motion_enabled.set(false);
-                        return Inhibit(true)
+                        return Inhibit(true);
                     }
                 }
                 Inhibit(false)
-             }
-        );
+            });
         let graticule_c = graticule.clone();
-        graticule.drawing_area.connect_leave_notify_event(
-            move |_, _| {
+        graticule
+            .drawing_area
+            .connect_leave_notify_event(move |_, _| {
                 graticule_c.motion_enabled.set(false);
                 Inhibit(false)
-             }
-        );
+            });
         graticule
     }
 }
@@ -319,7 +326,5 @@ mod tests {
     //use super::*;
 
     #[test]
-    fn it_works() {
-
-    }
+    fn it_works() {}
 }

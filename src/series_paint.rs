@@ -24,11 +24,11 @@ use pw_gix::gtkx::window::*;
 use pw_gix::wrapper::*;
 
 use basic_paint::*;
-use colln_paint::*;
 use colln_paint::binder::*;
 use colln_paint::collection::*;
 pub use colln_paint::display::*;
 use colln_paint::editor::*;
+use colln_paint::*;
 use icons::series_paint_xpm::*;
 
 #[derive(Debug, PartialEq, PartialOrd, Eq, Ord, Clone, Default, Hash)]
@@ -49,7 +49,7 @@ impl PaintSeriesId {
 
 impl CollnIdInterface for PaintSeriesId {
     fn new(colln_name: &str, colln_owner: &str) -> PaintSeriesId {
-        PaintSeriesId{
+        PaintSeriesId {
             manufacturer: colln_owner.to_string(),
             series_name: colln_name.to_string(),
         }
@@ -96,21 +96,22 @@ pub type SeriesPaintCollnBinder<A, C> = CollnPaintCollnBinder<A, C, PaintSeriesI
 pub type SeriesPaintDisplayDialog<A, C> = CollnPaintDisplayDialog<A, C, PaintSeriesId>;
 pub type SeriesPaintEditor<A, C> = CollnPaintEditor<A, C, PaintSeriesId>;
 
-const TOOLTIP_TEXT: &str =
-"Open the Series Paint Manager.
+const TOOLTIP_TEXT: &str = "Open the Series Paint Manager.
 This enables paint to be added to the mixer.";
 
 pub struct SeriesPaintManagerCore<A, C>
-    where   A: ColourAttributesInterface + 'static,
-            C: CharacteristicsInterface + 'static,
+where
+    A: ColourAttributesInterface + 'static,
+    C: CharacteristicsInterface + 'static,
 {
     window: gtk::Window,
     binder: SeriesPaintCollnBinder<A, C>,
 }
 
-impl<A,C> SeriesPaintManagerCore<A, C>
-    where   A: ColourAttributesInterface + 'static,
-            C: CharacteristicsInterface + 'static,
+impl<A, C> SeriesPaintManagerCore<A, C>
+where
+    A: ColourAttributesInterface + 'static,
+    C: CharacteristicsInterface + 'static,
 {
     pub fn set_icon(&self, icon: &Pixbuf) {
         self.window.set_icon(Some(icon))
@@ -132,34 +133,34 @@ impl<A,C> SeriesPaintManagerCore<A, C>
 pub type SeriesPaintManager<A, C> = Rc<SeriesPaintManagerCore<A, C>>;
 
 pub trait SeriesPaintManagerInterface<A, C>
-    where   A: ColourAttributesInterface + 'static,
-            C: CharacteristicsInterface + 'static,
+where
+    A: ColourAttributesInterface + 'static,
+    C: CharacteristicsInterface + 'static,
 {
     fn create(data_path: &Path) -> SeriesPaintManager<A, C>;
     fn button(&self) -> gtk::Button;
     fn tool_button(&self) -> gtk::ToolButton;
 }
 
-
 impl<A, C> SeriesPaintManagerInterface<A, C> for SeriesPaintManager<A, C>
-    where   A: ColourAttributesInterface + 'static,
-            C: CharacteristicsInterface + 'static,
+where
+    A: ColourAttributesInterface + 'static,
+    C: CharacteristicsInterface + 'static,
 {
     fn create(data_path: &Path) -> SeriesPaintManager<A, C> {
         let window = gtk::Window::new(gtk::WindowType::Toplevel);
         window.set_geometry_from_recollections("series_paint_manager", (600, 200));
         window.set_destroy_with_parent(true);
         window.set_title("Series Paint Manager");
-        window.connect_delete_event(
-            move |w,_| {w.hide_on_delete(); gtk::Inhibit(true)}
-        );
+        window.connect_delete_event(move |w, _| {
+            w.hide_on_delete();
+            gtk::Inhibit(true)
+        });
         let binder = SeriesPaintCollnBinder::<A, C>::create(data_path);
         binder.set_initiate_select_ok(true);
         window.add(&binder.pwo());
 
-        let spm = Rc::new(
-            SeriesPaintManagerCore::<A, C>{window, binder}
-        );
+        let spm = Rc::new(SeriesPaintManagerCore::<A, C> { window, binder });
 
         spm
     }
@@ -169,19 +170,16 @@ impl<A, C> SeriesPaintManagerInterface<A, C> for SeriesPaintManager<A, C>
         button.set_tooltip_text(Some(TOOLTIP_TEXT));
         button.set_image(&series_paint_image(24));
         let spm_c = self.clone();
-        button.connect_clicked(
-            move |_| spm_c.window.present()
-        );
+        button.connect_clicked(move |_| spm_c.window.present());
         button
     }
 
     fn tool_button(&self) -> gtk::ToolButton {
-        let tool_button = gtk::ToolButton::new(Some(&series_paint_image(24)), Some("Series Paint Manager"));
+        let tool_button =
+            gtk::ToolButton::new(Some(&series_paint_image(24)), Some("Series Paint Manager"));
         tool_button.set_tooltip_text(Some(TOOLTIP_TEXT));
         let spm_c = self.clone();
-        tool_button.connect_clicked(
-            move |_| spm_c.window.present()
-        );
+        tool_button.connect_clicked(move |_| spm_c.window.present());
         tool_button
     }
 }

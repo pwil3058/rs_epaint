@@ -23,11 +23,11 @@ use pw_gix::gtkx::window::*;
 use pw_gix::wrapper::*;
 
 use basic_paint::*;
-use colln_paint::*;
 use colln_paint::binder::*;
 use colln_paint::collection::*;
 pub use colln_paint::display::*;
 use colln_paint::editor::*;
+use colln_paint::*;
 use icons::paint_standard_xpms::*;
 
 #[derive(Debug, PartialEq, PartialOrd, Eq, Ord, Clone, Default, Hash)]
@@ -48,7 +48,7 @@ impl PaintStandardId {
 
 impl CollnIdInterface for PaintStandardId {
     fn new(colln_name: &str, colln_owner: &str) -> PaintStandardId {
-        PaintStandardId{
+        PaintStandardId {
             sponsor: colln_owner.to_string(),
             standard: colln_name.to_string(),
         }
@@ -95,21 +95,22 @@ pub type PaintStandardCollnBinder<A, C> = CollnPaintCollnBinder<A, C, PaintStand
 pub type PaintStandardDisplayDialog<A, C> = CollnPaintDisplayDialog<A, C, PaintStandardId>;
 pub type PaintStandardEditor<A, C> = CollnPaintEditor<A, C, PaintStandardId>;
 
-const TOOLTIP_TEXT: &str =
-"Open the Series Paint Manager.
+const TOOLTIP_TEXT: &str = "Open the Series Paint Manager.
 This enables paint to be added to the mixer.";
 
 pub struct PaintStandardManagerCore<A, C>
-    where   A: ColourAttributesInterface + 'static,
-            C: CharacteristicsInterface + 'static,
+where
+    A: ColourAttributesInterface + 'static,
+    C: CharacteristicsInterface + 'static,
 {
     window: gtk::Window,
     binder: PaintStandardCollnBinder<A, C>,
 }
 
-impl<A,C> PaintStandardManagerCore<A, C>
-    where   A: ColourAttributesInterface + 'static,
-            C: CharacteristicsInterface + 'static,
+impl<A, C> PaintStandardManagerCore<A, C>
+where
+    A: ColourAttributesInterface + 'static,
+    C: CharacteristicsInterface + 'static,
 {
     pub fn set_icon(&self, icon: &Pixbuf) {
         self.window.set_icon(Some(icon))
@@ -127,34 +128,34 @@ impl<A,C> PaintStandardManagerCore<A, C>
 pub type PaintStandardManager<A, C> = Rc<PaintStandardManagerCore<A, C>>;
 
 pub trait PaintStandardManagerInterface<A, C>
-    where   A: ColourAttributesInterface + 'static,
-            C: CharacteristicsInterface + 'static,
+where
+    A: ColourAttributesInterface + 'static,
+    C: CharacteristicsInterface + 'static,
 {
     fn create(data_path: &Path) -> PaintStandardManager<A, C>;
     fn button(&self) -> gtk::Button;
     fn tool_button(&self) -> gtk::ToolButton;
 }
 
-
 impl<A, C> PaintStandardManagerInterface<A, C> for PaintStandardManager<A, C>
-    where   A: ColourAttributesInterface + 'static,
-            C: CharacteristicsInterface + 'static,
+where
+    A: ColourAttributesInterface + 'static,
+    C: CharacteristicsInterface + 'static,
 {
     fn create(data_path: &Path) -> PaintStandardManager<A, C> {
         let window = gtk::Window::new(gtk::WindowType::Toplevel);
         window.set_geometry_from_recollections("paint_standards_manager", (600, 200));
         window.set_destroy_with_parent(true);
         window.set_title("Paint Standards Manager");
-        window.connect_delete_event(
-            move |w,_| {w.hide_on_delete(); gtk::Inhibit(true)}
-        );
+        window.connect_delete_event(move |w, _| {
+            w.hide_on_delete();
+            gtk::Inhibit(true)
+        });
         let binder = PaintStandardCollnBinder::<A, C>::create(data_path);
         binder.set_initiate_select_ok(true);
         window.add(&binder.pwo());
 
-        let spm = Rc::new(
-            PaintStandardManagerCore::<A, C>{window, binder}
-        );
+        let spm = Rc::new(PaintStandardManagerCore::<A, C> { window, binder });
 
         spm
     }
@@ -164,19 +165,18 @@ impl<A, C> PaintStandardManagerInterface<A, C> for PaintStandardManager<A, C>
         button.set_tooltip_text(Some(TOOLTIP_TEXT));
         button.set_image(&paint_standard_image(24));
         let spm_c = self.clone();
-        button.connect_clicked(
-            move |_| spm_c.window.present()
-        );
+        button.connect_clicked(move |_| spm_c.window.present());
         button
     }
 
     fn tool_button(&self) -> gtk::ToolButton {
-        let tool_button = gtk::ToolButton::new(Some(&paint_standard_image(24)), Some("Paint Standards Manager"));
+        let tool_button = gtk::ToolButton::new(
+            Some(&paint_standard_image(24)),
+            Some("Paint Standards Manager"),
+        );
         tool_button.set_tooltip_text(Some(TOOLTIP_TEXT));
         let spm_c = self.clone();
-        tool_button.connect_clicked(
-            move |_| spm_c.window.present()
-        );
+        tool_button.connect_clicked(move |_| spm_c.window.present());
         tool_button
     }
 }

@@ -24,8 +24,9 @@ use basic_paint::*;
 pub use dialogue::*;
 
 pub struct BasicPaintDisplayDialogCore<A, C>
-    where   C: CharacteristicsInterface + 'static,
-            A: ColourAttributesInterface + 'static,
+where
+    C: CharacteristicsInterface + 'static,
+    A: ColourAttributesInterface + 'static,
 {
     dialog: gtk::Dialog,
     paint: BasicPaint<C>,
@@ -37,17 +38,23 @@ pub struct BasicPaintDisplayDialogCore<A, C>
 pub type BasicPaintDisplayDialog<A, C> = Rc<BasicPaintDisplayDialogCore<A, C>>;
 
 impl<A, C> DialogWrapper for BasicPaintDisplayDialog<A, C>
-    where   A: ColourAttributesInterface + 'static,
-            C: CharacteristicsInterface + 'static,
+where
+    A: ColourAttributesInterface + 'static,
+    C: CharacteristicsInterface + 'static,
 {
-    fn dialog(&self) -> gtk::Dialog { self.dialog. clone() }
+    fn dialog(&self) -> gtk::Dialog {
+        self.dialog.clone()
+    }
 }
 
 impl<A, C> TrackedDialog for BasicPaintDisplayDialog<A, C>
-    where   A: ColourAttributesInterface + 'static,
-            C: CharacteristicsInterface + 'static,
+where
+    A: ColourAttributesInterface + 'static,
+    C: CharacteristicsInterface + 'static,
 {
-    fn id_no(&self) -> u32 { self.id_no }
+    fn id_no(&self) -> u32 {
+        self.id_no
+    }
 
     fn destroyed_callbacks(&self) -> &DestroyedCallbacks {
         &self.destroyed_callbacks
@@ -55,8 +62,9 @@ impl<A, C> TrackedDialog for BasicPaintDisplayDialog<A, C>
 }
 
 impl<A, C> PaintDisplay<A, C, BasicPaint<C>> for BasicPaintDisplayDialog<A, C>
-    where   A: ColourAttributesInterface + 'static,
-            C: CharacteristicsInterface + 'static,
+where
+    A: ColourAttributesInterface + 'static,
+    C: CharacteristicsInterface + 'static,
 {
     fn create<W: WidgetWrapper>(
         paint: &BasicPaint<C>,
@@ -82,31 +90,30 @@ impl<A, C> PaintDisplay<A, C, BasicPaint<C>> for BasicPaintDisplayDialog<A, C>
         content_area.pack_start(&characteristics_display, false, false, 0);
         content_area.show_all();
         for (response_id, spec) in button_specs.iter().enumerate() {
-            let button = dialog.add_button(spec.label.as_str(), response_id as i32);
+            let button = dialog.add_button(
+                spec.label.as_str(),
+                gtk::ResponseType::Other(response_id as u16),
+            );
             button.set_tooltip_text(Some(spec.tooltip_text.as_str()));
-        };
-        dialog.connect_response (
-            move |_, r_id| {
-                if r_id >= 0 && r_id < button_specs.len() as i32 {
+        }
+        dialog.connect_response(move |_, r_id| {
+            if let gtk::ResponseType::Other(r_id) = r_id {
+                if (r_id as usize) < button_specs.len() {
                     (button_specs[r_id as usize].callback)()
                 }
             }
-        );
-        let bpd_dialog = Rc::new(
-            BasicPaintDisplayDialogCore {
-                dialog: dialog,
-                paint: paint.clone(),
-                _cads: cads,
-                id_no: get_id_for_dialog(),
-                destroyed_callbacks: DestroyedCallbacks::create(),
-            }
-        );
+        });
+        let bpd_dialog = Rc::new(BasicPaintDisplayDialogCore {
+            dialog: dialog,
+            paint: paint.clone(),
+            _cads: cads,
+            id_no: get_id_for_dialog(),
+            destroyed_callbacks: DestroyedCallbacks::create(),
+        });
         let bpd_dialog_c = bpd_dialog.clone();
-        bpd_dialog.dialog.connect_destroy(
-            move |_| {
-                bpd_dialog_c.inform_destroyed()
-            }
-        );
+        bpd_dialog
+            .dialog
+            .connect_destroy(move |_| bpd_dialog_c.inform_destroyed());
 
         bpd_dialog
     }
@@ -121,7 +128,5 @@ mod tests {
     //use super::*;
 
     #[test]
-    fn it_works() {
-
-    }
+    fn it_works() {}
 }

@@ -29,14 +29,15 @@ use pw_gix::wrapper::*;
 
 use pw_pathux;
 
-use basic_paint::*;
-use super::*;
 use super::collection::*;
+use super::*;
+use basic_paint::*;
 
 pub struct CollnPaintCollnBinderCore<A, C, CID>
-    where   A: ColourAttributesInterface + 'static,
-            C: CharacteristicsInterface + 'static,
-            CID: CollnIdInterface + 'static,
+where
+    A: ColourAttributesInterface + 'static,
+    C: CharacteristicsInterface + 'static,
+    CID: CollnIdInterface + 'static,
 {
     vbox: gtk::Box,
     notebook: gtk::Notebook,
@@ -54,23 +55,23 @@ impl_widget_wrapper!(vbox: gtk::Box, CollnPaintCollnBinderCore<A, C, CID>
 );
 
 impl<A, C, CID> CollnPaintCollnBinderCore<A, C, CID>
-    where   A: ColourAttributesInterface + 'static,
-            C: CharacteristicsInterface + 'static,
-            CID: CollnIdInterface + 'static,
+where
+    A: ColourAttributesInterface + 'static,
+    C: CharacteristicsInterface + 'static,
+    CID: CollnIdInterface + 'static,
 {
     fn find_cid(&self, cid: &Rc<CID>) -> Result<usize, usize> {
-        self.paint_collns.borrow().binary_search_by_key(
-            cid,
-            |colln_data| colln_data.0.colln_id()
-        )
+        self.paint_collns
+            .borrow()
+            .binary_search_by_key(cid, |colln_data| colln_data.0.colln_id())
     }
 
     fn find_file_path(&self, path: &Path) -> Option<usize> {
         for (index, colln_data) in self.paint_collns.borrow().iter().enumerate() {
             if path == colln_data.1 {
-                return Some(index)
+                return Some(index);
             }
-        };
+        }
         None
     }
 
@@ -110,15 +111,13 @@ impl<A, C, CID> CollnPaintCollnBinderCore<A, C, CID>
     fn read_colln_file_paths(&self) -> Vec<PathBuf> {
         let mut vpb = Vec::new();
         if !self.paint_colln_files_data_path.exists() {
-            return vpb
+            return vpb;
         };
-        let mut file = File::open(&self.paint_colln_files_data_path).unwrap_or_else(
-            |err| panic!("File: {:?} Line: {:?} : {:?}", file!(), line!(), err)
-        );
+        let mut file = File::open(&self.paint_colln_files_data_path)
+            .unwrap_or_else(|err| panic!("File: {:?} Line: {:?} : {:?}", file!(), line!(), err));
         let mut string = String::new();
-        file.read_to_string(&mut string).unwrap_or_else(
-            |err| panic!("File: {:?} Line: {:?} : {:?}", file!(), line!(), err)
-        );
+        file.read_to_string(&mut string)
+            .unwrap_or_else(|err| panic!("File: {:?} Line: {:?} : {:?}", file!(), line!(), err));
         for line in string.lines() {
             vpb.push(PathBuf::from(line));
         }
@@ -130,26 +129,29 @@ impl<A, C, CID> CollnPaintCollnBinderCore<A, C, CID>
         let mut text = String::new();
         for colln_data in self.paint_collns.borrow().iter() {
             text += (pw_pathux::path_to_string(&colln_data.1) + "\n").as_str();
-        };
+        }
         match File::create(&self.paint_colln_files_data_path) {
-            Ok(mut file) => file.write(&text.into_bytes()).unwrap_or_else(
-                |err| panic!("File: {:?} Line: {:?} : {:?}", file!(), line!(), err)
-            ),
+            Ok(mut file) => file.write(&text.into_bytes()).unwrap_or_else(|err| {
+                panic!("File: {:?} Line: {:?} : {:?}", file!(), line!(), err)
+            }),
             Err(err) => panic!("File: {:?} Line: {:?} : {:?}", file!(), line!(), err),
         };
     }
 
     pub fn connect_paint_selected<F: 'static + Fn(&CollnPaint<C, CID>)>(&self, callback: F) {
-        self.paint_selected_callbacks.borrow_mut().push(Box::new(callback))
+        self.paint_selected_callbacks
+            .borrow_mut()
+            .push(Box::new(callback))
     }
 }
 
 pub type CollnPaintCollnBinder<A, C, CID> = Rc<CollnPaintCollnBinderCore<A, C, CID>>;
 
 pub trait CollnPaintCollnBinderInterface<A, C, CID>
-    where   A: ColourAttributesInterface + 'static,
-            C: CharacteristicsInterface + 'static,
-            CID: CollnIdInterface + 'static,
+where
+    A: ColourAttributesInterface + 'static,
+    C: CharacteristicsInterface + 'static,
+    CID: CollnIdInterface + 'static,
 {
     fn create(data_path: &Path) -> CollnPaintCollnBinder<A, C, CID>;
     fn _insert_paint_colln(&self, spec: &PaintCollnSpec<C, CID>, path: &Path, index: usize);
@@ -158,26 +160,26 @@ pub trait CollnPaintCollnBinderInterface<A, C, CID>
 }
 
 impl<A, C, CID> CollnPaintCollnBinderInterface<A, C, CID> for CollnPaintCollnBinder<A, C, CID>
-    where   A: ColourAttributesInterface + 'static,
-            C: CharacteristicsInterface + 'static,
-            CID: CollnIdInterface + 'static,
+where
+    A: ColourAttributesInterface + 'static,
+    C: CharacteristicsInterface + 'static,
+    CID: CollnIdInterface + 'static,
 {
     fn create(data_path: &Path) -> CollnPaintCollnBinder<A, C, CID> {
-        let cpcb = Rc::new(
-            CollnPaintCollnBinderCore::<A, C, CID>{
-                vbox: gtk::Box::new(gtk::Orientation::Vertical, 0),
-                notebook: gtk:: Notebook::new(),
-                load_colln_button: gtk::Button::new(),
-                initiate_select_ok: Cell::new(false),
-                paint_selected_callbacks: RefCell::new(Vec::new()),
-                paint_collns: RefCell::new(Vec::new()),
-                paint_colln_files_data_path: data_path.to_path_buf(),
-            }
-        );
+        let cpcb = Rc::new(CollnPaintCollnBinderCore::<A, C, CID> {
+            vbox: gtk::Box::new(gtk::Orientation::Vertical, 0),
+            notebook: gtk::Notebook::new(),
+            load_colln_button: gtk::Button::new(),
+            initiate_select_ok: Cell::new(false),
+            paint_selected_callbacks: RefCell::new(Vec::new()),
+            paint_collns: RefCell::new(Vec::new()),
+            paint_colln_files_data_path: data_path.to_path_buf(),
+        });
         cpcb.notebook.set_scrollable(true);
         cpcb.notebook.popup_enable();
 
-        cpcb.load_colln_button.set_tooltip_text(Some("Load collection from file."));
+        cpcb.load_colln_button
+            .set_tooltip_text(Some("Load collection from file."));
         cpcb.load_colln_button.set_image(&CID::colln_load_image(24));
 
         let hbox = gtk::Box::new(gtk::Orientation::Horizontal, 0);
@@ -188,14 +190,13 @@ impl<A, C, CID> CollnPaintCollnBinderInterface<A, C, CID> for CollnPaintCollnBin
         let colln_file_paths = cpcb.read_colln_file_paths();
         for colln_file_path in colln_file_paths.iter() {
             cpcb._add_paint_colln_from_file(colln_file_path);
-        };
+        }
         cpcb.write_colln_file_paths();
         cpcb.notebook.show_all();
 
         let cpcb_c = cpcb.clone();
-        cpcb.load_colln_button.connect_clicked(
-            move |_| cpcb_c.load_paint_colln_from_file()
-        );
+        cpcb.load_colln_button
+            .connect_clicked(move |_| cpcb_c.load_paint_colln_from_file());
         cpcb.vbox.show_all();
 
         cpcb
@@ -207,71 +208,83 @@ impl<A, C, CID> CollnPaintCollnBinderInterface<A, C, CID> for CollnPaintCollnBin
         paint_colln.set_initiate_select_ok(self.initiate_select_ok.get());
         paint_collns.insert(index, (paint_colln.clone(), path.to_path_buf()));
         let cpcb_c = self.clone();
-        paint_colln.connect_paint_selected(
-            move |paint| cpcb_c.inform_paint_selected(paint)
+        paint_colln.connect_paint_selected(move |paint| cpcb_c.inform_paint_selected(paint));
+        let l_text = format!(
+            "{}\n{}",
+            colln_spec.colln_id.colln_name(),
+            colln_spec.colln_id.colln_owner()
         );
-        let l_text = format!("{}\n{}", colln_spec.colln_id.colln_name(), colln_spec.colln_id.colln_owner());
-        let tt_text = format!("Remove {} ({}) from the tool kit", colln_spec.colln_id.colln_name(), colln_spec.colln_id.colln_owner());
+        let tt_text = format!(
+            "Remove {} ({}) from the tool kit",
+            colln_spec.colln_id.colln_name(),
+            colln_spec.colln_id.colln_owner()
+        );
         let label = TabRemoveLabel::create(Some(l_text.as_str()), Some(&tt_text.as_str()));
-        let l_text = format!("{} ({})", colln_spec.colln_id.colln_name(), colln_spec.colln_id.colln_owner());
+        let l_text = format!(
+            "{} ({})",
+            colln_spec.colln_id.colln_name(),
+            colln_spec.colln_id.colln_owner()
+        );
         let menu_label = gtk::Label::new(Some(l_text.as_str()));
         let cpcb_c = self.clone();
         let ps_id = colln_spec.colln_id.clone();
-        label.connect_remove_page(
-            move || cpcb_c.remove_paint_colln(&ps_id)
+        label.connect_remove_page(move || cpcb_c.remove_paint_colln(&ps_id));
+        self.notebook.insert_page_menu(
+            &paint_colln.pwo(),
+            Some(&label.pwo()),
+            Some(&menu_label),
+            Some(index as u32),
         );
-        self.notebook.insert_page_menu(&paint_colln.pwo(), Some(&label.pwo()), Some(&menu_label), Some(index as u32));
     }
 
     fn _add_paint_colln_from_file(&self, path: &Path) {
         match PaintCollnSpec::<C, CID>::from_file(path) {
-            Ok(colln_spec) => {
-                match self.find_cid(&colln_spec.colln_id) {
-                    Ok(index) => {
-                        let other_file_path = &self.paint_collns.borrow()[index].1;
-                        let expln = format!(
+            Ok(colln_spec) => match self.find_cid(&colln_spec.colln_id) {
+                Ok(index) => {
+                    let other_file_path = &self.paint_collns.borrow()[index].1;
+                    let expln = format!(
                             "\"{}\" ({}): already included in the tool box.\nLoaded from file \"{:?}\".",
                             colln_spec.colln_id.colln_name(),
                             colln_spec.colln_id.colln_owner(),
                             other_file_path,
                         );
-                        let buttons = &[("Skip", 0), ("Replace", 1)];
-                        if self.ask_question("Duplicate Collection", Some(expln.as_str()), buttons) == 1 {
-                            self.remove_paint_colln_at_index(index);
-                            self._insert_paint_colln(&colln_spec, path, index);
-                            self.notebook.show_all();
-                            self.write_colln_file_paths();
-                        }
-                    },
-                    Err(index) => {
+                    let buttons = [
+                        ("Skip", gtk::ResponseType::Other(0)),
+                        ("Replace", gtk::ResponseType::Other(1)),
+                    ];
+                    if self.ask_question("Duplicate Collection", Some(expln.as_str()), &buttons)
+                        == gtk::ResponseType::Other(1)
+                    {
+                        self.remove_paint_colln_at_index(index);
                         self._insert_paint_colln(&colln_spec, path, index);
                         self.notebook.show_all();
                         self.write_colln_file_paths();
                     }
                 }
-            },
-            Err(err) => {
-                match err.error_type() {
-                    &PaintErrorType::IOError(ref io_error) => {
-                        let expln = format!("\"{:?}\" \"{}\"\n", path, io_error.description());
-                        let msg = "I/O Error";
-                        self.warn_user(msg, Some(expln.as_str()));
-                    },
-                    &PaintErrorType::MalformedText(_) => {
-                        let expln = format!("Error parsing \"{:?}\"\n", path);
-                        let msg = "Malformed Collection Specification Text";
-                        self.warn_user(msg, Some(expln.as_str()));
-                    },
-                    &PaintErrorType::AlreadyExists(ref text) => {
-                        let expln = format!("\"{:?}\" contains two paints named\"{}\"\n", path, text);
-                        let msg = "Malformed Collection (Duplicate Paints)";
-                        self.warn_user(msg, Some(expln.as_str()));
-                    },
-                    _ => {
-                        panic!("File: {} Line: {}: unexpected error.")
-                    }
+                Err(index) => {
+                    self._insert_paint_colln(&colln_spec, path, index);
+                    self.notebook.show_all();
+                    self.write_colln_file_paths();
                 }
-            }
+            },
+            Err(err) => match err.error_type() {
+                &PaintErrorType::IOError(ref io_error) => {
+                    let expln = format!("\"{:?}\" \"{}\"\n", path, io_error.description());
+                    let msg = "I/O Error";
+                    self.warn_user(msg, Some(expln.as_str()));
+                }
+                &PaintErrorType::MalformedText(_) => {
+                    let expln = format!("Error parsing \"{:?}\"\n", path);
+                    let msg = "Malformed Collection Specification Text";
+                    self.warn_user(msg, Some(expln.as_str()));
+                }
+                &PaintErrorType::AlreadyExists(ref text) => {
+                    let expln = format!("\"{:?}\" contains two paints named\"{}\"\n", path, text);
+                    let msg = "Malformed Collection (Duplicate Paints)";
+                    self.warn_user(msg, Some(expln.as_str()));
+                }
+                _ => panic!("File: {} Line: {}: unexpected error."),
+            },
         }
     }
 
@@ -293,17 +306,25 @@ impl<A, C, CID> CollnPaintCollnBinderInterface<A, C, CID> for CollnPaintCollnBin
                             colln_id.colln_name(),
                             colln_id.colln_owner(),
                         );
-                        let buttons = &[("Cancel", 0), ("Reload", 1)];
-                        if self.ask_question("Duplicate Collection", Some(expln.as_str()), buttons) == 1 {
+                        let buttons = [
+                            ("Cancel", gtk::ResponseType::Other(0)),
+                            ("Reload", gtk::ResponseType::Other(1)),
+                        ];
+                        if self.ask_question("Duplicate Collection", Some(expln.as_str()), &buttons)
+                            == gtk::ResponseType::Other(1)
+                        {
                             self.remove_paint_colln_at_index(index);
                         } else {
-                            return
+                            return;
                         }
                     };
                     self._add_paint_colln_from_file(&abs_file_path);
                     let path_text = pw_pathux::path_to_string(&abs_file_path);
-                    remember(&CID::recollection_name_for("last_colln_loaded_file"), &path_text);
-                },
+                    remember(
+                        &CID::recollection_name_for("last_colln_loaded_file"),
+                        &path_text,
+                    );
+                }
                 Err(err) => {
                     let expln = format!("\"{:?}\" \"{}\"\n", path, err.description());
                     let msg = "I/O Error";
@@ -319,7 +340,5 @@ mod tests {
     //use super::*;
 
     #[test]
-    fn it_works() {
-
-    }
+    fn it_works() {}
 }

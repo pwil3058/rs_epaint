@@ -25,9 +25,10 @@ use super::*;
 pub use dialogue::*;
 
 pub struct CollnPaintDisplayDialogCore<A, C, CID>
-    where   C: CharacteristicsInterface + 'static,
-            A: ColourAttributesInterface + 'static,
-            CID: CollnIdInterface + 'static,
+where
+    C: CharacteristicsInterface + 'static,
+    A: ColourAttributesInterface + 'static,
+    CID: CollnIdInterface + 'static,
 {
     dialog: gtk::Dialog,
     paint: CollnPaint<C, CID>,
@@ -40,19 +41,25 @@ pub struct CollnPaintDisplayDialogCore<A, C, CID>
 pub type CollnPaintDisplayDialog<A, C, CID> = Rc<CollnPaintDisplayDialogCore<A, C, CID>>;
 
 impl<A, C, CID> DialogWrapper for CollnPaintDisplayDialog<A, C, CID>
-    where   A: ColourAttributesInterface + 'static,
-            C: CharacteristicsInterface + 'static,
-            CID: CollnIdInterface + 'static,
+where
+    A: ColourAttributesInterface + 'static,
+    C: CharacteristicsInterface + 'static,
+    CID: CollnIdInterface + 'static,
 {
-    fn dialog(&self) -> gtk::Dialog { self.dialog. clone() }
+    fn dialog(&self) -> gtk::Dialog {
+        self.dialog.clone()
+    }
 }
 
 impl<A, C, CID> TrackedDialog for CollnPaintDisplayDialog<A, C, CID>
-    where   A: ColourAttributesInterface + 'static,
-            C: CharacteristicsInterface + 'static,
-            CID: CollnIdInterface + 'static,
+where
+    A: ColourAttributesInterface + 'static,
+    C: CharacteristicsInterface + 'static,
+    CID: CollnIdInterface + 'static,
 {
-    fn id_no(&self) -> u32 { self.id_no }
+    fn id_no(&self) -> u32 {
+        self.id_no
+    }
 
     fn destroyed_callbacks(&self) -> &RefCell<Vec<Box<Fn(u32)>>> {
         &self.destroyed_callbacks
@@ -60,9 +67,10 @@ impl<A, C, CID> TrackedDialog for CollnPaintDisplayDialog<A, C, CID>
 }
 
 pub trait CollnPaintDisplayDialogInterface<A, C, CID>
-    where   C: CharacteristicsInterface + 'static,
-            A: ColourAttributesInterface + 'static,
-            CID: CollnIdInterface + 'static,
+where
+    C: CharacteristicsInterface + 'static,
+    A: ColourAttributesInterface + 'static,
+    CID: CollnIdInterface + 'static,
 {
     fn create<W: WidgetWrapper>(
         paint: &CollnPaint<C, CID>,
@@ -72,10 +80,12 @@ pub trait CollnPaintDisplayDialogInterface<A, C, CID>
     ) -> CollnPaintDisplayDialog<A, C, CID>;
 }
 
-impl<A, C, CID> PaintDisplayWithCurrentTarget<A, C, CollnPaint<C, CID>> for CollnPaintDisplayDialog<A, C, CID>
-    where   A: ColourAttributesInterface + 'static,
-            C: CharacteristicsInterface + 'static,
-            CID: CollnIdInterface + 'static,
+impl<A, C, CID> PaintDisplayWithCurrentTarget<A, C, CollnPaint<C, CID>>
+    for CollnPaintDisplayDialog<A, C, CID>
+where
+    A: ColourAttributesInterface + 'static,
+    C: CharacteristicsInterface + 'static,
+    CID: CollnIdInterface + 'static,
 {
     fn create<W: WidgetWrapper>(
         paint: &CollnPaint<C, CID>,
@@ -121,33 +131,32 @@ impl<A, C, CID> PaintDisplayWithCurrentTarget<A, C, CollnPaint<C, CID>> for Coll
         content_area.pack_start(&characteristics_display, false, false, 0);
         content_area.show_all();
         for (response_id, spec) in button_specs.iter().enumerate() {
-            let button = dialog.add_button(spec.label.as_str(), response_id as i32);
+            let button = dialog.add_button(
+                spec.label.as_str(),
+                gtk::ResponseType::Other(response_id as u16),
+            );
             button.set_tooltip_text(Some(spec.tooltip_text.as_str()));
-        };
-        dialog.connect_response (
-            move |_, r_id| {
-                if r_id >= 0 && r_id < button_specs.len() as i32 {
+        }
+        dialog.connect_response(move |_, r_id| {
+            if let gtk::ResponseType::Other(r_id) = r_id {
+                if (r_id as usize) < button_specs.len() {
                     (button_specs[r_id as usize].callback)()
                 }
             }
-        );
-        let cpd_dialog = Rc::new(
-            CollnPaintDisplayDialogCore {
-                dialog: dialog,
-                paint: paint.clone(),
-                current_target_label: current_target_label,
-                cads: cads,
-                id_no: get_id_for_dialog(),
-                destroyed_callbacks: DestroyedCallbacks::create(),
-            }
-        );
+        });
+        let cpd_dialog = Rc::new(CollnPaintDisplayDialogCore {
+            dialog: dialog,
+            paint: paint.clone(),
+            current_target_label: current_target_label,
+            cads: cads,
+            id_no: get_id_for_dialog(),
+            destroyed_callbacks: DestroyedCallbacks::create(),
+        });
         cpd_dialog.set_current_target(current_target);
         let cpd_dialog_c = cpd_dialog.clone();
-        cpd_dialog.dialog.connect_destroy(
-            move |_| {
-                cpd_dialog_c.inform_destroyed()
-            }
-        );
+        cpd_dialog
+            .dialog
+            .connect_destroy(move |_| cpd_dialog_c.inform_destroyed());
 
         cpd_dialog
     }
@@ -164,7 +173,8 @@ impl<A, C, CID> PaintDisplayWithCurrentTarget<A, C, CollnPaint<C, CID>> for Coll
                 self.cads.set_target_colour(Some(&colour));
             } else {
                 self.current_target_label.set_label("");
-                self.current_target_label.set_widget_colour(&self.paint.colour());
+                self.current_target_label
+                    .set_widget_colour(&self.paint.colour());
                 self.cads.set_target_colour(None);
             };
         }
@@ -176,7 +186,5 @@ mod tests {
     //use super::*;
 
     #[test]
-    fn it_works() {
-
-    }
+    fn it_works() {}
 }

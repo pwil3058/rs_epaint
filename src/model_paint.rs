@@ -20,23 +20,23 @@ use std::fmt;
 use std::rc::Rc;
 use std::str::FromStr;
 
-use pw_gix::colour::*;
 use pw_gix::colour::attributes::*;
+use pw_gix::colour::*;
 use pw_gix::gtkx::tree_view_column::*;
 pub use pw_gix::wrapper::*;
 
-use basic_paint::*;
 use basic_paint::factory::*;
+use basic_paint::*;
+use characteristics::*;
 use colln_paint::collection::*;
 use error::*;
-use characteristics::*;
 use mixed_paint::*;
 use series_paint::*;
 use standards::*;
 
-pub use struct_traits::SimpleCreation;
-pub use mixed_paint::mixer::*;
 pub use basic_paint::entry::*;
+pub use mixed_paint::mixer::*;
+pub use struct_traits::SimpleCreation;
 
 #[derive(Debug, PartialEq, Hash, Clone, Copy)]
 pub struct ModelPaintCharacteristics {
@@ -56,10 +56,42 @@ impl CharacteristicsInterface for ModelPaintCharacteristics {
     fn tv_columns(start_col_id: i32) -> Vec<gtk::TreeViewColumn> {
         let mut cols: Vec<gtk::TreeViewColumn> = Vec::new();
         let cfw = 30;
-        cols.push(simple_text_column("Fi.", start_col_id, start_col_id, 6, 7, cfw, false));
-        cols.push(simple_text_column("Tr.", start_col_id + 1, start_col_id + 1, 6, 7, cfw, false));
-        cols.push(simple_text_column("Me.", start_col_id + 2, start_col_id + 2, 6, 7, cfw, false));
-        cols.push(simple_text_column("Fl.", start_col_id + 3, start_col_id + 3, 6, 7, cfw, false));
+        cols.push(simple_text_column(
+            "Fi.",
+            start_col_id,
+            start_col_id,
+            6,
+            7,
+            cfw,
+            false,
+        ));
+        cols.push(simple_text_column(
+            "Tr.",
+            start_col_id + 1,
+            start_col_id + 1,
+            6,
+            7,
+            cfw,
+            false,
+        ));
+        cols.push(simple_text_column(
+            "Me.",
+            start_col_id + 2,
+            start_col_id + 2,
+            6,
+            7,
+            cfw,
+            false,
+        ));
+        cols.push(simple_text_column(
+            "Fl.",
+            start_col_id + 3,
+            start_col_id + 3,
+            6,
+            7,
+            cfw,
+            false,
+        ));
         cols
     }
 
@@ -68,7 +100,7 @@ impl CharacteristicsInterface for ModelPaintCharacteristics {
             finish: Finish::from(floats[0]),
             transparency: Transparency::from(floats[1]),
             fluorescence: Fluorescence::from(floats[2]),
-            metallic: Metallic::from(floats[3])
+            metallic: Metallic::from(floats[3]),
         }
     }
 
@@ -104,7 +136,9 @@ impl CharacteristicsInterface for ModelPaintCharacteristics {
         ]
     }
 
-    fn from_str(string: &str) -> Result<ModelPaintCharacteristics, PaintError<ModelPaintCharacteristics>> {
+    fn from_str(
+        string: &str,
+    ) -> Result<ModelPaintCharacteristics, PaintError<ModelPaintCharacteristics>> {
         let finish = Finish::from_str(string)?;
         let transparency = Transparency::from_str(string)?;
         // NB: cope with older definitions that don't include
@@ -117,13 +151,20 @@ impl CharacteristicsInterface for ModelPaintCharacteristics {
             Ok(mc) => mc,
             Err(_) => Metallic::Nonmetallic,
         };
-        Ok(ModelPaintCharacteristics{finish, transparency, fluorescence, metallic})
+        Ok(ModelPaintCharacteristics {
+            finish,
+            transparency,
+            fluorescence,
+            metallic,
+        })
     }
 }
 
 impl fmt::Display for ModelPaintCharacteristics {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}, {}, {}, {}",
+        write!(
+            f,
+            "{}, {}, {}, {}",
             self.finish.to_string(),
             self.transparency.to_string(),
             self.fluorescence.to_string(),
@@ -149,34 +190,34 @@ impl ModelPaintCharacteristicsEntryCore {
     }
 }
 
-impl CharacteristicsEntryInterface<ModelPaintCharacteristics> for ModelPaintCharacteristicsEntryCore {
+impl CharacteristicsEntryInterface<ModelPaintCharacteristics>
+    for ModelPaintCharacteristicsEntryCore
+{
     fn create() -> Rc<ModelPaintCharacteristicsEntryCore> {
-        let cei = Rc::new(
-            ModelPaintCharacteristicsEntryCore {
-                grid: gtk::Grid::new(),
-                finish_entry: FinishEntry::create(),
-                transparency_entry: TransparencyEntry::create(),
-                fluorescence_entry: FluorescenceEntry::create(),
-                metallic_entry: MetallicEntry::create(),
-                changed_callbacks: RefCell::new(Vec::new()),
-            }
-        );
+        let cei = Rc::new(ModelPaintCharacteristicsEntryCore {
+            grid: gtk::Grid::new(),
+            finish_entry: FinishEntry::create(),
+            transparency_entry: TransparencyEntry::create(),
+            fluorescence_entry: FluorescenceEntry::create(),
+            metallic_entry: MetallicEntry::create(),
+            changed_callbacks: RefCell::new(Vec::new()),
+        });
         let cei_c = cei.clone();
-        cei.finish_entry.combo_box_text().connect_changed(
-            move |_| cei_c.inform_changed()
-        );
+        cei.finish_entry
+            .combo_box_text()
+            .connect_changed(move |_| cei_c.inform_changed());
         let cei_c = cei.clone();
-        cei.transparency_entry.combo_box_text().connect_changed(
-            move |_| cei_c.inform_changed()
-        );
+        cei.transparency_entry
+            .combo_box_text()
+            .connect_changed(move |_| cei_c.inform_changed());
         let cei_c = cei.clone();
-        cei.fluorescence_entry.combo_box_text().connect_changed(
-            move |_| cei_c.inform_changed()
-        );
+        cei.fluorescence_entry
+            .combo_box_text()
+            .connect_changed(move |_| cei_c.inform_changed());
         let cei_c = cei.clone();
-        cei.metallic_entry.combo_box_text().connect_changed(
-            move |_| cei_c.inform_changed()
-        );
+        cei.metallic_entry
+            .combo_box_text()
+            .connect_changed(move |_| cei_c.inform_changed());
         cei.finish_entry.combo_box_text().set_hexpand(true);
         cei.transparency_entry.combo_box_text().set_hexpand(true);
         cei.fluorescence_entry.combo_box_text().set_hexpand(true);
@@ -184,19 +225,43 @@ impl CharacteristicsEntryInterface<ModelPaintCharacteristics> for ModelPaintChar
         let label = gtk::Label::new(Some(Finish::prompt().as_str()));
         label.set_halign(gtk::Align::End);
         cei.grid.attach(&label, 0, 0, 1, 1);
-        cei.grid.attach_next_to(&cei.finish_entry.combo_box_text(), Some(&label), gtk::PositionType::Right, 1, 1);
+        cei.grid.attach_next_to(
+            &cei.finish_entry.combo_box_text(),
+            Some(&label),
+            gtk::PositionType::Right,
+            1,
+            1,
+        );
         let label = gtk::Label::new(Some(Transparency::prompt().as_str()));
         label.set_halign(gtk::Align::End);
         cei.grid.attach(&label, 0, 1, 1, 1);
-        cei.grid.attach_next_to(&cei.transparency_entry.combo_box_text(), Some(&label), gtk::PositionType::Right, 1, 1);
+        cei.grid.attach_next_to(
+            &cei.transparency_entry.combo_box_text(),
+            Some(&label),
+            gtk::PositionType::Right,
+            1,
+            1,
+        );
         let label = gtk::Label::new(Some(Fluorescence::prompt().as_str()));
         label.set_halign(gtk::Align::End);
         cei.grid.attach(&label, 0, 2, 1, 1);
-        cei.grid.attach_next_to(&cei.fluorescence_entry.combo_box_text(), Some(&label), gtk::PositionType::Right, 1, 1);
+        cei.grid.attach_next_to(
+            &cei.fluorescence_entry.combo_box_text(),
+            Some(&label),
+            gtk::PositionType::Right,
+            1,
+            1,
+        );
         let label = gtk::Label::new(Some(Metallic::prompt().as_str()));
         label.set_halign(gtk::Align::End);
         cei.grid.attach(&label, 0, 3, 1, 1);
-        cei.grid.attach_next_to(&cei.metallic_entry.combo_box_text(), Some(&label), gtk::PositionType::Right, 1, 1);
+        cei.grid.attach_next_to(
+            &cei.metallic_entry.combo_box_text(),
+            Some(&label),
+            gtk::PositionType::Right,
+            1,
+            1,
+        );
 
         cei.grid.show_all();
         cei
@@ -210,33 +275,40 @@ impl CharacteristicsEntryInterface<ModelPaintCharacteristics> for ModelPaintChar
         let finish = if let Some(value) = self.finish_entry.get_value() {
             value
         } else {
-            return None
+            return None;
         };
         let transparency = if let Some(value) = self.transparency_entry.get_value() {
             value
         } else {
-            return None
+            return None;
         };
         let fluorescence = if let Some(value) = self.fluorescence_entry.get_value() {
             value
         } else {
-            return None
+            return None;
         };
         let metallic = if let Some(value) = self.metallic_entry.get_value() {
             value
         } else {
-            return None
+            return None;
         };
-        Some(ModelPaintCharacteristics {finish, transparency, fluorescence, metallic})
+        Some(ModelPaintCharacteristics {
+            finish,
+            transparency,
+            fluorescence,
+            metallic,
+        })
     }
 
     fn set_characteristics(&self, o_characteristics: Option<&ModelPaintCharacteristics>) {
         if let Some(characteristics) = o_characteristics {
             self.finish_entry.set_value(Some(characteristics.finish));
-            self.transparency_entry.set_value(Some(characteristics.transparency));
-            self.fluorescence_entry.set_value(Some(characteristics.fluorescence));
-            self.metallic_entry.set_value(Some(characteristics.metallic));
-
+            self.transparency_entry
+                .set_value(Some(characteristics.transparency));
+            self.fluorescence_entry
+                .set_value(Some(characteristics.fluorescence));
+            self.metallic_entry
+                .set_value(Some(characteristics.metallic));
         } else {
             self.finish_entry.set_value(None);
             self.transparency_entry.set_value(None);
@@ -268,29 +340,46 @@ impl ColourAttributesInterface for ModelPaintAttributes {
         vbox.pack_start(&hue_cad.pwo(), true, true, 0);
         vbox.pack_start(&greyness_cad.pwo(), true, true, 0);
         vbox.pack_start(&value_cad.pwo(), true, true, 0);
-        Rc::new(
-            ModelPaintAttributes {
-                vbox,
-                hue_cad,
-                greyness_cad,
-                value_cad,
-            }
-        )
+        Rc::new(ModelPaintAttributes {
+            vbox,
+            hue_cad,
+            greyness_cad,
+            value_cad,
+        })
     }
 
     fn tv_columns() -> Vec<gtk::TreeViewColumn> {
         let fw = 60;
         vec![
             simple_text_column("Hue", -1, SP_HUE_ANGLE, SP_HUE_RGB, -1, 50, false),
-            simple_text_column("Grey", SP_GREYNESS, SP_GREYNESS, SP_RGB, SP_RGB_FG, fw, false),
-            simple_text_column("Value", SP_VALUE, SP_VALUE, SP_MONO_RGB, SP_MONO_RGB_FG, fw, false),
+            simple_text_column(
+                "Grey",
+                SP_GREYNESS,
+                SP_GREYNESS,
+                SP_RGB,
+                SP_RGB_FG,
+                fw,
+                false,
+            ),
+            simple_text_column(
+                "Value",
+                SP_VALUE,
+                SP_VALUE,
+                SP_MONO_RGB,
+                SP_MONO_RGB_FG,
+                fw,
+                false,
+            ),
         ]
     }
 
     fn scalar_attributes() -> Vec<ScalarAttribute> {
-        vec![ScalarAttribute::Value, ScalarAttribute::Greyness, ScalarAttribute::Chroma]
+        vec![
+            ScalarAttribute::Value,
+            ScalarAttribute::Greyness,
+            ScalarAttribute::Chroma,
+        ]
     }
-
 
     fn set_colour(&self, colour: Option<&Colour>) {
         self.hue_cad.set_colour(colour);
@@ -319,14 +408,19 @@ pub type ModelMixedPaint = MixedPaint<ModelPaintCharacteristics>;
 pub type ModelPaint = Paint<ModelPaintCharacteristics>;
 pub type BasicModelPaint = BasicPaint<ModelPaintCharacteristics>;
 pub type ModelPaintSeries = SeriesPaintColln<ModelPaintCharacteristics>;
-pub type ModelPaintComponentsBox = SeriesPaintComponentBox<ModelPaintAttributes, ModelPaintCharacteristics>;
-pub type ModelPaintMixer = PaintMixer<ModelPaintAttributes, ModelPaintCharacteristics, ModelPaintMixerConfig>;
-pub type ModelPaintSeriesManager = SeriesPaintManager<ModelPaintAttributes, ModelPaintCharacteristics>;
-pub type ModelPaintFactoryDisplay = BasicPaintFactoryDisplay<ModelPaintAttributes, ModelPaintCharacteristics>;
+pub type ModelPaintComponentsBox =
+    SeriesPaintComponentBox<ModelPaintAttributes, ModelPaintCharacteristics>;
+pub type ModelPaintMixer =
+    PaintMixer<ModelPaintAttributes, ModelPaintCharacteristics, ModelPaintMixerConfig>;
+pub type ModelPaintSeriesManager =
+    SeriesPaintManager<ModelPaintAttributes, ModelPaintCharacteristics>;
+pub type ModelPaintFactoryDisplay =
+    BasicPaintFactoryDisplay<ModelPaintAttributes, ModelPaintCharacteristics>;
 pub type BasicModelPaintEditor = SeriesPaintEditor<ModelPaintAttributes, ModelPaintCharacteristics>;
 pub type ModelPaintSeriesSpec = SeriesPaintCollnSpec<ModelPaintCharacteristics>;
 
-pub type ModelPaintStandardEditor = PaintStandardEditor<ModelPaintAttributes, ModelPaintCharacteristics>;
+pub type ModelPaintStandardEditor =
+    PaintStandardEditor<ModelPaintAttributes, ModelPaintCharacteristics>;
 
 const IDEAL_PAINT_STR: &str =
 "Manufacturer: Imaginary
@@ -350,7 +444,7 @@ mod tests {
     use super::*;
     use pw_gix::rgb_math::rgb::*;
 
-const OBSOLETE_PAINT_STR: &str =
+    const OBSOLETE_PAINT_STR: &str =
 "Manufacturer: Tamiya
 Series: Flat Acrylic (Peter Williams Digital Samples #3)
 NamedColour(name=\"XF 1: Flat Black *\", rgb=RGB(0x2D00, 0x2B00, 0x3000), transparency=\"O\", finish=\"F\")
@@ -367,7 +461,10 @@ NamedColour(name=\"XF 4: Yellow Green *\", rgb=RGB(0xAA00, 0xAE00, 0x4000), tran
             assert_eq!(spec.name, "71.001 White");
             assert_eq!(spec.characteristics.finish, Finish::Flat);
             assert_eq!(spec.characteristics.transparency, Transparency::Opaque);
-            assert_eq!(spec.characteristics.fluorescence, Fluorescence::Nonfluorescent);
+            assert_eq!(
+                spec.characteristics.fluorescence,
+                Fluorescence::Nonfluorescent
+            );
             assert_eq!(spec.characteristics.metallic, Metallic::Nonmetallic);
             assert_eq!(spec.notes, "FS37925 RAL9016 RLM21");
             let rgb16 = RGB16::from(spec.rgb);
@@ -387,7 +484,10 @@ NamedColour(name=\"XF 4: Yellow Green *\", rgb=RGB(0xAA00, 0xAE00, 0x4000), tran
             assert_eq!(spec.name, "XF 2: Flat White *");
             assert_eq!(spec.characteristics.finish, Finish::Flat);
             assert_eq!(spec.characteristics.transparency, Transparency::Opaque);
-            assert_eq!(spec.characteristics.fluorescence, Fluorescence::Nonfluorescent);
+            assert_eq!(
+                spec.characteristics.fluorescence,
+                Fluorescence::Nonfluorescent
+            );
             assert_eq!(spec.characteristics.metallic, Metallic::Nonmetallic);
             assert_eq!(spec.notes, "");
             let rgb16 = RGB16::from(spec.rgb);
@@ -410,10 +510,14 @@ NamedColour(name=\"XF 4: Yellow Green *\", rgb=RGB(0xAA00, 0xAE00, 0x4000), tran
                 ("Magenta", MAGENTA),
                 ("Yellow", YELLOW),
                 ("Black", BLACK),
-                ("White", WHITE)
-            ].iter()
+                ("White", WHITE),
+            ]
+            .iter()
             {
-                assert_eq!(series.get_series_paint(pair.0).unwrap().colour().rgb(), pair.1);
+                assert_eq!(
+                    series.get_series_paint(pair.0).unwrap().colour().rgb(),
+                    pair.1
+                );
             }
         } else {
             panic!("File: {:?} Line: {:?}", file!(), line!())
@@ -427,10 +531,14 @@ NamedColour(name=\"XF 4: Yellow Green *\", rgb=RGB(0xAA00, 0xAE00, 0x4000), tran
             ("Magenta", MAGENTA),
             ("Yellow", YELLOW),
             ("Black", BLACK),
-            ("White", WHITE)
-        ].iter()
+            ("White", WHITE),
+        ]
+        .iter()
         {
-            assert_eq!(series.get_series_paint(pair.0).unwrap().colour().rgb(), pair.1);
+            assert_eq!(
+                series.get_series_paint(pair.0).unwrap().colour().rgb(),
+                pair.1
+            );
             assert_eq!(series.get_paint(pair.0).unwrap().colour().rgb(), pair.1);
         }
     }
@@ -440,15 +548,31 @@ NamedColour(name=\"XF 4: Yellow Green *\", rgb=RGB(0xAA00, 0xAE00, 0x4000), tran
         match ModelPaintSeries::from_str(OBSOLETE_PAINT_STR) {
             Ok(series) => {
                 for pair in [
-                    ("XF 1: Flat Black *", RGB16::from_str("RGB(0x2D00, 0x2B00, 0x3000)").unwrap()),
-                    ("XF 2: Flat White *", RGB16::from_str("RGB(0xFE00, 0xFE00, 0xFE00)").unwrap()),
-                    ("XF 3: Flat Yellow *", RGB16::from_str("RGB(0xF800, 0xCD00, 0x2900)").unwrap()),
-                    ("XF 4: Yellow Green *", RGB16::from_str("RGB(0xAA00, 0xAE00, 0x4000)").unwrap()),
-                ].iter()
+                    (
+                        "XF 1: Flat Black *",
+                        RGB16::from_str("RGB(0x2D00, 0x2B00, 0x3000)").unwrap(),
+                    ),
+                    (
+                        "XF 2: Flat White *",
+                        RGB16::from_str("RGB(0xFE00, 0xFE00, 0xFE00)").unwrap(),
+                    ),
+                    (
+                        "XF 3: Flat Yellow *",
+                        RGB16::from_str("RGB(0xF800, 0xCD00, 0x2900)").unwrap(),
+                    ),
+                    (
+                        "XF 4: Yellow Green *",
+                        RGB16::from_str("RGB(0xAA00, 0xAE00, 0x4000)").unwrap(),
+                    ),
+                ]
+                .iter()
                 {
-                    assert_eq!(series.get_series_paint(pair.0).unwrap().colour().rgb(), RGB::from(pair.1));
+                    assert_eq!(
+                        series.get_series_paint(pair.0).unwrap().colour().rgb(),
+                        RGB::from(pair.1)
+                    );
                 }
-            },
+            }
             Err(err) => panic!("File: {:?} Line: {:?} {:?}", file!(), line!(), err),
         }
     }
@@ -471,10 +595,14 @@ NamedColour(name=\"XF 4: Yellow Green *\", rgb=RGB(0xAA00, 0xAE00, 0x4000), tran
             ("Magenta", MAGENTA),
             ("Yellow", YELLOW),
             ("Black", BLACK),
-            ("White", WHITE)
-        ].iter()
+            ("White", WHITE),
+        ]
+        .iter()
         {
-            assert_eq!(series.get_series_paint(pair.0).unwrap().colour().rgb(), pair.1);
+            assert_eq!(
+                series.get_series_paint(pair.0).unwrap().colour().rgb(),
+                pair.1
+            );
             assert_eq!(series.get_paint(pair.0).unwrap().colour().rgb(), pair.1);
             let paint = series.get_paint(pair.0).unwrap();
             assert_eq!(paint.colour().rgb(), pair.1);
@@ -493,12 +621,13 @@ NamedColour(name=\"XF 4: Yellow Green *\", rgb=RGB(0xAA00, 0xAE00, 0x4000), tran
                 ("Magenta", MAGENTA),
                 ("Yellow", YELLOW),
                 ("Black", BLACK),
-                ("White", WHITE)
-            ].iter()
+                ("White", WHITE),
+            ]
+            .iter()
             {
                 if let Some(index) = spec.get_index_for_name(pair.0) {
-                    assert_eq!(spec.paint_specs[index].rgb, pair.1);}
-                else {
+                    assert_eq!(spec.paint_specs[index].rgb, pair.1);
+                } else {
                     panic!("File: {:?} Line: {:?}", file!(), line!())
                 }
             }
@@ -512,19 +641,32 @@ NamedColour(name=\"XF 4: Yellow Green *\", rgb=RGB(0xAA00, 0xAE00, 0x4000), tran
         match ModelPaintSeriesSpec::from_str(OBSOLETE_PAINT_STR) {
             Ok(spec) => {
                 for pair in [
-                    ("XF 1: Flat Black *", RGB16::from_str("RGB(0x2D00, 0x2B00, 0x3000)").unwrap()),
-                    ("XF 2: Flat White *", RGB16::from_str("RGB(0xFE00, 0xFE00, 0xFE00)").unwrap()),
-                    ("XF 3: Flat Yellow *", RGB16::from_str("RGB(0xF800, 0xCD00, 0x2900)").unwrap()),
-                    ("XF 4: Yellow Green *", RGB16::from_str("RGB(0xAA00, 0xAE00, 0x4000)").unwrap()),
-                ].iter()
+                    (
+                        "XF 1: Flat Black *",
+                        RGB16::from_str("RGB(0x2D00, 0x2B00, 0x3000)").unwrap(),
+                    ),
+                    (
+                        "XF 2: Flat White *",
+                        RGB16::from_str("RGB(0xFE00, 0xFE00, 0xFE00)").unwrap(),
+                    ),
+                    (
+                        "XF 3: Flat Yellow *",
+                        RGB16::from_str("RGB(0xF800, 0xCD00, 0x2900)").unwrap(),
+                    ),
+                    (
+                        "XF 4: Yellow Green *",
+                        RGB16::from_str("RGB(0xAA00, 0xAE00, 0x4000)").unwrap(),
+                    ),
+                ]
+                .iter()
                 {
                     if let Some(index) = spec.get_index_for_name(pair.0) {
-                        assert_eq!(spec.paint_specs[index].rgb, RGB::from(pair.1));}
-                    else {
+                        assert_eq!(spec.paint_specs[index].rgb, RGB::from(pair.1));
+                    } else {
                         panic!("File: {:?} Line: {:?}", file!(), line!())
                     }
                 }
-            },
+            }
             Err(err) => panic!("File: {:?} Line: {:?} {:?}", file!(), line!(), err),
         }
     }
