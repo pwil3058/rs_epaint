@@ -266,11 +266,3 @@ pub fn up_to_date_image(size: i32) -> gtk::Image {
         panic!("File: {:?} Line: {:?}", file!(), line!())
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn it_works() {}
-}

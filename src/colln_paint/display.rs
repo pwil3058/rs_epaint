@@ -102,22 +102,22 @@ where
         let content_area = dialog.get_content_area();
         let vbox = gtk::Box::new(gtk::Orientation::Vertical, 0);
 
-        let label = gtk::Label::new(paint.name().as_str());
+        let label = gtk::Label::new(Some(paint.name().as_str()));
         label.set_widget_colour(&paint.colour());
         vbox.pack_start(&label, false, false, 0);
-        let label = gtk::Label::new(paint.notes().as_str());
+        let label = gtk::Label::new(Some(paint.notes().as_str()));
         label.set_widget_colour(&paint.colour());
         vbox.pack_start(&label, false, false, 0);
 
         let colln_id = paint.colln_id();
-        let label = gtk::Label::new(colln_id.colln_name().as_str());
+        let label = gtk::Label::new(Some(colln_id.colln_name().as_str()));
         label.set_widget_colour(&paint.colour());
         vbox.pack_start(&label, false, false, 0);
-        let label = gtk::Label::new(colln_id.colln_owner().as_str());
+        let label = gtk::Label::new(Some(colln_id.colln_owner().as_str()));
         label.set_widget_colour(&paint.colour());
         vbox.pack_start(&label, false, false, 0);
         //
-        let current_target_label = gtk::Label::new("");
+        let current_target_label = gtk::Label::new(None);
         if CID::display_current_target() {
             current_target_label.set_widget_colour(&paint.colour());
             vbox.pack_start(&current_target_label.clone(), true, true, 0);

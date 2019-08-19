@@ -476,10 +476,10 @@ where
 
         paint_mixer
             .print_report_btn
-            .set_image(&mixtures_print_xpm::mixtures_print_image(24));
+            .set_image(Some(&mixtures_print_xpm::mixtures_print_image(24)));
         paint_mixer
             .print_report_btn
-            .set_tooltip_text("Print a report of the mixtures and paints used");
+            .set_tooltip_text(Some("Print a report of the mixtures and paints used"));
         let paint_mixer_c = paint_mixer.clone();
         paint_mixer.print_report_btn.connect_clicked(move |_| {
             if let Err(ref err) =
@@ -492,7 +492,7 @@ where
         if MC::mixing_mode() == MixingMode::MatchTarget {
             paint_mixer
                 .new_mixture_btn
-                .set_tooltip_text("Start mixing a new colour.");
+                .set_tooltip_text(Some("Start mixing a new colour."));
             let paint_mixer_c = paint_mixer.clone();
             paint_mixer.new_mixture_btn.connect_clicked(move |_| {
                 let dialog = NewTargetColourDialog::<A>::create(&paint_mixer_c);
@@ -503,24 +503,24 @@ where
 
             paint_mixer
                 .cancel_btn
-                .set_tooltip_text("Cancel the current mixture.");
+                .set_tooltip_text(Some("Cancel the current mixture."));
             let paint_mixer_c = paint_mixer.clone();
             paint_mixer
                 .cancel_btn
                 .connect_clicked(move |_| paint_mixer_c.cancel_current_mixture());
         };
 
-        paint_mixer.accept_mixture_btn.set_tooltip_text(
+        paint_mixer.accept_mixture_btn.set_tooltip_text(Some(
             "Accept the current mixture and add it to the list of mixed colours.",
-        );
+        ));
         let paint_mixer_c = paint_mixer.clone();
         paint_mixer
             .accept_mixture_btn
             .connect_clicked(move |_| paint_mixer_c.accept_new_mixture());
 
-        paint_mixer
-            .simplify_parts_btn
-            .set_tooltip_text("Divide all paints' parts by their greatest common denominator.");
+        paint_mixer.simplify_parts_btn.set_tooltip_text(Some(
+            "Divide all paints' parts by their greatest common denominator.",
+        ));
         let paint_mixer_c = paint_mixer.clone();
         paint_mixer
             .simplify_parts_btn
@@ -528,7 +528,7 @@ where
 
         paint_mixer
             .reset_parts_btn
-            .set_tooltip_text("Reset parts of all paints in mixing part to zero.");
+            .set_tooltip_text(Some("Reset parts of all paints in mixing part to zero."));
         let paint_mixer_c = paint_mixer.clone();
         paint_mixer.reset_parts_btn.connect_clicked(move |_| {
             paint_mixer_c
@@ -544,7 +544,7 @@ where
         // TODO: be more sophisticated about removing series paints
         paint_mixer
             .remove_unused_btn
-            .set_tooltip_text("Remove paints not being used from the mixing area.");
+            .set_tooltip_text(Some("Remove paints not being used from the mixing area."));
         let paint_mixer_c = paint_mixer.clone();
         paint_mixer.remove_unused_btn.connect_clicked(move |_| {
             paint_mixer_c.remove_unused_paints_from_mixing_area();

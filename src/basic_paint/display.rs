@@ -75,10 +75,10 @@ where
         dialog.set_size_from_recollections("basic_paint_display", (60, 330));
         let content_area = dialog.get_content_area();
         let vbox = gtk::Box::new(gtk::Orientation::Vertical, 0);
-        let label = gtk::Label::new(paint.name().as_str());
+        let label = gtk::Label::new(Some(paint.name().as_str()));
         label.set_widget_colour(&paint.colour());
         vbox.pack_start(&label, false, false, 0);
-        let label = gtk::Label::new(paint.notes().as_str());
+        let label = gtk::Label::new(Some(paint.notes().as_str()));
         label.set_widget_colour(&paint.colour());
         vbox.pack_start(&label, false, false, 0);
         //

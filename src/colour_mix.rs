@@ -75,7 +75,7 @@ mod tests {
     fn paint_colour_mix_test() {
         let mut colour_mixer = ColourMixer::new();
         assert_eq!(colour_mixer.get_colour(), None);
-        colour_mixer.add(Colour::from(RED), 10);
+        colour_mixer.add(&Colour::from(RED), 10);
         assert_eq!(colour_mixer.get_colour(), Some(Colour::from(RED)));
     }
 }

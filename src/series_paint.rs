@@ -168,7 +168,7 @@ where
     fn button(&self) -> gtk::Button {
         let button = gtk::Button::new();
         button.set_tooltip_text(Some(TOOLTIP_TEXT));
-        button.set_image(&series_paint_image(24));
+        button.set_image(Some(&series_paint_image(24)));
         let spm_c = self.clone();
         button.connect_clicked(move |_| spm_c.window.present());
         button

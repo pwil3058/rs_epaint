@@ -133,10 +133,10 @@ where
         dialog.set_size_from_recollections("target_colour_display", (60, 180));
         let content_area = dialog.get_content_area();
         let vbox = gtk::Box::new(gtk::Orientation::Vertical, 0);
-        let label = gtk::Label::new(colour.name().as_str());
+        let label = gtk::Label::new(Some(colour.name().as_str()));
         label.set_widget_colour(&colour.colour());
         vbox.pack_start(&label, true, true, 0);
-        let label = gtk::Label::new(colour.notes().as_str());
+        let label = gtk::Label::new(Some(colour.notes().as_str()));
         label.set_widget_colour(&colour.colour());
         vbox.pack_start(&label, true, true, 0);
         content_area.pack_start(&vbox, true, true, 0);

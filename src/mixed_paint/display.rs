@@ -90,21 +90,21 @@ where
         dialog.set_size_from_recollections("mixed_paint_display", (60, 330));
         let content_area = dialog.get_content_area();
         let vbox = gtk::Box::new(gtk::Orientation::Vertical, 0);
-        let label = gtk::Label::new(paint.name().as_str());
+        let label = gtk::Label::new(Some(paint.name().as_str()));
         label.set_widget_colour(&paint.colour());
         vbox.pack_start(&label, false, false, 0);
-        let label = gtk::Label::new(paint.notes().as_str());
+        let label = gtk::Label::new(Some(paint.notes().as_str()));
         label.set_widget_colour(&paint.colour());
         vbox.pack_start(&label, false, false, 0);
         //
-        let current_target_label = gtk::Label::new("");
+        let current_target_label = gtk::Label::new(None);
         current_target_label.set_widget_colour(&paint.colour());
         vbox.pack_start(&current_target_label.clone(), true, true, 0);
         //
         let cads = A::create();
         cads.set_colour(Some(&paint.colour()));
         if let Some(matched_colour) = paint.matched_colour() {
-            let matched_colour_label = gtk::Label::new("Matched Colour");
+            let matched_colour_label = gtk::Label::new(Some("Matched Colour"));
             matched_colour_label.set_widget_colour(&matched_colour.clone());
             vbox.pack_start(&matched_colour_label.clone(), true, true, 0);
             cads.set_target_colour(Some(&matched_colour.clone()));

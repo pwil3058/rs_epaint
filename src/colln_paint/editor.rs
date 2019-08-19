@@ -117,23 +117,24 @@ where
         match file_status {
             FileStatus::NoFileNoData | FileStatus::UpToDate => {
                 self.file_status_btn.set_sensitive(false);
-                self.file_status_btn.set_image(&up_to_date_image(24));
+                self.file_status_btn.set_image(Some(&up_to_date_image(24)));
                 self.file_status_btn
-                    .set_tooltip_text("File Status: Up To Date");
+                    .set_tooltip_text(Some("File Status: Up To Date"));
             }
             FileStatus::NoFileDataReady | FileStatus::NotUpToDateReady => {
                 self.file_status_btn.set_sensitive(true);
-                self.file_status_btn.set_image(&needs_save_ready_image(24));
-                self.file_status_btn.set_tooltip_text(
+                self.file_status_btn
+                    .set_image(Some(&needs_save_ready_image(24)));
+                self.file_status_btn.set_tooltip_text(Some(
                     "File Status: Needs Save (Ready)\nClick to save data to file",
-                );
+                ));
             }
             FileStatus::NoFileDataNotReady | FileStatus::NotUpToDateNotReady => {
                 self.file_status_btn.set_sensitive(false);
                 self.file_status_btn
-                    .set_image(&needs_save_not_ready_image(24));
+                    .set_image(Some(&needs_save_not_ready_image(24)));
                 self.file_status_btn
-                    .set_tooltip_text("File Status: Needs Save (NOT Ready)");
+                    .set_tooltip_text(Some("File Status: Needs Save (NOT Ready)"));
             }
         }
     }
@@ -484,12 +485,13 @@ where
 {
     fn create() -> CollnPaintEditor<A, C, CID> {
         let add_paint_btn = gtk::Button::new_with_label("Add");
-        add_paint_btn
-            .set_tooltip_text("Add the paint defined by this specification to the collection");
+        add_paint_btn.set_tooltip_text(Some(
+            "Add the paint defined by this specification to the collection",
+        ));
         let accept_changes_btn = gtk::Button::new_with_label("Accept");
-        accept_changes_btn.set_tooltip_text("Accept the changes to the paint being edited");
+        accept_changes_btn.set_tooltip_text(Some("Accept the changes to the paint being edited"));
         let reset_entry_btn = gtk::Button::new_with_label("Reset");
-        reset_entry_btn.set_tooltip_text("Reset in preparation for defining a new paint");
+        reset_entry_btn.set_tooltip_text(Some("Reset in preparation for defining a new paint"));
         let extra_buttons = vec![
             add_paint_btn.clone(),
             accept_changes_btn.clone(),
@@ -497,21 +499,23 @@ where
         ];
 
         let new_colln_btn = gtk::Button::new();
-        new_colln_btn.set_image(&colln_xpms::colln_new_image(24));
-        new_colln_btn
-            .set_tooltip_text("Clear the editor in preparation for creating a new collection");
+        new_colln_btn.set_image(Some(&colln_xpms::colln_new_image(24)));
+        new_colln_btn.set_tooltip_text(Some(
+            "Clear the editor in preparation for creating a new collection",
+        ));
         let load_colln_btn = gtk::Button::new();
-        load_colln_btn.set_image(&colln_xpms::colln_open_image(24));
-        load_colln_btn.set_tooltip_text("Load a paint collection from a file for editing");
+        load_colln_btn.set_image(Some(&colln_xpms::colln_open_image(24)));
+        load_colln_btn.set_tooltip_text(Some("Load a paint collection from a file for editing"));
         let save_colln_btn = gtk::Button::new();
-        save_colln_btn.set_image(&colln_xpms::colln_save_image(24));
-        save_colln_btn.set_tooltip_text("Save the current editor content to file.");
+        save_colln_btn.set_image(Some(&colln_xpms::colln_save_image(24)));
+        save_colln_btn.set_tooltip_text(Some("Save the current editor content to file."));
         let save_as_colln_btn = gtk::Button::new();
-        save_as_colln_btn.set_image(&colln_xpms::colln_save_as_image(24));
-        save_as_colln_btn.set_tooltip_text("Save the current editor content to a nominated file.");
+        save_as_colln_btn.set_image(Some(&colln_xpms::colln_save_as_image(24)));
+        save_as_colln_btn
+            .set_tooltip_text(Some("Save the current editor content to a nominated file."));
 
         let file_status_btn = gtk::Button::new();
-        file_status_btn.set_image(&up_to_date_image(24));
+        file_status_btn.set_image(Some(&up_to_date_image(24)));
 
         let bpe = Rc::new(CollnPaintEditorCore::<A, C, CID> {
             vbox: gtk::Box::new(gtk::Orientation::Vertical, 1),
@@ -644,12 +648,4 @@ where
 
         bpe
     }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn it_works() {}
 }

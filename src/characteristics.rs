@@ -113,7 +113,7 @@ macro_rules! implement_entry_core {
                 for value in $characteristic::values().iter() {
                     combo_box_text.append_text(value.description());
                 }
-                combo_box_text.set_active(0);
+                combo_box_text.set_active(Some(0));
                 Rc::new($entry_core { combo_box_text })
             }
         }

@@ -476,7 +476,7 @@ where
         let paint_factory_view = BasicPaintFactoryView::<A, C>::create();
         notebook.append_page(
             &paint_factory_view.pwo(),
-            Some(&gtk::Label::new("Paint List")),
+            Some(&gtk::Label::new(Some("Paint List"))),
         );
         let mut hue_attr_wheels = Vec::new();
         for attr in A::scalar_attributes().iter() {
