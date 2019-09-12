@@ -95,6 +95,7 @@ where
         current_target: Option<&Colour>,
         sensitive: bool,
     ) -> PaintPartsSpinButton<A, C, P, D> {
+        println!("create");
         let adj = gtk::Adjustment::new(0.0, 0.0, 999.0, 1.0, 10.0, 0.0);
         let label_text = paint.name();
         let parts_changed_callbacks: RefCell<Vec<Box<dyn Fn(u32)>>> = RefCell::new(Vec::new());
@@ -164,9 +165,7 @@ where
         let hbox = gtk::Box::new(gtk::Orientation::Horizontal, 1);
         hbox.pack_start(&spin_button.label.clone(), true, true, 0);
         hbox.pack_start(&spin_button.entry.clone(), false, false, 0);
-        hbox.set_widget_colour(&paint.colour());
         let frame = gtk::Frame::new(None);
-        frame.set_widget_colour(&paint.colour());
         frame.add(&hbox);
         spin_button.event_box.add(&frame);
         let spin_button_c = spin_button.clone();
