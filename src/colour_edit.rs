@@ -99,7 +99,7 @@ where
     popup_menu_position: Cell<Point>,
     auto_match_btn: gtk::Button,
     auto_match_on_paste_btn: gtk::CheckButton,
-    colour_changed_callbacks: RefCell<Vec<Box<Fn(&Colour)>>>,
+    colour_changed_callbacks: RefCell<Vec<Box<dyn Fn(&Colour)>>>,
 }
 
 impl_widget_wrapper!(vbox: gtk::Box, ColourEditorCore<A>

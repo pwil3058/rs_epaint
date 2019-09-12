@@ -77,7 +77,7 @@ pub struct GraticuleCore {
     current_target: RefCell<Option<CurrentTargetShape>>,
     last_xy: Cell<Point>,
     motion_enabled: Cell<bool>,
-    draw_callbacks: RefCell<Vec<Box<Fn(&GraticuleCore, &cairo::Context)>>>,
+    draw_callbacks: RefCell<Vec<Box<dyn Fn(&GraticuleCore, &cairo::Context)>>>,
 }
 
 impl GeometryInterface for GraticuleCore {

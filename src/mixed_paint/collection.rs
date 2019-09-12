@@ -226,8 +226,8 @@ where
     components: MixedPaintComponentBox<A, C>,
     chosen_paint: RefCell<Option<MixedPaint<C>>>,
     current_target: RefCell<Option<Colour>>,
-    add_paint_callbacks: RefCell<Vec<Box<Fn(&MixedPaint<C>)>>>,
-    remove_paint_callbacks: RefCell<Vec<Box<Fn(&MixedPaint<C>)>>>,
+    add_paint_callbacks: RefCell<Vec<Box<dyn Fn(&MixedPaint<C>)>>>,
+    remove_paint_callbacks: RefCell<Vec<Box<dyn Fn(&MixedPaint<C>)>>>,
     mixed_paint_dialogs: RefCell<HashMap<u32, MixedPaintDisplayDialog<A, C>>>,
     spec: PhantomData<A>,
 }

@@ -64,7 +64,7 @@ where
     name_entry: gtk::Entry,
     notes_entry: gtk::Entry,
     colour_editor: ColourEditor<A>,
-    status_changed_callbacks: RefCell<Vec<Box<Fn(EntryStatus)>>>,
+    status_changed_callbacks: RefCell<Vec<Box<dyn Fn(EntryStatus)>>>,
 }
 
 impl_widget_wrapper!(vbox: gtk::Box, BasicPaintSpecEntryCore<A, C>

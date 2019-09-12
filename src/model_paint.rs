@@ -179,7 +179,7 @@ pub struct ModelPaintCharacteristicsEntryCore {
     transparency_entry: TransparencyEntry,
     fluorescence_entry: FluorescenceEntry,
     metallic_entry: MetallicEntry,
-    changed_callbacks: RefCell<Vec<Box<Fn()>>>,
+    changed_callbacks: RefCell<Vec<Box<dyn Fn()>>>,
 }
 
 impl ModelPaintCharacteristicsEntryCore {

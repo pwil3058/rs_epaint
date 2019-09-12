@@ -121,7 +121,7 @@ where
 {
     attr: ScalarAttribute,
     shapes: RefCell<Vec<PS>>,
-    changed_callbacks: RefCell<Vec<Box<Fn()>>>,
+    changed_callbacks: RefCell<Vec<Box<dyn Fn()>>>,
     pc: PhantomData<CI>,
 }
 

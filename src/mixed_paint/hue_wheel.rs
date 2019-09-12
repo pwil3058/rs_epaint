@@ -205,8 +205,8 @@ where
     target_colours: TargetColourShapeList,
     chosen_item: RefCell<ChosenItem<C>>,
     graticule: Graticule,
-    add_series_paint_callbacks: RefCell<Vec<Box<Fn(&SeriesPaint<C>)>>>,
-    add_mixed_paint_callbacks: RefCell<Vec<Box<Fn(&MixedPaint<C>)>>>,
+    add_series_paint_callbacks: RefCell<Vec<Box<dyn Fn(&SeriesPaint<C>)>>>,
+    add_mixed_paint_callbacks: RefCell<Vec<Box<dyn Fn(&MixedPaint<C>)>>>,
     series_paint_dialogs: RefCell<HashMap<u32, SeriesPaintDisplayDialog<A, C>>>,
     mixed_paint_dialogs: RefCell<HashMap<u32, MixedPaintDisplayDialog<A, C>>>,
 }

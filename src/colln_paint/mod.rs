@@ -76,7 +76,7 @@ where
     grid: gtk::Grid,
     colln_name_entry: gtk::Entry,
     colln_owner_entry: gtk::Entry,
-    changed_callbacks: RefCell<Vec<Box<Fn()>>>,
+    changed_callbacks: RefCell<Vec<Box<dyn Fn()>>>,
     phantom_data: PhantomData<CID>,
 }
 

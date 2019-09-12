@@ -129,7 +129,7 @@ pub struct ArtPaintCharacteristicsEntryCore {
     grid: gtk::Grid,
     permanence_entry: PermanenceEntry,
     transparency_entry: TransparencyEntry,
-    changed_callbacks: RefCell<Vec<Box<Fn()>>>,
+    changed_callbacks: RefCell<Vec<Box<dyn Fn()>>>,
 }
 
 impl ArtPaintCharacteristicsEntryCore {

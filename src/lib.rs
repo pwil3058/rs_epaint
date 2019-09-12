@@ -184,7 +184,7 @@ pub mod dialogue {
     pub struct PaintDisplayButtonSpec {
         pub label: String,
         pub tooltip_text: String,
-        pub callback: Box<Fn()>,
+        pub callback: Box<dyn Fn()>,
     }
 
     pub fn new_display_dialog<W>(
@@ -250,7 +250,7 @@ pub mod dialogue {
         id
     }
 
-    pub type DestroyedCallbacks = RefCell<Vec<Box<Fn(u32)>>>;
+    pub type DestroyedCallbacks = RefCell<Vec<Box<dyn Fn(u32)>>>;
 
     pub trait DestroyedCallbacksIfce {
         fn create() -> DestroyedCallbacks;

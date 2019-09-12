@@ -58,8 +58,8 @@ where
     paint: P,
     current_target: RefCell<Option<Colour>>,
     dialog: RefCell<Option<D>>,
-    parts_changed_callbacks: RefCell<Vec<Box<Fn(u32)>>>,
-    remove_me_callbacks: RefCell<Vec<Box<Fn(&PaintPartsSpinButton<A, C, P, D>)>>>,
+    parts_changed_callbacks: RefCell<Vec<Box<dyn Fn(u32)>>>,
+    remove_me_callbacks: RefCell<Vec<Box<dyn Fn(&PaintPartsSpinButton<A, C, P, D>)>>>,
 }
 
 impl<A, C, P, D> PartialEq for PaintPartsSpinButtonCore<A, C, P, D>
@@ -97,8 +97,8 @@ where
     ) -> PaintPartsSpinButton<A, C, P, D> {
         let adj = gtk::Adjustment::new(0.0, 0.0, 999.0, 1.0, 10.0, 0.0);
         let label_text = paint.name();
-        let parts_changed_callbacks: RefCell<Vec<Box<Fn(u32)>>> = RefCell::new(Vec::new());
-        let remove_me_callbacks: RefCell<Vec<Box<Fn(&PaintPartsSpinButton<A, C, P, D>)>>> =
+        let parts_changed_callbacks: RefCell<Vec<Box<dyn Fn(u32)>>> = RefCell::new(Vec::new());
+        let remove_me_callbacks: RefCell<Vec<Box<dyn Fn(&PaintPartsSpinButton<A, C, P, D>)>>> =
             RefCell::new(Vec::new());
         let spin_button = Rc::new(PaintPartsSpinButtonCore::<A, C, P, D> {
             event_box: gtk::EventBox::new(),
@@ -304,8 +304,8 @@ where
     is_sensitive: Cell<bool>,
     supress_change_notification: Cell<bool>,
     current_target: RefCell<Option<Colour>>,
-    contributions_changed_callbacks: RefCell<Vec<Box<Fn()>>>,
-    removal_requested_callbacks: RefCell<Vec<Box<Fn(&P)>>>,
+    contributions_changed_callbacks: RefCell<Vec<Box<dyn Fn()>>>,
+    removal_requested_callbacks: RefCell<Vec<Box<dyn Fn(&P)>>>,
 }
 
 impl_widget_wrapper!(vbox: gtk::Box, PaintComponentsBoxCore<A, C, P, D>

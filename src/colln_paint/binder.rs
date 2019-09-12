@@ -43,7 +43,7 @@ where
     notebook: gtk::Notebook,
     load_colln_button: gtk::Button,
     initiate_select_ok: Cell<bool>,
-    paint_selected_callbacks: RefCell<Vec<Box<Fn(&CollnPaint<C, CID>)>>>,
+    paint_selected_callbacks: RefCell<Vec<Box<dyn Fn(&CollnPaint<C, CID>)>>>,
     paint_collns: RefCell<Vec<(CollnPaintCollnWidget<A, C, CID>, PathBuf)>>,
     paint_colln_files_data_path: PathBuf,
 }

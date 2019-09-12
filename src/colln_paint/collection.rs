@@ -422,7 +422,7 @@ where
     initiate_select_ok: Cell<bool>,
     chosen_paint: RefCell<Option<CollnPaint<C, CID>>>,
     current_target: RefCell<Option<Colour>>,
-    paint_selected_callbacks: RefCell<Vec<Box<Fn(&CollnPaint<C, CID>)>>>,
+    paint_selected_callbacks: RefCell<Vec<Box<dyn Fn(&CollnPaint<C, CID>)>>>,
 }
 
 impl_widget_wrapper!(vbox: gtk::Box, CollnPaintCollnWidgetCore<A, C, CID>

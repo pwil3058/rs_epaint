@@ -344,8 +344,8 @@ where
     popup_menu: WrappedMenu,
     initiate_edit_ok: Cell<bool>,
     paint_dialogs: RefCell<HashMap<u32, BasicPaintDisplayDialog<A, C>>>,
-    paint_removed_callbacks: RefCell<Vec<Box<Fn(&BasicPaint<C>)>>>,
-    edit_paint_callbacks: RefCell<Vec<Box<Fn(&BasicPaint<C>)>>>,
+    paint_removed_callbacks: RefCell<Vec<Box<dyn Fn(&BasicPaint<C>)>>>,
+    edit_paint_callbacks: RefCell<Vec<Box<dyn Fn(&BasicPaint<C>)>>>,
 }
 
 impl<A, C> BasicPaintFactoryDisplayCore<A, C>

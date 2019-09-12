@@ -35,7 +35,7 @@ where
     current_target_label: gtk::Label,
     cads: Rc<A>,
     id_no: u32,
-    destroyed_callbacks: RefCell<Vec<Box<Fn(u32)>>>,
+    destroyed_callbacks: RefCell<Vec<Box<dyn Fn(u32)>>>,
 }
 
 pub type CollnPaintDisplayDialog<A, C, CID> = Rc<CollnPaintDisplayDialogCore<A, C, CID>>;
@@ -61,7 +61,7 @@ where
         self.id_no
     }
 
-    fn destroyed_callbacks(&self) -> &RefCell<Vec<Box<Fn(u32)>>> {
+    fn destroyed_callbacks(&self) -> &RefCell<Vec<Box<dyn Fn(u32)>>> {
         &self.destroyed_callbacks
     }
 }
