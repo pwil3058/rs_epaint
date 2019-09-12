@@ -22,7 +22,7 @@ use pw_gix::gtkx::coloured::*;
 use pw_gix::gtkx::dialog::*;
 
 use super::*;
-pub use dialogue::*;
+pub use crate::dialogue::*;
 
 pub struct CollnPaintDisplayDialogCore<A, C, CID>
 where

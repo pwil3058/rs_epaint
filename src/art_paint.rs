@@ -25,17 +25,17 @@ use pw_gix::colour::*;
 use pw_gix::gtkx::tree_view_column::*;
 pub use pw_gix::wrapper::*;
 
-use basic_paint::factory::*;
-use basic_paint::*;
-use characteristics::*;
-use colln_paint::collection::*;
-use error::*;
-use mixed_paint::*;
-use series_paint::*;
+use crate::basic_paint::factory::*;
+use crate::basic_paint::*;
+use crate::characteristics::*;
+use crate::colln_paint::collection::*;
+use crate::error::*;
+use crate::mixed_paint::*;
+use crate::series_paint::*;
 
-pub use basic_paint::entry::*;
-pub use mixed_paint::mixer::*;
-pub use struct_traits::SimpleCreation;
+pub use crate::basic_paint::entry::*;
+pub use crate::mixed_paint::mixer::*;
+pub use crate::struct_traits::SimpleCreation;
 
 #[derive(Debug, PartialEq, Hash, Clone, Copy)]
 pub struct ArtPaintCharacteristics {
@@ -115,7 +115,7 @@ impl CharacteristicsInterface for ArtPaintCharacteristics {
 }
 
 impl fmt::Display for ArtPaintCharacteristics {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
             "{}, {}",

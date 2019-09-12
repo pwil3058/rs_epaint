@@ -29,11 +29,11 @@ use pw_gix::colour::*;
 use pw_gix::gtkx::paned::*;
 pub use pw_gix::wrapper::*;
 
-use basic_paint::*;
-use colour_mix::*;
-use icons::mixtures_print_xpm;
-use series_paint::*;
-use standards::*;
+use crate::basic_paint::*;
+use crate::colour_mix::*;
+use crate::icons::mixtures_print_xpm;
+use crate::series_paint::*;
+use crate::standards::*;
 
 use super::collection::*;
 use super::components::*;

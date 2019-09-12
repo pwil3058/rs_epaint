@@ -25,9 +25,9 @@ use pw_gix::cairox::*;
 use pw_gix::colour::*;
 use pw_gix::wrapper::*;
 
-use basic_paint::*;
-use graticule::*;
-use shape::*;
+use crate::basic_paint::*;
+use crate::graticule::*;
+use crate::shape::*;
 
 // BASIC PAINT
 pub struct BasicPaintShape<C>

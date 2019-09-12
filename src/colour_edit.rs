@@ -32,7 +32,7 @@ use pw_gix::rgb_math::rgb_manipulator::RGBManipulator;
 
 pub use pw_gix::wrapper::*;
 
-use basic_paint::*;
+use crate::basic_paint::*;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 enum DeltaSize {

@@ -22,7 +22,7 @@ use pw_gix::cairox::*;
 use pw_gix::colour::*;
 use pw_gix::rgb_math::rgb::*;
 
-use basic_paint::*;
+use crate::basic_paint::*;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum ShapeType {

@@ -29,9 +29,9 @@ use pw_gix::gtkx::paned::*;
 use pw_gix::gtkx::tree_view_column::*;
 use pw_gix::rgb_math::rgb::*;
 
-use basic_paint::*;
-use graticule::*;
-use shape::*;
+use crate::basic_paint::*;
+use crate::graticule::*;
+use crate::shape::*;
 
 use super::display::*;
 use super::*;

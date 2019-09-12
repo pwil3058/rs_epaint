@@ -31,7 +31,7 @@ use pw_pathux;
 
 use super::collection::*;
 use super::*;
-use basic_paint::*;
+use crate::basic_paint::*;
 
 pub struct CollnPaintCollnBinderCore<A, C, CID>
 where

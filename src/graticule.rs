@@ -27,7 +27,7 @@ use pw_gix::rgb_math::angle::*;
 use pw_gix::rgb_math::hue::*;
 use pw_gix::rgb_math::rgb::*;
 
-use shape::*;
+use crate::shape::*;
 
 // CURRENT TARGET SHAPE
 pub struct CurrentTargetShape {

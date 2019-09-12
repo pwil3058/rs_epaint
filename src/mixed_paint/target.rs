@@ -24,10 +24,10 @@ use pw_gix::colour::*;
 use pw_gix::gtkx::coloured::*;
 use pw_gix::gtkx::dialog::*;
 
-use app_name;
-use basic_paint::*;
-use colour_edit::*;
-use dialogue::*;
+use crate::app_name;
+use crate::basic_paint::*;
+use crate::colour_edit::*;
+use crate::dialogue::*;
 
 #[derive(Debug, Hash)]
 pub struct TargetColourCore {

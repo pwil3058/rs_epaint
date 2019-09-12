@@ -18,18 +18,7 @@ extern crate lazy_static;
 #[macro_use]
 extern crate pw_gix;
 
-extern crate pw_pathux;
-
-extern crate chrono;
-extern crate num;
-extern crate regex;
-extern crate xml;
-
-extern crate cairo;
-extern crate gdk;
-extern crate gdk_pixbuf;
-extern crate glib;
-extern crate gtk;
+use pw_pathux;
 
 pub mod struct_traits {
     pub trait SimpleCreation {
@@ -59,9 +48,9 @@ pub mod error {
 
     use pw_gix::rgb_math::rgb;
 
-    use basic_paint::CharacteristicsInterface;
-    use characteristics::CharacteristicError;
-    use mixed_paint::MixedPaint;
+    use crate::basic_paint::CharacteristicsInterface;
+    use crate::characteristics::CharacteristicError;
+    use crate::mixed_paint::MixedPaint;
 
     #[derive(Debug)]
     pub enum PaintErrorType<C: CharacteristicsInterface> {
@@ -151,7 +140,7 @@ pub mod error {
     }
 
     impl<C: CharacteristicsInterface> fmt::Display for PaintError<C> {
-        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
             write!(f, "PaintError({:?}): {}.", self.error_type, self.msg)?;
             Ok(())
         }

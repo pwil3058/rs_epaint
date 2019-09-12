@@ -36,7 +36,7 @@ impl CharacteristicError {
 }
 
 impl fmt::Display for CharacteristicError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "CharacteristicError({}).", self.description())?;
         Ok(())
     }
@@ -214,7 +214,7 @@ impl From<Finish> for f64 {
 }
 
 impl fmt::Display for Finish {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "finish=\"{}\"", self.abbrev())
     }
 }
@@ -323,7 +323,7 @@ impl From<Transparency> for f64 {
 }
 
 impl fmt::Display for Transparency {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "transparency=\"{}\"", self.abbrev())
     }
 }
@@ -425,7 +425,7 @@ impl From<Permanence> for f64 {
 }
 
 impl fmt::Display for Permanence {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "permanence=\"{}\"", self.abbrev())
     }
 }
@@ -527,7 +527,7 @@ impl From<Fluorescence> for f64 {
 }
 
 impl fmt::Display for Fluorescence {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "fluorescence=\"{}\"", self.abbrev())
     }
 }
@@ -629,7 +629,7 @@ impl From<Metallic> for f64 {
 }
 
 impl fmt::Display for Metallic {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "metallic=\"{}\"", self.abbrev())
     }
 }

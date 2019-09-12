@@ -27,11 +27,11 @@ use pw_gix::gtkx::menu::*;
 use pw_gix::rgb_math::rgb::*;
 use pw_gix::wrapper::*;
 
-use basic_paint::*;
-use dialogue::*;
-use graticule::*;
-use series_paint::*;
-use shape::*;
+use crate::basic_paint::*;
+use crate::dialogue::*;
+use crate::graticule::*;
+use crate::series_paint::*;
+use crate::shape::*;
 
 use super::display::*;
 use super::target::*;

@@ -22,8 +22,8 @@ use gtk::{StaticType, ToValue};
 
 use pw_gix::colour::*;
 
-use basic_paint::*;
-use series_paint::*;
+use crate::basic_paint::*;
+use crate::series_paint::*;
 
 pub mod collection;
 pub mod components;

@@ -32,7 +32,7 @@ use pw_gix::rgb_math::hue::*;
 use pw_gix::rgb_math::rgb::*;
 use pw_gix::wrapper::*;
 
-use error::*;
+use crate::error::*;
 
 pub mod display;
 pub mod entry;
@@ -327,7 +327,7 @@ impl<C: CharacteristicsInterface> FromStr for BasicPaintSpec<C> {
 }
 
 impl<C: CharacteristicsInterface> fmt::Display for BasicPaintSpec<C> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
             "PaintSpec(name=\"{}\", rgb={}, {}, notes=\"{}\")",

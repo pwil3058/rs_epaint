@@ -22,13 +22,13 @@ use gtk::prelude::*;
 use pw_gix::gtkx::window::*;
 use pw_gix::wrapper::*;
 
-use basic_paint::*;
-use colln_paint::binder::*;
-use colln_paint::collection::*;
-pub use colln_paint::display::*;
-use colln_paint::editor::*;
-use colln_paint::*;
-use icons::paint_standard_xpms::*;
+use crate::basic_paint::*;
+use crate::colln_paint::binder::*;
+use crate::colln_paint::collection::*;
+pub use crate::colln_paint::display::*;
+use crate::colln_paint::editor::*;
+use crate::colln_paint::*;
+use crate::icons::paint_standard_xpms::*;
 
 #[derive(Debug, PartialEq, PartialOrd, Eq, Ord, Clone, Default, Hash)]
 pub struct PaintStandardId {

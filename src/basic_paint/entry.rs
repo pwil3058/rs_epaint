@@ -18,8 +18,8 @@ use std::rc::Rc;
 use gtk;
 use gtk::prelude::*;
 
-use basic_paint::*;
-use colour_edit::*;
+use crate::basic_paint::*;
+use crate::colour_edit::*;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum EntryStatus {

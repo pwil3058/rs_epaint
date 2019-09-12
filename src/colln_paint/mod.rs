@@ -35,9 +35,9 @@ pub mod collection;
 pub mod display;
 pub mod editor;
 
-use basic_paint::*;
-use error::*;
-pub use struct_traits::SimpleCreation;
+use crate::basic_paint::*;
+use crate::error::*;
+pub use crate::struct_traits::SimpleCreation;
 
 pub trait CollnIdInterface:
     Debug + PartialEq + PartialOrd + Eq + Ord + Clone + Default + Hash
@@ -389,7 +389,7 @@ where
     C: CharacteristicsInterface,
     CID: CollnIdInterface,
 {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
             "{} {}\n",

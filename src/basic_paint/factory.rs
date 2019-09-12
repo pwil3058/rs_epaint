@@ -26,8 +26,8 @@ use pw_gix::gtkx::menu::*;
 use pw_gix::gtkx::tree_view_column::*;
 use pw_gix::wrapper::*;
 
-use basic_paint::*;
-pub use struct_traits::SimpleCreation;
+use crate::basic_paint::*;
+pub use crate::struct_traits::SimpleCreation;
 
 use super::display::*;
 use super::hue_wheel::*;

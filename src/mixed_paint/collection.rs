@@ -30,9 +30,9 @@ use pw_gix::gtkx::tree_view_column::*;
 use pw_gix::rgb_math::rgb::*;
 use pw_gix::wrapper::*;
 
-use basic_paint::*;
-use dialogue::*;
-use error::*;
+use crate::basic_paint::*;
+use crate::dialogue::*;
+use crate::error::*;
 
 use super::components::*;
 use super::display::*;

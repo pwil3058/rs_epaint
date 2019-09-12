@@ -20,8 +20,8 @@ use gtk::prelude::*;
 use pw_gix::gtkx::coloured::*;
 use pw_gix::gtkx::dialog::*;
 
-use basic_paint::*;
-pub use dialogue::*;
+use crate::basic_paint::*;
+pub use crate::dialogue::*;
 
 pub struct BasicPaintDisplayDialogCore<A, C>
 where

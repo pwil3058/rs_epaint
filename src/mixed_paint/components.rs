@@ -26,8 +26,8 @@ use pw_gix::gtkx::coloured::*;
 use pw_gix::gtkx::menu::*;
 use pw_gix::wrapper::*;
 
-use basic_paint::*;
-use dialogue::PaintDisplayWithCurrentTarget;
+use crate::basic_paint::*;
+use crate::dialogue::PaintDisplayWithCurrentTarget;
 
 pub trait PaintPartsSpinButtonInterface<A, C, P, D>
 where

@@ -26,13 +26,13 @@ pub use pw_gix::wrapper::WidgetWrapper;
 
 use pw_pathux;
 
-use icons::colln_xpms;
-use icons::file_status_xpms::*;
+use crate::icons::colln_xpms;
+use crate::icons::file_status_xpms::*;
 
-pub use struct_traits::SimpleCreation;
+pub use crate::struct_traits::SimpleCreation;
 
-use basic_paint::entry::*;
-use basic_paint::factory::*;
+use crate::basic_paint::entry::*;
+use crate::basic_paint::factory::*;
 
 use super::*;
 

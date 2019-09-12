@@ -29,9 +29,9 @@ use pw_gix::gtkx::menu::*;
 use pw_gix::gtkx::tree_view_column::*;
 use pw_gix::wrapper::*;
 
-use basic_paint::*;
-use dialogue::*;
-use series_paint::*;
+use crate::basic_paint::*;
+use crate::dialogue::*;
+use crate::series_paint::*;
 
 use super::*;
 
