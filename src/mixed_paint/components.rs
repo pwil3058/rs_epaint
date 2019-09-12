@@ -95,7 +95,6 @@ where
         current_target: Option<&Colour>,
         sensitive: bool,
     ) -> PaintPartsSpinButton<A, C, P, D> {
-        println!("create");
         let adj = gtk::Adjustment::new(0.0, 0.0, 999.0, 1.0, 10.0, 0.0);
         let label_text = paint.name();
         let parts_changed_callbacks: RefCell<Vec<Box<dyn Fn(u32)>>> = RefCell::new(Vec::new());
