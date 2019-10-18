@@ -333,10 +333,19 @@ where
         } else {
             self.rgb().into()
         };
-        let mcsort: f64 = if let Some(colour) = self.matched_colour() {
-            colour.hue().angle().radians()
+        let hue_radians = if let Some(hue) = self.hue() {
+            hue.angle().radians()
         } else {
-            self.hue().angle().radians()
+            0.0
+        };
+        let mcsort: f64 = if let Some(colour) = self.matched_colour() {
+            if let Some(hue) = colour.hue() {
+                hue.angle().radians()
+            } else {
+                0.0
+            }
+        } else {
+            hue_radians
         };
         let mut rows = vec![
             self.name().to_value(),
@@ -352,7 +361,7 @@ where
             wrgba.to_value(),
             wfrgba.to_value(),
             hrgba.to_value(),
-            self.hue().angle().radians().to_value(),
+            hue_radians.to_value(),
             mcrgba.to_value(),
             mcsort.to_value(),
         ];

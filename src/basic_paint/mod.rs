@@ -64,7 +64,7 @@ pub trait ColouredItemInterface {
         self.colour().rgb()
     }
 
-    fn hue(&self) -> HueAngle {
+    fn hue(&self) -> Option<HueAngle> {
         self.colour().hue()
     }
 
@@ -153,6 +153,11 @@ where
         let wrgba: gdk::RGBA = self.warmth_rgb().into();
         let wfrgba: gdk::RGBA = self.warmth_rgb().best_foreground_rgb().into();
         let hrgba: gdk::RGBA = self.max_chroma_rgb().into();
+        let angle = if let Some(hue) = self.hue() {
+            hue.angle().radians()
+        } else {
+            0.0
+        };
         let mut rows = vec![
             self.name().to_value(),
             self.notes().to_value(),
@@ -167,7 +172,7 @@ where
             wrgba.to_value(),
             wfrgba.to_value(),
             hrgba.to_value(),
-            self.hue().angle().radians().to_value(),
+            angle.to_value(),
         ];
         for row in self.characteristics().tv_rows().iter() {
             rows.push(row.clone());

@@ -89,7 +89,11 @@ where
 {
     fn new(paint: &SeriesPaint<C>, attr: ScalarAttribute) -> SeriesPaintShape<C> {
         let radius = paint.scalar_attribute(attr);
-        let angle = paint.hue().angle();
+        let angle = if let Some(hue) = paint.hue() {
+            hue.angle()
+        } else {
+            pw_gix::rgb_math::angle::Angle::DEG_0
+        };
         SeriesPaintShape::<C> {
             paint: paint.clone(),
             xy: Point::from((angle, radius)),
@@ -129,7 +133,11 @@ where
 {
     fn new(paint: &MixedPaint<C>, attr: ScalarAttribute) -> MixedPaintShape<C> {
         let radius = paint.scalar_attribute(attr);
-        let angle = paint.hue().angle();
+        let angle = if let Some(hue) = paint.hue() {
+            hue.angle()
+        } else {
+            pw_gix::rgb_math::angle::Angle::DEG_0
+        };
         MixedPaintShape::<C> {
             paint: paint.clone(),
             xy: Point::from((angle, radius)),
@@ -167,7 +175,11 @@ impl ColourShapeInterface for TargetColourShape {
 impl ColouredItemShapeInterface<TargetColour> for TargetColourShape {
     fn new(target_colour: &TargetColour, attr: ScalarAttribute) -> TargetColourShape {
         let radius = target_colour.colour().scalar_attribute(attr);
-        let angle = target_colour.colour().hue().angle();
+        let angle = if let Some(hue) = target_colour.hue() {
+            hue.angle()
+        } else {
+            pw_gix::rgb_math::angle::Angle::DEG_0
+        };
         TargetColourShape {
             target_colour: target_colour.clone(),
             xy: Point::from((angle, radius)),

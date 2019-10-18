@@ -12,7 +12,7 @@ pw_gix = { path = "../../CRATES/rs_pw_gix.git" }
 #pw_pathux = { git = "https://github.com/pwil3058/rs_pw_pathux.git" }
 pw_pathux = { path = "../../CRATES/rs_pw_pathux.git" }
 chrono = "0.4"
-lazy_static = "0.2.8"
+lazy_static = "1.4.0"
 num = "0.1"
 regex = "0.2"
 xml-rs = "0.7.0"

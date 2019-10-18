@@ -50,7 +50,11 @@ where
 {
     fn new(paint: &BasicPaint<C>, attr: ScalarAttribute) -> BasicPaintShape<C> {
         let radius = paint.scalar_attribute(attr);
-        let angle = paint.hue().angle();
+        let angle = if let Some(hue) = paint.hue() {
+            hue.angle()
+        } else {
+            pw_gix::rgb_math::angle::Angle::DEG_0
+        };
         BasicPaintShape::<C> {
             paint: paint.clone(),
             xy: Point::from((angle, radius)),
