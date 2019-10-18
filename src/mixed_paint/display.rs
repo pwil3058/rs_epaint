@@ -221,6 +221,11 @@ where
         let wrgba: gdk::RGBA = self.paint.warmth_rgb().into();
         let wfrgba: gdk::RGBA = self.paint.warmth_rgb().best_foreground_rgb().into();
         let hrgba: gdk::RGBA = self.paint.max_chroma_rgb().into();
+        let hue_radians = if let Some(hue) = self.paint.hue() {
+            hue.angle().radians()
+        } else {
+            0.0
+        };
         let mut rows = vec![
             self.paint.name().to_value(),
             self.paint.notes().to_value(),
@@ -235,7 +240,7 @@ where
             wrgba.to_value(),
             wfrgba.to_value(),
             hrgba.to_value(),
-            self.paint.hue().angle().radians().to_value(),
+            hue_radians.to_value(),
             index.to_value(),
             format!("{:3}", self.parts).to_value(),
         ];

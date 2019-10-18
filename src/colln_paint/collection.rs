@@ -270,7 +270,11 @@ where
 {
     fn new(paint: &CollnPaint<C, CID>, attr: ScalarAttribute) -> CollnPaintShape<C, CID> {
         let radius = paint.scalar_attribute(attr);
-        let angle = paint.hue().angle();
+        let angle = if let Some(hue) = paint.hue() {
+            hue.angle()
+        } else {
+            pw_gix::rgb_math::angle::Angle::DEG_0
+        };
         CollnPaintShape::<C, CID> {
             paint: paint.clone(),
             xy: Point::from((angle, radius)),

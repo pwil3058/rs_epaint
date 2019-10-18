@@ -48,9 +48,9 @@ impl DeltaSize {
 
     fn for_hue(&self) -> Angle {
         match *self {
-            DeltaSize::Small => DEG_1 * 0.5,
-            DeltaSize::Normal => DEG_1,
-            DeltaSize::Large => DEG_5,
+            DeltaSize::Small => 0.5.into(),
+            DeltaSize::Normal => 1.0.into(),
+            DeltaSize::Large => 5.0.into(),
         }
     }
 }
@@ -69,7 +69,7 @@ where
     A: ColourAttributesInterface + 'static,
 {
     vbox: gtk::Box,
-    rgb_manipulator: RGBManipulator,
+    rgb_manipulator: RefCell<RGBManipulator>,
     cads: Rc<A>,
     rgb_entry: RGBHexEntryBox,
     drawing_area: gtk::DrawingArea,
@@ -101,7 +101,7 @@ where
     pub fn set_rgb(&self, rgb: RGB) -> Colour {
         let colour = Colour::from(rgb);
         self.rgb_entry.set_rgb(rgb);
-        self.rgb_manipulator.set_rgb(rgb);
+        self.rgb_manipulator.borrow_mut().set_rgb(rgb);
         self.cads.set_colour(Some(&colour));
         self.incr_value_btn
             .set_widget_colour_rgb(rgb * 0.8 + WHITE * 0.2);
@@ -123,20 +123,20 @@ where
             self.decr_chroma_btn.set_widget_colour_rgb(low_chroma_rgb);
 
             self.hue_left_btn
-                .set_widget_colour_rgb(rgb.components_rotated(DEG_30));
+                .set_widget_colour_rgb(rgb.components_rotated(Angle::DEG_30));
             self.hue_right_btn
-                .set_widget_colour_rgb(rgb.components_rotated(-DEG_30));
+                .set_widget_colour_rgb(rgb.components_rotated(-Angle::DEG_30));
         }
         self.drawing_area.queue_draw();
         colour
     }
 
     pub fn get_rgb(&self) -> RGB {
-        self.rgb_manipulator.get_rgb()
+        self.rgb_manipulator.borrow().get_rgb()
     }
 
     pub fn get_colour(&self) -> Colour {
-        self.rgb_manipulator.get_rgb().into()
+        self.rgb_manipulator.borrow().get_rgb().into()
     }
 
     fn set_rgb_and_inform(&self, rgb: RGB) {
@@ -147,7 +147,7 @@ where
     }
 
     fn draw(&self, _drawing_area: &gtk::DrawingArea, cairo_context: &cairo::Context) {
-        let rgb = self.rgb_manipulator.get_rgb();
+        let rgb = self.rgb_manipulator.borrow().get_rgb();
         cairo_context.set_source_colour_rgb(rgb);
         cairo_context.paint();
         for sample in self.samples.borrow().iter() {
@@ -203,7 +203,7 @@ where
     fn create(extra_buttons: &Vec<gtk::Button>) -> Self {
         let ced = Rc::new(ColourEditorCore::<A> {
             vbox: gtk::Box::new(gtk::Orientation::Vertical, 0),
-            rgb_manipulator: RGBManipulator::new(),
+            rgb_manipulator: RefCell::new(RGBManipulator::new()),
             cads: A::create(),
             rgb_entry: RGBHexEntryBox::create(),
             drawing_area: gtk::DrawingArea::new(),
@@ -299,78 +299,94 @@ where
         if A::scalar_attributes().contains(&ScalarAttribute::Greyness) {
             let ced_c = ced.clone();
             ced.incr_greyness_btn.connect_clicked(move |_| {
-                if ced_c
+                let changed = ced_c
                     .rgb_manipulator
-                    .decr_chroma(ced_c.delta_size.get().for_chroma())
-                {
-                    ced_c.set_rgb_and_inform(ced_c.rgb_manipulator.get_rgb());
+                    .borrow_mut()
+                    .decr_chroma(ced_c.delta_size.get().for_chroma());
+                if changed {
+                    let new_rgb = ced_c.rgb_manipulator.borrow().get_rgb();
+                    ced_c.set_rgb_and_inform(new_rgb);
                 };
             });
             let ced_c = ced.clone();
             ced.decr_greyness_btn.connect_clicked(move |_| {
-                if ced_c
+                let changed = ced_c
                     .rgb_manipulator
-                    .incr_chroma(ced_c.delta_size.get().for_chroma())
-                {
-                    ced_c.set_rgb_and_inform(ced_c.rgb_manipulator.get_rgb());
+                    .borrow_mut()
+                    .incr_chroma(ced_c.delta_size.get().for_chroma());
+                if changed {
+                    let new_rgb = ced_c.rgb_manipulator.borrow().get_rgb();
+                    ced_c.set_rgb_and_inform(new_rgb);
                 };
             });
         } else {
             let ced_c = ced.clone();
             ced.decr_chroma_btn.connect_clicked(move |_| {
-                if ced_c
+                let changed = ced_c
                     .rgb_manipulator
-                    .decr_chroma(ced_c.delta_size.get().for_chroma())
-                {
-                    ced_c.set_rgb_and_inform(ced_c.rgb_manipulator.get_rgb());
+                    .borrow_mut()
+                    .decr_chroma(ced_c.delta_size.get().for_chroma());
+                if changed {
+                    let new_rgb = ced_c.rgb_manipulator.borrow().get_rgb();
+                    ced_c.set_rgb_and_inform(new_rgb);
                 };
             });
             let ced_c = ced.clone();
             ced.incr_chroma_btn.connect_clicked(move |_| {
-                if ced_c
+                let changed = ced_c
                     .rgb_manipulator
-                    .incr_chroma(ced_c.delta_size.get().for_chroma())
-                {
-                    ced_c.set_rgb_and_inform(ced_c.rgb_manipulator.get_rgb());
+                    .borrow_mut()
+                    .incr_chroma(ced_c.delta_size.get().for_chroma());
+                if changed {
+                    let new_rgb = ced_c.rgb_manipulator.borrow().get_rgb();
+                    ced_c.set_rgb_and_inform(new_rgb);
                 };
             });
         }
 
         let ced_c = ced.clone();
         ced.decr_value_btn.connect_clicked(move |_| {
-            if ced_c
+            let changed = ced_c
                 .rgb_manipulator
-                .decr_value(ced_c.delta_size.get().for_value())
-            {
-                ced_c.set_rgb_and_inform(ced_c.rgb_manipulator.get_rgb());
+                .borrow_mut()
+                .decr_value(ced_c.delta_size.get().for_value());
+            if changed {
+                let new_rgb = ced_c.rgb_manipulator.borrow().get_rgb();
+                ced_c.set_rgb_and_inform(new_rgb);
             };
         });
         let ced_c = ced.clone();
         ced.incr_value_btn.connect_clicked(move |_| {
-            if ced_c
+            let changed = ced_c
                 .rgb_manipulator
-                .incr_value(ced_c.delta_size.get().for_value())
-            {
-                ced_c.set_rgb_and_inform(ced_c.rgb_manipulator.get_rgb());
+                .borrow_mut()
+                .incr_value(ced_c.delta_size.get().for_value());
+            if changed {
+                let new_rgb = ced_c.rgb_manipulator.borrow().get_rgb();
+                ced_c.set_rgb_and_inform(new_rgb);
             };
         });
 
         let ced_c = ced.clone();
         ced.hue_left_btn.connect_clicked(move |_| {
-            if ced_c
+            let changed = ced_c
                 .rgb_manipulator
-                .rotate(ced_c.delta_size.get().for_hue())
-            {
-                ced_c.set_rgb_and_inform(ced_c.rgb_manipulator.get_rgb());
+                .borrow_mut()
+                .rotate(ced_c.delta_size.get().for_hue());
+            if changed {
+                let new_rgb = ced_c.rgb_manipulator.borrow().get_rgb();
+                ced_c.set_rgb_and_inform(new_rgb);
             };
         });
         let ced_c = ced.clone();
         ced.hue_right_btn.connect_clicked(move |_| {
-            if ced_c
+            let changed = ced_c
                 .rgb_manipulator
-                .rotate(-ced_c.delta_size.get().for_hue())
-            {
-                ced_c.set_rgb_and_inform(ced_c.rgb_manipulator.get_rgb());
+                .borrow_mut()
+                .rotate(-ced_c.delta_size.get().for_hue());
+            if changed {
+                let new_rgb = ced_c.rgb_manipulator.borrow().get_rgb();
+                ced_c.set_rgb_and_inform(new_rgb);
             };
         });
 
