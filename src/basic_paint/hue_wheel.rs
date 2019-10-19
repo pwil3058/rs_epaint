@@ -53,7 +53,7 @@ where
         let angle: normalised_angles::Angle<f64> = if let Some(hue) = paint.hue() {
             hue.angle().into()
         } else {
-            pw_gix::rgb_math::angle::Angle::DEG_0.into()
+            normalised_angles::Degrees::DEG_0.into()
         };
         BasicPaintShape::<C> {
             paint: paint.clone(),

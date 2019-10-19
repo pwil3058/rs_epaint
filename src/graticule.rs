@@ -9,9 +9,10 @@ use glib::signal::SignalHandlerId;
 use gtk;
 use gtk::prelude::*;
 
+use normalised_angles::Degrees;
+
 use pw_gix::cairox::*;
 use pw_gix::colour::*;
-use pw_gix::rgb_math::angle::*;
 use pw_gix::rgb_math::hue::*;
 use pw_gix::rgb_math::rgb::*;
 
@@ -43,7 +44,7 @@ impl CurrentTargetShape {
         let angle: normalised_angles::Angle<f64> = if let Some(hue) = colour.hue() {
             hue.angle().into()
         } else {
-            pw_gix::rgb_math::angle::Angle::DEG_0.into()
+            normalised_angles::Degrees::DEG_0.into()
         };
         CurrentTargetShape {
             colour: colour.clone(),
@@ -146,7 +147,7 @@ impl GraticuleCore {
 
         cairo_context.set_line_width(4.0);
         for i in 0..6 {
-            let angle = Angle::DEG_60 * i;
+            let angle = Degrees::DEG_60 * i;
             let hue = HueAngle::from(angle);
             let g_angle: normalised_angles::Angle<f64> = angle.into();
             cairo_context.set_source_colour_rgb(hue.max_chroma_rgb());

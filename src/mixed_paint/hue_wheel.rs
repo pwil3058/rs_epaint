@@ -92,7 +92,7 @@ where
         let angle: normalised_angles::Angle<f64> = if let Some(hue) = paint.hue() {
             hue.angle().into()
         } else {
-            pw_gix::rgb_math::angle::Angle::DEG_0.into()
+            normalised_angles::Degrees::DEG_0.into()
         };
         SeriesPaintShape::<C> {
             paint: paint.clone(),
@@ -136,7 +136,7 @@ where
         let angle: normalised_angles::Angle<f64> = if let Some(hue) = paint.hue() {
             hue.angle().into()
         } else {
-            pw_gix::rgb_math::angle::Angle::DEG_0.into()
+            normalised_angles::Degrees::DEG_0.into()
         };
         MixedPaintShape::<C> {
             paint: paint.clone(),
@@ -178,7 +178,7 @@ impl ColouredItemShapeInterface<TargetColour> for TargetColourShape {
         let angle: normalised_angles::Angle<f64> = if let Some(hue) = target_colour.hue() {
             hue.angle().into()
         } else {
-            pw_gix::rgb_math::angle::Angle::DEG_0.into()
+            normalised_angles::Degrees::DEG_0.into()
         };
         TargetColourShape {
             target_colour: target_colour.clone(),

@@ -9,12 +9,13 @@ use gdk_pixbuf;
 use gtk;
 use gtk::prelude::*;
 
+use normalised_angles::Degrees;
+
 use pw_gix::cairox::*;
 use pw_gix::colour::*;
 use pw_gix::gtkx::coloured::*;
 use pw_gix::gtkx::entry::*;
 use pw_gix::gtkx::menu::*;
-use pw_gix::rgb_math::angle::*;
 use pw_gix::rgb_math::rgb::*;
 use pw_gix::rgb_math::rgb_manipulator::RGBManipulator;
 
@@ -46,7 +47,7 @@ impl DeltaSize {
         }
     }
 
-    fn for_hue(&self) -> Angle {
+    fn for_hue(&self) -> Degrees<f64> {
         match *self {
             DeltaSize::Small => 0.5.into(),
             DeltaSize::Normal => 1.0.into(),
@@ -123,9 +124,9 @@ where
             self.decr_chroma_btn.set_widget_colour_rgb(low_chroma_rgb);
 
             self.hue_left_btn
-                .set_widget_colour_rgb(rgb.components_rotated(Angle::DEG_30));
+                .set_widget_colour_rgb(rgb.components_rotated(Degrees::DEG_30));
             self.hue_right_btn
-                .set_widget_colour_rgb(rgb.components_rotated(-Angle::DEG_30));
+                .set_widget_colour_rgb(rgb.components_rotated(-Degrees::DEG_30));
         }
         self.drawing_area.queue_draw();
         colour
