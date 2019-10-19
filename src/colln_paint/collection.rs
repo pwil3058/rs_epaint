@@ -270,10 +270,10 @@ where
 {
     fn new(paint: &CollnPaint<C, CID>, attr: ScalarAttribute) -> CollnPaintShape<C, CID> {
         let radius = paint.scalar_attribute(attr);
-        let angle = if let Some(hue) = paint.hue() {
-            hue.angle()
+        let angle: normalised_angles::Angle<f64> = if let Some(hue) = paint.hue() {
+            hue.angle().into()
         } else {
-            pw_gix::rgb_math::angle::Angle::DEG_0
+            pw_gix::rgb_math::angle::Angle::DEG_0.into()
         };
         CollnPaintShape::<C, CID> {
             paint: paint.clone(),

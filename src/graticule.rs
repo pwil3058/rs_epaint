@@ -40,10 +40,10 @@ impl ColourShapeInterface for CurrentTargetShape {
 impl CurrentTargetShape {
     pub fn create(colour: &Colour, attr: ScalarAttribute) -> CurrentTargetShape {
         let radius = colour.scalar_attribute(attr);
-        let angle = if let Some(hue) = colour.hue() {
-            hue.angle()
+        let angle: normalised_angles::Angle<f64> = if let Some(hue) = colour.hue() {
+            hue.angle().into()
         } else {
-            pw_gix::rgb_math::angle::Angle::DEG_0
+            pw_gix::rgb_math::angle::Angle::DEG_0.into()
         };
         CurrentTargetShape {
             colour: colour.clone(),
@@ -148,8 +148,9 @@ impl GraticuleCore {
         for i in 0..6 {
             let angle = Angle::DEG_60 * i;
             let hue = HueAngle::from(angle);
+            let g_angle: normalised_angles::Angle<f64> = angle.into();
             cairo_context.set_source_colour_rgb(hue.max_chroma_rgb());
-            let eol = self.transform(Point::from((angle, 1.0)));
+            let eol = self.transform(Point::from((g_angle, 1.0)));
             cairo_context.draw_line(self.centre.get(), eol);
             cairo_context.stroke();
         }

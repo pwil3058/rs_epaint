@@ -5,6 +5,9 @@ authors = ["Peter Williams <pwil3058@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+# TODO: change normalised_angles dependency when it goes public
+#normalised_angles = { git = "https://github.com/pwil3058/rs_normalised_angles.git" }
+normalised_angles = { path = "../../CRATES/rs_normalised_angles.git" }
 # TODO: change pw_gix dependency when it goes public
 #pw_gix = { git = "https://github.com/pwil3058/rs_pw_gix.git" }
 pw_gix = { path = "../../CRATES/rs_pw_gix.git" }
