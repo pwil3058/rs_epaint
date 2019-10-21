@@ -11,14 +11,13 @@ use gdk;
 use gtk;
 use gtk::prelude::*;
 
-use pw_gix::colour::*;
 use pw_gix::gtkx::list_store::*;
 use pw_gix::gtkx::menu::*;
 use pw_gix::gtkx::tree_view_column::*;
-use pw_gix::rgb_math::rgb::*;
 use pw_gix::wrapper::*;
 
 use crate::basic_paint::*;
+use crate::colour::*;
 use crate::dialogue::*;
 use crate::error::*;
 
@@ -79,14 +78,17 @@ impl<C: CharacteristicsInterface> MixedPaintFactoryCore<C> {
         }
         let mut total_parts: u32 = parts.iter().sum();
         total_parts /= gcd;
-        let mut new_rgb: RGB = BLACK;
+        let mut new_rgb_array: [f64; 3] = [0.0, 0.0, 0.0];
         let mut p_components: Vec<PaintComponent<C>> = Vec::new();
         let mut new_c_floats = vec![0.0_f64; C::tv_row_len()];
         for (series_paint, mut parts) in sp_components {
             if parts > 0 {
                 parts /= gcd;
                 let weight: f64 = parts as f64 / total_parts as f64;
-                new_rgb += series_paint.rgb() * weight;
+                let rgb = series_paint.rgb();
+                new_rgb_array[0] += rgb[0] * weight;
+                new_rgb_array[1] += rgb[1] * weight;
+                new_rgb_array[2] += rgb[2] * weight;
                 let floats = series_paint.characteristics().to_floats();
                 for (i, val) in new_c_floats.iter_mut().enumerate() {
                     *val = *val + floats[i] * weight;
@@ -99,7 +101,10 @@ impl<C: CharacteristicsInterface> MixedPaintFactoryCore<C> {
             if parts > 0 {
                 parts /= gcd;
                 let weight: f64 = parts as f64 / total_parts as f64;
-                new_rgb += mixed_paint.rgb() * weight;
+                let rgb = mixed_paint.rgb();
+                new_rgb_array[0] += rgb[0] * weight;
+                new_rgb_array[1] += rgb[1] * weight;
+                new_rgb_array[2] += rgb[2] * weight;
                 let floats = mixed_paint.characteristics().to_floats();
                 for (i, val) in new_c_floats.iter_mut().enumerate() {
                     *val = *val + floats[i] * weight;
@@ -116,6 +121,7 @@ impl<C: CharacteristicsInterface> MixedPaintFactoryCore<C> {
             None
         };
         self.last_mixture_id.set(name_num);
+        let new_rgb: RGB = new_rgb_array.into();
         let mixed_paint = Rc::new(MixedPaintCore::<C> {
             colour: Colour::from(new_rgb),
             name: format!("Mix #{:03}", name_num),
@@ -553,5 +559,4 @@ where
 #[cfg(test)]
 mod tests {
     //use super::*;
-
 }

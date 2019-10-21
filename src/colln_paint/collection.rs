@@ -15,7 +15,6 @@ use pw_gix::gtkx::list_store::*;
 use pw_gix::gtkx::menu::*;
 use pw_gix::gtkx::paned::*;
 use pw_gix::gtkx::tree_view_column::*;
-use pw_gix::rgb_math::rgb::*;
 
 use crate::basic_paint::*;
 use crate::graticule::*;

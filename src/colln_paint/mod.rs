@@ -15,7 +15,6 @@ use std::str::FromStr;
 use gtk;
 use gtk::prelude::*;
 
-use pw_gix::colour::*;
 use pw_gix::wrapper::*;
 
 pub mod binder;
@@ -24,6 +23,7 @@ pub mod display;
 pub mod editor;
 
 use crate::basic_paint::*;
+use crate::colour::*;
 use crate::error::*;
 pub use crate::struct_traits::SimpleCreation;
 
@@ -160,7 +160,7 @@ where
 }
 
 // COLLECTION PAINT CORE
-#[derive(Debug, Hash, Clone)]
+#[derive(Debug, Clone)]
 pub struct CollnPaintCore<C, CID>
 where
     C: CharacteristicsInterface,

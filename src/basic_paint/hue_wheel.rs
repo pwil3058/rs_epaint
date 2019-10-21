@@ -10,7 +10,6 @@ use gtk;
 use gtk::prelude::*;
 
 use pw_gix::cairox::*;
-use pw_gix::colour::*;
 use pw_gix::wrapper::*;
 
 use crate::basic_paint::*;

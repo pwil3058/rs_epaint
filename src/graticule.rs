@@ -12,10 +12,8 @@ use gtk::prelude::*;
 use normalised_angles::Degrees;
 
 use pw_gix::cairox::*;
-use pw_gix::colour::*;
-use pw_gix::rgb_math::hue::*;
-use pw_gix::rgb_math::rgb::*;
 
+use crate::colour::*;
 use crate::shape::*;
 
 // CURRENT TARGET SHAPE
@@ -135,10 +133,10 @@ impl GraticuleCore {
     }
 
     fn draw(&self, cairo_context: &cairo::Context) {
-        cairo_context.set_source_colour_rgb(WHITE * 0.5);
+        cairo_context.set_source_colour_rgb(RGB::WHITE * 0.5);
         cairo_context.paint();
 
-        cairo_context.set_source_colour_rgb(WHITE * 0.75);
+        cairo_context.set_source_colour_rgb(RGB::WHITE * 0.75);
         let n_rings: u8 = 10;
         for i in 0..n_rings {
             let radius = self.radius.get() * (i as f64 + 1.0) / n_rings as f64;
@@ -148,7 +146,7 @@ impl GraticuleCore {
         cairo_context.set_line_width(4.0);
         for i in 0..6 {
             let angle = Degrees::DEG_60 * i;
-            let hue = HueAngle::from(angle);
+            let hue = Hue::from(angle);
             let g_angle: normalised_angles::Angle<f64> = angle.into();
             cairo_context.set_source_colour_rgb(hue.max_chroma_rgb());
             let eol = self.transform(Point::from((g_angle, 1.0)));

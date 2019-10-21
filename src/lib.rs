@@ -26,6 +26,34 @@ pub mod struct_traits {
     }
 }
 
+pub mod colour {
+    pub use colour_math::{
+        rgb::{RGBError, RGB16, RGB8},
+        ColourInterface, ScalarAttribute,
+    };
+    use gdk;
+
+    pub type Colour = colour_math::Colour<f64>;
+    pub type Hue = colour_math::hue::Hue<f64>;
+    pub type RGB = colour_math::rgb::RGB<f64>;
+    pub type RGBManipulator = colour_math::manipulator::RGBManipulator<f64>;
+
+    pub trait GdkConvert {
+        fn into_gdk_rgba(&self) -> gdk::RGBA;
+    }
+
+    impl GdkConvert for RGB {
+        fn into_gdk_rgba(&self) -> gdk::RGBA {
+            gdk::RGBA {
+                red: self[0],
+                green: self[1],
+                blue: self[2],
+                alpha: 1.0,
+            }
+        }
+    }
+}
+
 pub mod error {
     use std::convert::From;
     use std::error::Error;
@@ -34,10 +62,9 @@ pub mod error {
 
     use regex;
 
-    use pw_gix::rgb_math::rgb;
-
     use crate::basic_paint::CharacteristicsInterface;
     use crate::characteristics::CharacteristicError;
+    use crate::colour::*;
     use crate::mixed_paint::MixedPaint;
 
     #[derive(Debug)]
@@ -117,12 +144,10 @@ pub mod error {
         }
     }
 
-    impl<C: CharacteristicsInterface> From<rgb::RGBError> for PaintError<C> {
-        fn from(rgb_error: rgb::RGBError) -> PaintError<C> {
+    impl<C: CharacteristicsInterface> From<RGBError> for PaintError<C> {
+        fn from(rgb_error: RGBError) -> PaintError<C> {
             match rgb_error {
-                rgb::RGBError::MalformedText(string) => {
-                    PaintErrorType::MalformedText(string).into()
-                }
+                RGBError::MalformedText(string) => PaintErrorType::MalformedText(string).into(),
             }
         }
     }
@@ -150,13 +175,13 @@ pub mod dialogue {
     use glib::signal::SignalHandlerId;
     use gtk::{self, DialogExt, GtkWindowExt, GtkWindowExtManual, WidgetExt};
 
-    use pw_gix::colour::*;
     use pw_gix::wrapper::{parent_none, WidgetWrapper};
 
     use super::app_name;
     use super::basic_paint::{
         BasicPaintInterface, CharacteristicsInterface, ColourAttributesInterface,
     };
+    use super::colour::*;
 
     pub struct PaintDisplayButtonSpec {
         pub label: String,

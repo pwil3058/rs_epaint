@@ -9,7 +9,6 @@ use std::rc::Rc;
 use std::str::FromStr;
 
 use pw_gix::colour::attributes::*;
-use pw_gix::colour::*;
 use pw_gix::gtkx::tree_view_column::*;
 pub use pw_gix::wrapper::*;
 
@@ -17,6 +16,7 @@ use crate::basic_paint::factory::*;
 use crate::basic_paint::*;
 use crate::characteristics::*;
 use crate::colln_paint::collection::*;
+use crate::colour::*;
 use crate::error::*;
 use crate::mixed_paint::*;
 use crate::series_paint::*;
@@ -430,7 +430,7 @@ pub fn create_ideal_model_paint_series() -> ModelPaintSeries {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pw_gix::rgb_math::rgb::*;
+    use crate::colour::*;
 
     const OBSOLETE_PAINT_STR: &str =
 "Manufacturer: Tamiya
@@ -456,9 +456,9 @@ NamedColour(name=\"XF 4: Yellow Green *\", rgb=RGB(0xAA00, 0xAE00, 0x4000), tran
             assert_eq!(spec.characteristics.metallic, Metallic::Nonmetallic);
             assert_eq!(spec.notes, "FS37925 RAL9016 RLM21");
             let rgb16 = RGB16::from(spec.rgb);
-            assert_eq!(rgb16.red, u16::from_str_radix("F800", 16).unwrap());
-            assert_eq!(rgb16.green, u16::from_str_radix("FA00", 16).unwrap());
-            assert_eq!(rgb16.blue, u16::from_str_radix("F600", 16).unwrap());
+            assert_eq!(rgb16[0], u16::from_str_radix("F800", 16).unwrap());
+            assert_eq!(rgb16[1], u16::from_str_radix("FA00", 16).unwrap());
+            assert_eq!(rgb16[2], u16::from_str_radix("F600", 16).unwrap());
         } else {
             panic!("File: {:?} Line: {:?}", file!(), line!())
         }
@@ -479,9 +479,9 @@ NamedColour(name=\"XF 4: Yellow Green *\", rgb=RGB(0xAA00, 0xAE00, 0x4000), tran
             assert_eq!(spec.characteristics.metallic, Metallic::Nonmetallic);
             assert_eq!(spec.notes, "");
             let rgb16 = RGB16::from(spec.rgb);
-            assert_eq!(rgb16.red, u16::from_str_radix("F800", 16).unwrap());
-            assert_eq!(rgb16.green, u16::from_str_radix("FA00", 16).unwrap());
-            assert_eq!(rgb16.blue, u16::from_str_radix("F600", 16).unwrap());
+            assert_eq!(rgb16[0], u16::from_str_radix("F800", 16).unwrap());
+            assert_eq!(rgb16[1], u16::from_str_radix("FA00", 16).unwrap());
+            assert_eq!(rgb16[2], u16::from_str_radix("F600", 16).unwrap());
         } else {
             panic!("File: {:?} Line: {:?}", file!(), line!())
         }
@@ -602,14 +602,14 @@ NamedColour(name=\"XF 4: Yellow Green *\", rgb=RGB(0xAA00, 0xAE00, 0x4000), tran
     fn paint_model_paint_spec_ideal_series() {
         if let Ok(spec) = ModelPaintSeriesSpec::from_str(IDEAL_PAINT_STR) {
             for pair in [
-                ("Red", RED),
-                ("Green", GREEN),
-                ("Blue", BLUE),
-                ("Cyan", CYAN),
-                ("Magenta", MAGENTA),
-                ("Yellow", YELLOW),
-                ("Black", BLACK),
-                ("White", WHITE),
+                ("Red", RGB::RED),
+                ("Green", RGB::GREEN),
+                ("Blue", RGB::BLUE),
+                ("Cyan", RGB::CYAN),
+                ("Magenta", RGB::MAGENTA),
+                ("Yellow", RGB::YELLOW),
+                ("Black", RGB::BLACK),
+                ("White", RGB::WHITE),
             ]
             .iter()
             {

@@ -2,8 +2,7 @@
 
 use std::convert::From;
 
-use pw_gix::colour::*;
-use pw_gix::rgb_math::rgb::*;
+use crate::colour::*;
 
 #[derive(Debug, PartialEq)]
 pub struct ColourComponent {
@@ -13,27 +12,32 @@ pub struct ColourComponent {
 
 #[derive(Debug, PartialEq)]
 pub struct ColourMixer {
-    rgb_sum: RGB,
+    rgb_sum: [f64; 3],
     total_parts: u32,
 }
 
 impl ColourMixer {
     pub fn new() -> ColourMixer {
         ColourMixer {
-            rgb_sum: RGB::from((0.0, 0.0, 0.0)),
+            rgb_sum: [0.0, 0.0, 0.0],
             total_parts: 0,
         }
     }
 
     pub fn reset(&mut self) {
         self.total_parts = 0;
-        self.rgb_sum = RGB::from((0.0, 0.0, 0.0));
+        self.rgb_sum = [0.0, 0.0, 0.0];
     }
 
     pub fn get_colour(&self) -> Option<Colour> {
         if self.total_parts > 0 {
-            let rgb = self.rgb_sum / self.total_parts;
-            Some(Colour::from(rgb))
+            let divisor = self.total_parts as f64;
+            let array: [f64; 3] = [
+                self.rgb_sum[0] / divisor,
+                self.rgb_sum[1] / divisor,
+                self.rgb_sum[2] / divisor,
+            ];
+            Some(Colour::from(RGB::from(array)))
         } else {
             None
         }
@@ -41,7 +45,9 @@ impl ColourMixer {
 
     pub fn add(&mut self, colour: &Colour, parts: u32) {
         self.total_parts += parts;
-        self.rgb_sum += colour.rgb() * parts;
+        self.rgb_sum[0] += colour.rgb()[0] * parts as f64;
+        self.rgb_sum[1] += colour.rgb()[1] * parts as f64;
+        self.rgb_sum[2] += colour.rgb()[2] * parts as f64;
     }
 }
 
@@ -63,7 +69,7 @@ mod tests {
     fn paint_colour_mix_test() {
         let mut colour_mixer = ColourMixer::new();
         assert_eq!(colour_mixer.get_colour(), None);
-        colour_mixer.add(&Colour::from(RED), 10);
-        assert_eq!(colour_mixer.get_colour(), Some(Colour::from(RED)));
+        colour_mixer.add(&Colour::from(RGB::RED), 10);
+        assert_eq!(colour_mixer.get_colour(), Some(Colour::from(RGB::RED)));
     }
 }

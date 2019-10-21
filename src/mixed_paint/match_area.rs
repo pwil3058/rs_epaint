@@ -10,10 +10,10 @@ use gtk::prelude::*;
 
 use pw_gix::cairox::*;
 
-use pw_gix::colour::*;
 use pw_gix::gtkx::menu::*;
-use pw_gix::rgb_math::rgb::*;
 pub use pw_gix::wrapper::*;
+
+use crate::colour::*;
 
 use super::*;
 
@@ -41,7 +41,7 @@ impl ColourMatchAreaCore {
         if let Some(ref colour) = *self.mixed_colour.borrow() {
             cairo_context.set_source_colour(&colour);
         } else {
-            cairo_context.set_source_colour_rgb(BLACK);
+            cairo_context.set_source_colour_rgb(RGB::BLACK);
         };
         cairo_context.paint();
         if let Some(ref colour) = *self.target_colour.borrow() {

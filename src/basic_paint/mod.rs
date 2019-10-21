@@ -15,11 +15,9 @@ use gtk::StaticType;
 
 use regex::*;
 
-use pw_gix::colour::*;
-use pw_gix::rgb_math::hue::*;
-use pw_gix::rgb_math::rgb::*;
 use pw_gix::wrapper::*;
 
+use crate::colour::*;
 use crate::error::*;
 
 pub mod display;
@@ -64,7 +62,7 @@ pub trait ColouredItemInterface {
         self.colour().rgb()
     }
 
-    fn hue(&self) -> Option<HueAngle> {
+    fn hue(&self) -> Option<Hue> {
         self.colour().hue()
     }
 
@@ -146,13 +144,13 @@ where
     }
 
     fn tv_rows(&self) -> Vec<gtk::Value> {
-        let rgba: gdk::RGBA = self.rgb().into();
-        let frgba: gdk::RGBA = self.rgb().best_foreground_rgb().into();
-        let mrgba: gdk::RGBA = self.monotone_rgb().into();
-        let mfrgba: gdk::RGBA = self.monotone_rgb().best_foreground_rgb().into();
-        let wrgba: gdk::RGBA = self.warmth_rgb().into();
-        let wfrgba: gdk::RGBA = self.warmth_rgb().best_foreground_rgb().into();
-        let hrgba: gdk::RGBA = self.max_chroma_rgb().into();
+        let rgba: gdk::RGBA = self.rgb().into_gdk_rgba();
+        let frgba: gdk::RGBA = self.rgb().best_foreground_rgb().into_gdk_rgba();
+        let mrgba: gdk::RGBA = self.monotone_rgb().into_gdk_rgba();
+        let mfrgba: gdk::RGBA = self.monotone_rgb().best_foreground_rgb().into_gdk_rgba();
+        let wrgba: gdk::RGBA = self.warmth_rgb().into_gdk_rgba();
+        let wfrgba: gdk::RGBA = self.warmth_rgb().best_foreground_rgb().into_gdk_rgba();
+        let hrgba: gdk::RGBA = self.max_chroma_rgb().into_gdk_rgba();
         let angle = if let Some(hue) = self.hue() {
             hue.angle().radians()
         } else {
@@ -200,7 +198,7 @@ impl<C: CharacteristicsInterface> From<BasicPaint<C>> for BasicPaintSpec<C> {
     }
 }
 
-#[derive(Debug, Hash, Clone)]
+#[derive(Debug, Clone)]
 pub struct BasicPaintCore<C: CharacteristicsInterface> {
     colour: Colour,
     name: String,

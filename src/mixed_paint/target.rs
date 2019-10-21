@@ -8,16 +8,16 @@ use gtk::{self, WidgetExt};
 use std::cmp::*;
 use std::rc::Rc;
 
-use pw_gix::colour::*;
 use pw_gix::gtkx::coloured::*;
 use pw_gix::gtkx::dialog::*;
 
 use crate::app_name;
 use crate::basic_paint::*;
+use crate::colour::*;
 use crate::colour_edit::*;
 use crate::dialogue::*;
 
-#[derive(Debug, Hash)]
+#[derive(Debug)]
 pub struct TargetColourCore {
     name: String,
     notes: String,

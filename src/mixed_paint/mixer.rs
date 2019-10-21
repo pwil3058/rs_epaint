@@ -13,11 +13,11 @@ use gdk_pixbuf::Pixbuf;
 use gtk;
 use gtk::prelude::*;
 
-use pw_gix::colour::*;
 use pw_gix::gtkx::paned::*;
 pub use pw_gix::wrapper::*;
 
 use crate::basic_paint::*;
+use crate::colour::*;
 use crate::colour_mix::*;
 use crate::icons::mixtures_print_xpm;
 use crate::series_paint::*;

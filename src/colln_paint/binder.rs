@@ -10,7 +10,6 @@ use std::rc::Rc;
 use gtk;
 use gtk::prelude::*;
 
-use pw_gix::colour::*;
 use pw_gix::gtkx::notebook::*;
 use pw_gix::recollections::{recall, remember};
 use pw_gix::wrapper::*;

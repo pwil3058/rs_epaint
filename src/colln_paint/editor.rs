@@ -9,7 +9,6 @@ use std::rc::Rc;
 use pw_gix::gtkx::coloured::*;
 use pw_gix::gtkx::paned::RememberPosition;
 use pw_gix::recollections::{recall, remember};
-use pw_gix::rgb_math::rgb::*;
 pub use pw_gix::wrapper::WidgetWrapper;
 
 use pw_pathux;
@@ -525,7 +524,7 @@ where
         });
         bpe.file_path_text.set_justify(gtk::Justification::Left);
         bpe.file_path_text.set_xalign(0.01);
-        bpe.file_path_text.set_widget_colour_rgb(WHITE);
+        bpe.file_path_text.set_widget_colour_rgb(RGB::WHITE);
         let hbox = gtk::Box::new(gtk::Orientation::Horizontal, 2);
         hbox.pack_start(&bpe.new_colln_btn, false, false, 0);
         hbox.pack_start(&bpe.load_colln_btn, false, false, 0);

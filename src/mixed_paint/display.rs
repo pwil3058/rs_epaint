@@ -9,7 +9,6 @@ use gdk;
 use gtk;
 use gtk::prelude::*;
 
-use pw_gix::colour::*;
 use pw_gix::gtkx::coloured::*;
 use pw_gix::gtkx::dialog::*;
 use pw_gix::gtkx::list_store::*;
@@ -18,6 +17,7 @@ use pw_gix::gtkx::tree_view_column::*;
 use pw_gix::wrapper::*;
 
 use crate::basic_paint::*;
+use crate::colour::*;
 use crate::dialogue::*;
 use crate::series_paint::*;
 
@@ -214,13 +214,21 @@ where
     C: CharacteristicsInterface + 'static,
 {
     fn tv_rows(&self, index: u32) -> Vec<gtk::Value> {
-        let rgba: gdk::RGBA = self.paint.rgb().into();
-        let frgba: gdk::RGBA = self.paint.rgb().best_foreground_rgb().into();
-        let mrgba: gdk::RGBA = self.paint.monotone_rgb().into();
-        let mfrgba: gdk::RGBA = self.paint.monotone_rgb().best_foreground_rgb().into();
-        let wrgba: gdk::RGBA = self.paint.warmth_rgb().into();
-        let wfrgba: gdk::RGBA = self.paint.warmth_rgb().best_foreground_rgb().into();
-        let hrgba: gdk::RGBA = self.paint.max_chroma_rgb().into();
+        let rgba: gdk::RGBA = self.paint.rgb().into_gdk_rgba();
+        let frgba: gdk::RGBA = self.paint.rgb().best_foreground_rgb().into_gdk_rgba();
+        let mrgba: gdk::RGBA = self.paint.monotone_rgb().into_gdk_rgba();
+        let mfrgba: gdk::RGBA = self
+            .paint
+            .monotone_rgb()
+            .best_foreground_rgb()
+            .into_gdk_rgba();
+        let wrgba: gdk::RGBA = self.paint.warmth_rgb().into_gdk_rgba();
+        let wfrgba: gdk::RGBA = self
+            .paint
+            .warmth_rgb()
+            .best_foreground_rgb()
+            .into_gdk_rgba();
+        let hrgba: gdk::RGBA = self.paint.max_chroma_rgb().into_gdk_rgba();
         let hue_radians = if let Some(hue) = self.paint.hue() {
             hue.angle().radians()
         } else {

@@ -10,12 +10,11 @@ use gtk;
 use gtk::prelude::*;
 
 use pw_gix::cairox::*;
-use pw_gix::colour::*;
 use pw_gix::gtkx::menu::*;
-use pw_gix::rgb_math::rgb::*;
 use pw_gix::wrapper::*;
 
 use crate::basic_paint::*;
+use crate::colour::*;
 use crate::dialogue::*;
 use crate::graticule::*;
 use crate::series_paint::*;

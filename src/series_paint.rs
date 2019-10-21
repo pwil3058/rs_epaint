@@ -7,7 +7,6 @@ use gdk_pixbuf::Pixbuf;
 use gtk;
 use gtk::prelude::*;
 
-use pw_gix::colour::*;
 use pw_gix::gtkx::window::*;
 use pw_gix::wrapper::*;
 
@@ -17,6 +16,7 @@ use crate::colln_paint::collection::*;
 pub use crate::colln_paint::display::*;
 use crate::colln_paint::editor::*;
 use crate::colln_paint::*;
+use crate::colour::*;
 use crate::icons::series_paint_xpm::*;
 
 #[derive(Debug, PartialEq, PartialOrd, Eq, Ord, Clone, Default, Hash)]
@@ -175,5 +175,4 @@ where
 #[cfg(test)]
 mod tests {
     //use super::*;
-
 }

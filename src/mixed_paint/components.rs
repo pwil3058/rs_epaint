@@ -9,12 +9,12 @@ use gdk;
 use gtk;
 use gtk::prelude::*;
 
-use pw_gix::colour::*;
 use pw_gix::gtkx::coloured::*;
 use pw_gix::gtkx::menu::*;
 use pw_gix::wrapper::*;
 
 use crate::basic_paint::*;
+use crate::colour::*;
 use crate::dialogue::PaintDisplayWithCurrentTarget;
 
 pub trait PaintPartsSpinButtonInterface<A, C, P, D>

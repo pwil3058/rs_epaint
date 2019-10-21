@@ -8,9 +8,8 @@ use gdk;
 use gtk;
 use gtk::{StaticType, ToValue};
 
-use pw_gix::colour::*;
-
 use crate::basic_paint::*;
+use crate::colour::*;
 use crate::series_paint::*;
 
 pub mod collection;
@@ -321,17 +320,17 @@ where
     }
 
     fn tv_rows(&self) -> Vec<gtk::Value> {
-        let rgba: gdk::RGBA = self.rgb().into();
-        let frgba: gdk::RGBA = self.rgb().best_foreground_rgb().into();
-        let mrgba: gdk::RGBA = self.monotone_rgb().into();
-        let mfrgba: gdk::RGBA = self.monotone_rgb().best_foreground_rgb().into();
-        let wrgba: gdk::RGBA = self.warmth_rgb().into();
-        let wfrgba: gdk::RGBA = self.warmth_rgb().best_foreground_rgb().into();
-        let hrgba: gdk::RGBA = self.max_chroma_rgb().into();
+        let rgba: gdk::RGBA = self.rgb().into_gdk_rgba();
+        let frgba: gdk::RGBA = self.rgb().best_foreground_rgb().into_gdk_rgba();
+        let mrgba: gdk::RGBA = self.monotone_rgb().into_gdk_rgba();
+        let mfrgba: gdk::RGBA = self.monotone_rgb().best_foreground_rgb().into_gdk_rgba();
+        let wrgba: gdk::RGBA = self.warmth_rgb().into_gdk_rgba();
+        let wfrgba: gdk::RGBA = self.warmth_rgb().best_foreground_rgb().into_gdk_rgba();
+        let hrgba: gdk::RGBA = self.max_chroma_rgb().into_gdk_rgba();
         let mcrgba: gdk::RGBA = if let Some(colour) = self.matched_colour() {
-            colour.rgb().into()
+            colour.rgb().into_gdk_rgba()
         } else {
-            self.rgb().into()
+            self.rgb().into_gdk_rgba()
         };
         let hue_radians = if let Some(hue) = self.hue() {
             hue.angle().radians()
