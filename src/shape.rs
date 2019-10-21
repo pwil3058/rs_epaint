@@ -99,6 +99,17 @@ where
 {
     fn new(paint: &CI, attr: ScalarAttribute) -> Self;
     fn coloured_item(&self) -> CI;
+
+    fn colour_xy(colour: Colour, attr: ScalarAttribute) -> Point {
+        if let Some(hue) = colour.hue() {
+            let radius = colour.scalar_attribute(attr);
+            let angle: normalised_angles::Angle<f64> = hue.angle().into();
+            Point::from((angle, radius))
+        } else {
+            let value = colour.value();
+            Point(-1.05, 1.0 - 2.0 * value)
+        }
+    }
 }
 
 pub struct ColouredItemSpapeList<CI, PS>

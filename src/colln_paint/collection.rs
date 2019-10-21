@@ -268,15 +268,9 @@ where
     CID: CollnIdInterface,
 {
     fn new(paint: &CollnPaint<C, CID>, attr: ScalarAttribute) -> CollnPaintShape<C, CID> {
-        let radius = paint.scalar_attribute(attr);
-        let angle: normalised_angles::Angle<f64> = if let Some(hue) = paint.hue() {
-            hue.angle().into()
-        } else {
-            normalised_angles::Degrees::DEG_0.into()
-        };
         CollnPaintShape::<C, CID> {
             paint: paint.clone(),
-            xy: Point::from((angle, radius)),
+            xy: Self::colour_xy(paint.colour(), attr),
         }
     }
 

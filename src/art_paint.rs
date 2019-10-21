@@ -340,7 +340,6 @@ pub fn create_ideal_art_paint_series() -> ArtPaintSeries {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::colour::*;
 
     //    const OBSOLETE_PAINT_STR: &str =
     //"Manufacturer: Tamiya

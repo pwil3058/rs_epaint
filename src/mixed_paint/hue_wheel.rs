@@ -87,15 +87,9 @@ where
     C: CharacteristicsInterface,
 {
     fn new(paint: &SeriesPaint<C>, attr: ScalarAttribute) -> SeriesPaintShape<C> {
-        let radius = paint.scalar_attribute(attr);
-        let angle: normalised_angles::Angle<f64> = if let Some(hue) = paint.hue() {
-            hue.angle().into()
-        } else {
-            normalised_angles::Degrees::DEG_0.into()
-        };
         SeriesPaintShape::<C> {
             paint: paint.clone(),
-            xy: Point::from((angle, radius)),
+            xy: Self::colour_xy(paint.colour(), attr),
         }
     }
 
@@ -131,15 +125,9 @@ where
     C: CharacteristicsInterface,
 {
     fn new(paint: &MixedPaint<C>, attr: ScalarAttribute) -> MixedPaintShape<C> {
-        let radius = paint.scalar_attribute(attr);
-        let angle: normalised_angles::Angle<f64> = if let Some(hue) = paint.hue() {
-            hue.angle().into()
-        } else {
-            normalised_angles::Degrees::DEG_0.into()
-        };
         MixedPaintShape::<C> {
             paint: paint.clone(),
-            xy: Point::from((angle, radius)),
+            xy: Self::colour_xy(paint.colour(), attr),
         }
     }
 
@@ -173,15 +161,9 @@ impl ColourShapeInterface for TargetColourShape {
 
 impl ColouredItemShapeInterface<TargetColour> for TargetColourShape {
     fn new(target_colour: &TargetColour, attr: ScalarAttribute) -> TargetColourShape {
-        let radius = target_colour.colour().scalar_attribute(attr);
-        let angle: normalised_angles::Angle<f64> = if let Some(hue) = target_colour.hue() {
-            hue.angle().into()
-        } else {
-            normalised_angles::Degrees::DEG_0.into()
-        };
         TargetColourShape {
             target_colour: target_colour.clone(),
-            xy: Point::from((angle, radius)),
+            xy: Self::colour_xy(target_colour.colour(), attr),
         }
     }
 

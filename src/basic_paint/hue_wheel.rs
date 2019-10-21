@@ -48,15 +48,9 @@ where
     C: CharacteristicsInterface,
 {
     fn new(paint: &BasicPaint<C>, attr: ScalarAttribute) -> BasicPaintShape<C> {
-        let radius = paint.scalar_attribute(attr);
-        let angle: normalised_angles::Angle<f64> = if let Some(hue) = paint.hue() {
-            hue.angle().into()
-        } else {
-            normalised_angles::Degrees::DEG_0.into()
-        };
         BasicPaintShape::<C> {
             paint: paint.clone(),
-            xy: Point::from((angle, radius)),
+            xy: Self::colour_xy(paint.colour(), attr),
             phantom: PhantomData,
         }
     }
