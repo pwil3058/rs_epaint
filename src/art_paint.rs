@@ -243,15 +243,7 @@ impl ColourAttributesInterface for ArtPaintAttributes {
         let fw = 60;
         vec![
             simple_text_column("Hue", -1, SP_HUE_ANGLE, SP_HUE_RGB, -1, 50, false),
-            simple_text_column(
-                "Chroma",
-                SP_GREYNESS,
-                SP_GREYNESS,
-                SP_RGB,
-                SP_RGB_FG,
-                fw,
-                false,
-            ),
+            simple_text_column("Chroma", SP_CHROMA, SP_CHROMA, SP_RGB, SP_RGB_FG, fw, false),
             simple_text_column(
                 "Value",
                 SP_VALUE,
