@@ -44,12 +44,7 @@ pub mod colour {
 
     impl GdkConvert for RGB {
         fn into_gdk_rgba(&self) -> gdk::RGBA {
-            gdk::RGBA {
-                red: self[0],
-                green: self[1],
-                blue: self[2],
-                alpha: 1.0,
-            }
+            pw_gix::colour::rgba_from_rgb(*self)
         }
     }
 }
