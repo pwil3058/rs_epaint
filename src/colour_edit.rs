@@ -113,7 +113,7 @@ where
             self.hue_left_btn.set_widget_colour_rgb(rgb);
             self.hue_right_btn.set_widget_colour_rgb(rgb);
         } else {
-            let low_chroma_rgb = rgb * 0.8 + colour.monotone_rgb() * 0.2;
+            let low_chroma_rgb = rgb * 0.8 + colour.monochrome_rgb() * 0.2;
             let high_chroma_rgb = rgb * 0.8 + colour.max_chroma_rgb() * 0.2;
             self.incr_greyness_btn.set_widget_colour_rgb(low_chroma_rgb);
             self.decr_greyness_btn

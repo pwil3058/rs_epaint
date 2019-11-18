@@ -216,10 +216,10 @@ where
     fn tv_rows(&self, index: u32) -> Vec<gtk::Value> {
         let rgba: gdk::RGBA = self.paint.rgb().into_gdk_rgba();
         let frgba: gdk::RGBA = self.paint.rgb().best_foreground_rgb().into_gdk_rgba();
-        let mrgba: gdk::RGBA = self.paint.monotone_rgb().into_gdk_rgba();
+        let mrgba: gdk::RGBA = self.paint.monochrome_rgb().into_gdk_rgba();
         let mfrgba: gdk::RGBA = self
             .paint
-            .monotone_rgb()
+            .monochrome_rgb()
             .best_foreground_rgb()
             .into_gdk_rgba();
         let wrgba: gdk::RGBA = self.paint.warmth_rgb().into_gdk_rgba();

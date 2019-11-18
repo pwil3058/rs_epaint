@@ -301,7 +301,7 @@ where
             );
             text += &format!(
                 "<span background=\"{}\">\t</span> ",
-                mixed_paint.monotone_rgb().pango_string()
+                mixed_paint.monochrome_rgb().pango_string()
             );
             text += &format!(
                 "<span background=\"{}\">\t</span> ",
@@ -320,7 +320,7 @@ where
                 );
                 text += &format!(
                     "<span background=\"{}\">\t</span> ",
-                    matched_colour.monotone_rgb().pango_string()
+                    matched_colour.monochrome_rgb().pango_string()
                 );
                 text += &format!(
                     "<span background=\"{}\">\t</span> Matched Colour\n",
