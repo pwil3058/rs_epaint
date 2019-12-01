@@ -211,7 +211,7 @@ where
     fn create(extra_buttons: &Vec<gtk::Button>) -> Self {
         let ced = Rc::new(ColourEditorCore::<A> {
             vbox: gtk::Box::new(gtk::Orientation::Vertical, 0),
-            rgb_manipulator: RefCell::new(RGBManipulator::new()),
+            rgb_manipulator: RefCell::new(RGBManipulator::new(false)),
             cads: A::create(),
             rgb_entry: RGBHexEntryBox::create(),
             drawing_area: gtk::DrawingArea::new(),
