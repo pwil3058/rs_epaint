@@ -5,18 +5,11 @@ authors = ["Peter Williams <pwil3058@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-# TODO: change colour_math dependency when it goes public
-#colour_math = { git = "https://github.com/pwil3058/rs_colour_math.git" }
-colour_math = { path = "../../CRATES/rs_colour_math.git" }
-# TODO: change normalised_angles dependency when it goes public
-#normalised_angles = { git = "https://github.com/pwil3058/rs_normalised_angles.git" }
-normalised_angles = { path = "../../CRATES/rs_normalised_angles.git" }
-# TODO: change pw_gix dependency when it goes public
-#pw_gix = { git = "https://github.com/pwil3058/rs_pw_gix.git" }
-pw_gix = { path = "../../CRATES/rs_pw_gix.git" }
-# TODO: change pw_pathux dependency when it goes public
-#pw_pathux = { git = "https://github.com/pwil3058/rs_pw_pathux.git" }
-pw_pathux = { path = "../../CRATES/rs_pw_pathux.git" }
+colour_math = { git = "https://github.com/pwil3058/rs_colour_math.git" }
+normalised_angles = { git = "https://github.com/pwil3058/rs_normalised_angles.git" }
+pw_gix = { git = "https://github.com/pwil3058/rs_pw_gix.git" }
+pw_pathux = { git = "https://github.com/pwil3058/rs_pw_pathux.git" }
+
 chrono = "0.4"
 lazy_static = "1.4.0"
 num = "0.1"
