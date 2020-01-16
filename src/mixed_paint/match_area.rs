@@ -52,7 +52,7 @@ impl ColourMatchAreaCore {
             cairo_context.fill();
         }
         for sample in self.samples.borrow().iter() {
-            cairo_context.set_source_pixbuf_at(&sample.pix_buf, sample.position, false);
+            cairo_context.set_source_pixbuf_at(&sample.pix_buf, sample.position);
             cairo_context.set_line_width(0.0);
             cairo_context.paint();
         }

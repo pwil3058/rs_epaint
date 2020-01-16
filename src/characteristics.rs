@@ -6,7 +6,7 @@ use std::rc::Rc;
 use std::str::FromStr;
 
 use gtk;
-use gtk::{ComboBoxExtManual, ComboBoxTextExt};
+use gtk::{prelude::ComboBoxExtManual, ComboBoxTextExt};
 
 use regex::*;
 

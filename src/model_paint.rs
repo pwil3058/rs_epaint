@@ -92,8 +92,8 @@ impl CharacteristicsInterface for ModelPaintCharacteristics {
         }
     }
 
-    fn tv_rows(&self) -> Vec<gtk::Value> {
-        let mut rows: Vec<gtk::Value> = Vec::new();
+    fn tv_rows(&self) -> Vec<glib::Value> {
+        let mut rows: Vec<glib::Value> = Vec::new();
         rows.push(self.finish.abbrev().to_value());
         rows.push(self.transparency.abbrev().to_value());
         rows.push(self.metallic.abbrev().to_value());

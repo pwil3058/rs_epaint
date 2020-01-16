@@ -9,9 +9,9 @@ use std::rc::Rc;
 use std::str::FromStr;
 
 use gdk;
+use glib::StaticType;
 use gtk;
 use gtk::prelude::*;
-use gtk::StaticType;
 
 use regex::*;
 
@@ -33,7 +33,7 @@ pub trait CharacteristicsInterface: Debug + Hash + PartialEq + Clone + Copy + To
     fn from_floats(floats: &Vec<f64>) -> Self;
     fn from_str(string: &str) -> Result<Self, PaintError<Self>>;
 
-    fn tv_rows(&self) -> Vec<gtk::Value>;
+    fn tv_rows(&self) -> Vec<glib::Value>;
     fn gui_display_widget(&self) -> gtk::Box;
     fn to_floats(&self) -> Vec<f64>;
 }
@@ -143,7 +143,7 @@ where
         14 + C::tv_row_len()
     }
 
-    fn tv_rows(&self) -> Vec<gtk::Value> {
+    fn tv_rows(&self) -> Vec<glib::Value> {
         let rgba: gdk::RGBA = self.rgb().into_gdk_rgba();
         let frgba: gdk::RGBA = self.rgb().best_foreground_rgb().into_gdk_rgba();
         let mrgba: gdk::RGBA = self.monochrome_rgb().into_gdk_rgba();
@@ -350,14 +350,14 @@ pub const SP_CHARS_2: i32 = 16;
 pub const SP_CHARS_3: i32 = 17;
 
 lazy_static! {
-    pub static ref STANDARD_PAINT_ROW_SPEC: [gtk::Type; 18] =
+    pub static ref STANDARD_PAINT_ROW_SPEC: [glib::Type; 18] =
         [
-            gtk::Type::String,          // 0 Name
-            gtk::Type::String,          // 1 Notes
-            gtk::Type::String,          // 2 Chroma
-            gtk::Type::String,          // 3 Greyness
-            gtk::Type::String,          // 4 Value
-            gtk::Type::String,          // 5 Warmth
+            glib::Type::String,          // 0 Name
+            glib::Type::String,          // 1 Notes
+            glib::Type::String,          // 2 Chroma
+            glib::Type::String,          // 3 Greyness
+            glib::Type::String,          // 4 Value
+            glib::Type::String,          // 5 Warmth
             gdk::RGBA::static_type(),   // 6 RGB
             gdk::RGBA::static_type(),   // 7 FG for RGB
             gdk::RGBA::static_type(),   // 8 Monochrome RGB
@@ -366,10 +366,10 @@ lazy_static! {
             gdk::RGBA::static_type(),   // 11 FG for Warmth RGB
             gdk::RGBA::static_type(),   // 12 Hue Colour
             f64::static_type(),         // 13 Hue angle (radians)
-            gtk::Type::String,          // 14 Characteristic #1
-            gtk::Type::String,          // 15 Characteristic #2
-            gtk::Type::String,          // 16 Characteristic #3
-            gtk::Type::String,          // 17 Characteristic #4
+            glib::Type::String,          // 14 Characteristic #1
+            glib::Type::String,          // 15 Characteristic #2
+            glib::Type::String,          // 16 Characteristic #3
+            glib::Type::String,          // 17 Characteristic #4
         ];
 }
 

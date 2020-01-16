@@ -245,6 +245,7 @@ where
                         .list_store
                         .get_value(&iter, MP_NAME)
                         .get()
+                        .unwrap()
                         .unwrap_or_else(|| panic!("File: {:?} Line: {:?}", file!(), line!()));
                     let paint = self
                         .factory
@@ -313,12 +314,13 @@ where
     }
 
     fn find_paint_named(&self, name: &str) -> Option<(i32, gtk::TreeIter)> {
-        self.list_store
-            .find_row_where(|list_store, iter| list_store.get_value(iter, 0).get() == Some(name))
+        self.list_store.find_row_where(|list_store, iter| {
+            list_store.get_value(iter, 0).get().unwrap() == Some(name)
+        })
     }
 
     fn set_notes_for_paint_at(&self, iter: &gtk::TreeIter, new_notes: &str) {
-        let o_paint_name: Option<String> = self.list_store.get_value(iter, MP_NAME).get();
+        let o_paint_name: Option<String> = self.list_store.get_value(iter, MP_NAME).get().unwrap();
         if let Some(ref paint_name) = o_paint_name {
             if let Some(paint) = self.factory.get_paint(paint_name) {
                 paint.set_notes(new_notes);

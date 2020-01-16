@@ -165,6 +165,7 @@ where
                         .list_store
                         .get_value(&iter, 0)
                         .get()
+                        .unwrap()
                         .unwrap_or_else(|| panic!("File: {:?} Line: {:?}", file!(), line!()));
                     let paint = self
                         .paint_factory
@@ -222,8 +223,9 @@ where
     }
 
     fn find_paint_named(&self, name: &str) -> Option<(i32, gtk::TreeIter)> {
-        self.list_store
-            .find_row_where(|list_store, iter| list_store.get_value(iter, 0).get() == Some(name))
+        self.list_store.find_row_where(|list_store, iter| {
+            list_store.get_value(iter, 0).get().unwrap() == Some(name)
+        })
     }
 
     pub fn remove_paint(&self, paint: &BasicPaint<C>) {

@@ -127,6 +127,7 @@ where
                         .list_store
                         .get_value(&iter, 0)
                         .get()
+                        .unwrap()
                         .unwrap_or_else(|| panic!("File: {:?} Line: {:?}", file!(), line!()));
                     let paint = self
                         .colln

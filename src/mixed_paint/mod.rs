@@ -5,8 +5,8 @@ use std::cmp::Ordering;
 use std::rc::Rc;
 
 use gdk;
+use glib::{StaticType, ToValue};
 use gtk;
-use gtk::{StaticType, ToValue};
 
 use crate::basic_paint::*;
 use crate::colour::*;
@@ -161,14 +161,14 @@ pub const MP_CHARS_2: i32 = 18;
 pub const MP_CHARS_3: i32 = 19;
 
 lazy_static! {
-    pub static ref MIXED_PAINT_ROW_SPEC: [gtk::Type; 20] =
+    pub static ref MIXED_PAINT_ROW_SPEC: [glib::Type; 20] =
         [
-            gtk::Type::String,          // 0 Name
-            gtk::Type::String,          // 1 Notes
-            gtk::Type::String,          // 2 Chroma
-            gtk::Type::String,          // 3 Greyness
-            gtk::Type::String,          // 4 Value
-            gtk::Type::String,          // 5 Warmth
+            glib::Type::String,          // 0 Name
+            glib::Type::String,          // 1 Notes
+            glib::Type::String,          // 2 Chroma
+            glib::Type::String,          // 3 Greyness
+            glib::Type::String,          // 4 Value
+            glib::Type::String,          // 5 Warmth
             gdk::RGBA::static_type(),   // 6 RGB
             gdk::RGBA::static_type(),   // 7 FG for RGB
             gdk::RGBA::static_type(),   // 8 Monochrome RGB
@@ -179,10 +179,10 @@ lazy_static! {
             f64::static_type(),         // 13 Hue angle (radians)
             gdk::RGBA::static_type(),   // 14 Matched Colour
             f64::static_type(),         // 15 Matched Colour angle (radians)
-            gtk::Type::String,          // 16 Characteristic #1
-            gtk::Type::String,          // 17 Characteristic #2
-            gtk::Type::String,          // 18 Characteristic #3
-            gtk::Type::String,          // 19 Characteristic #4
+            glib::Type::String,          // 16 Characteristic #1
+            glib::Type::String,          // 17 Characteristic #2
+            glib::Type::String,          // 18 Characteristic #3
+            glib::Type::String,          // 19 Characteristic #4
         ];
 }
 
@@ -319,7 +319,7 @@ where
         MP_CHARS_0 as usize + C::tv_row_len()
     }
 
-    fn tv_rows(&self) -> Vec<gtk::Value> {
+    fn tv_rows(&self) -> Vec<glib::Value> {
         let rgba: gdk::RGBA = self.rgb().into_gdk_rgba();
         let frgba: gdk::RGBA = self.rgb().best_foreground_rgb().into_gdk_rgba();
         let mrgba: gdk::RGBA = self.monochrome_rgb().into_gdk_rgba();

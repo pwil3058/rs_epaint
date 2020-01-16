@@ -184,14 +184,14 @@ pub const PC_CHARS_2: i32 = 18;
 pub const PC_CHARS_3: i32 = 19;
 
 lazy_static! {
-    pub static ref PAINT_COMPONENTS_ROW_SPEC: [gtk::Type; 20] =
+    pub static ref PAINT_COMPONENTS_ROW_SPEC: [glib::Type; 20] =
         [
-            gtk::Type::String,          // 0 Name
-            gtk::Type::String,          // 1 Notes
-            gtk::Type::String,          // 2 Chroma
-            gtk::Type::String,          // 3 Greyness
-            gtk::Type::String,          // 4 Value
-            gtk::Type::String,          // 5 Warmth
+            glib::Type::String,          // 0 Name
+            glib::Type::String,          // 1 Notes
+            glib::Type::String,          // 2 Chroma
+            glib::Type::String,          // 3 Greyness
+            glib::Type::String,          // 4 Value
+            glib::Type::String,          // 5 Warmth
             gdk::RGBA::static_type(),   // 6 RGB
             gdk::RGBA::static_type(),   // 7 FG for RGB
             gdk::RGBA::static_type(),   // 8 Monochrome RGB
@@ -201,11 +201,11 @@ lazy_static! {
             gdk::RGBA::static_type(),   // 12 Hue Colour
             f64::static_type(),         // 13 Hue angle (radians)
             u32::static_type(),         // 14 Paint Index
-            gtk::Type::String,          // 15 Parts
-            gtk::Type::String,          // 16 Characteristic #1
-            gtk::Type::String,          // 17 Characteristic #2
-            gtk::Type::String,          // 18 Characteristic #3
-            gtk::Type::String,          // 19 Characteristic #4
+            glib::Type::String,          // 15 Parts
+            glib::Type::String,          // 16 Characteristic #1
+            glib::Type::String,          // 17 Characteristic #2
+            glib::Type::String,          // 18 Characteristic #3
+            glib::Type::String,          // 19 Characteristic #4
         ];
 }
 
@@ -213,7 +213,7 @@ impl<C> PaintComponent<C>
 where
     C: CharacteristicsInterface + 'static,
 {
-    fn tv_rows(&self, index: u32) -> Vec<gtk::Value> {
+    fn tv_rows(&self, index: u32) -> Vec<glib::Value> {
         let rgba: gdk::RGBA = self.paint.rgb().into_gdk_rgba();
         let frgba: gdk::RGBA = self.paint.rgb().best_foreground_rgb().into_gdk_rgba();
         let mrgba: gdk::RGBA = self.paint.monochrome_rgb().into_gdk_rgba();
@@ -291,6 +291,7 @@ where
                         .list_store
                         .get_value(&iter, 14)
                         .get()
+                        .unwrap()
                         .unwrap_or_else(|| panic!("File: {:?} Line: {:?}", file!(), line!()));
                     if index as usize >= self.components.len() {
                         panic!(
