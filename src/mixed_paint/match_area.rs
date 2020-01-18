@@ -22,6 +22,7 @@ struct Sample {
     position: Point,
 }
 
+#[derive(PWO, Wrapper)]
 pub struct ColourMatchAreaCore {
     drawing_area: gtk::DrawingArea,
     mixed_colour: RefCell<Option<Colour>>,
@@ -96,8 +97,6 @@ impl ColourMatchAreaCore {
 }
 
 pub type ColourMatchArea = Rc<ColourMatchAreaCore>;
-
-impl_widget_wrapper!(drawing_area: gtk::DrawingArea, ColourMatchAreaCore);
 
 pub trait ColourMatchAreaInterface {
     type ColourMatchAreaType;

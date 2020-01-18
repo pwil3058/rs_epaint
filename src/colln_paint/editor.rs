@@ -61,6 +61,7 @@ where
     pub spec: PaintCollnSpec<C, CID>,
 }
 
+#[derive(PWO, Wrapper)]
 pub struct CollnPaintEditorCore<A, C, CID>
 where
     A: ColourAttributesInterface + 'static,
@@ -455,12 +456,6 @@ where
         }
     }
 }
-
-impl_widget_wrapper!(vbox: gtk::Box, CollnPaintEditorCore<A, C, CID>
-    where   A: ColourAttributesInterface + 'static,
-            C: CharacteristicsInterface + 'static,
-            CID: CollnIdInterface + 'static,
-);
 
 pub type CollnPaintEditor<A, C, CID> = Rc<CollnPaintEditorCore<A, C, CID>>;
 

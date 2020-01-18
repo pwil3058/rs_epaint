@@ -3,9 +3,6 @@
 #[macro_use]
 extern crate lazy_static;
 
-#[macro_use]
-extern crate pw_gix;
-
 use pw_pathux;
 
 pub mod struct_traits {

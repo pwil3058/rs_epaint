@@ -131,6 +131,7 @@ where
 }
 
 // FACTORY VIEW
+#[derive(PWO, Wrapper)]
 pub struct BasicPaintFactoryViewCore<A, C>
 where
     A: ColourAttributesInterface + 'static,
@@ -262,11 +263,6 @@ where
     }
 }
 
-impl_widget_wrapper!(scrolled_window: gtk::ScrolledWindow, BasicPaintFactoryViewCore<A, C>
-    where   A: ColourAttributesInterface + 'static,
-            C: CharacteristicsInterface + 'static,
-);
-
 pub type BasicPaintFactoryView<A, C> = Rc<BasicPaintFactoryViewCore<A, C>>;
 
 pub trait BasicPaintFactoryViewInterface<A, C>
@@ -322,6 +318,7 @@ where
 }
 
 // FACTORY DISPLAY CORE
+#[derive(PWO, Wrapper)]
 pub struct BasicPaintFactoryDisplayCore<A, C>
 where
     A: ColourAttributesInterface + 'static,
@@ -448,11 +445,6 @@ where
 
 // FACTORY DISPLAY
 pub type BasicPaintFactoryDisplay<A, C> = Rc<BasicPaintFactoryDisplayCore<A, C>>;
-
-impl_widget_wrapper!(notebook: gtk::Notebook, BasicPaintFactoryDisplayCore<A, C>
-    where   A: ColourAttributesInterface + 'static,
-            C: CharacteristicsInterface + 'static,
-);
 
 impl<A, C> SimpleCreation for BasicPaintFactoryDisplay<A, C>
 where

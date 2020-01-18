@@ -310,14 +310,13 @@ impl CharacteristicsEntryInterface<ModelPaintCharacteristics>
     }
 }
 
+#[derive(PWO, Wrapper)]
 pub struct ModelPaintAttributes {
     vbox: gtk::Box,
     hue_cad: HueCAD,
     greyness_cad: GreynessCAD,
     value_cad: ValueCAD,
 }
-
-impl_widget_wrapper!(vbox: gtk::Box, ModelPaintAttributes);
 
 impl ColourAttributesInterface for ModelPaintAttributes {
     fn create() -> Rc<ModelPaintAttributes> {

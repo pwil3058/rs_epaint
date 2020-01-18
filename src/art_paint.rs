@@ -209,6 +209,7 @@ impl CharacteristicsEntryInterface<ArtPaintCharacteristics> for ArtPaintCharacte
     }
 }
 
+#[derive(PWO, Wrapper)]
 pub struct ArtPaintAttributes {
     vbox: gtk::Box,
     hue_cad: HueCAD,
@@ -216,8 +217,6 @@ pub struct ArtPaintAttributes {
     value_cad: ValueCAD,
     warmth_cad: WarmthCAD,
 }
-
-impl_widget_wrapper!(vbox: gtk::Box, ArtPaintAttributes);
 
 impl ColourAttributesInterface for ArtPaintAttributes {
     fn create() -> Rc<ArtPaintAttributes> {

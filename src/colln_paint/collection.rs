@@ -98,6 +98,7 @@ where
     }
 }
 
+#[derive(PWO, Wrapper)]
 pub struct CollnPaintCollnViewCore<A, C, CID>
 where
     A: ColourAttributesInterface + 'static,
@@ -169,12 +170,6 @@ where
         self.view.connect_button_press_event(f)
     }
 }
-
-impl_widget_wrapper!(scrolled_window: gtk::ScrolledWindow, CollnPaintCollnViewCore<A, C, CID>
-    where   A: ColourAttributesInterface + 'static,
-            C: CharacteristicsInterface + 'static,
-            CID: CollnIdInterface,
-);
 
 pub type CollnPaintCollnView<A, C, CID> = Rc<CollnPaintCollnViewCore<A, C, CID>>;
 
@@ -284,6 +279,7 @@ pub type CollnPaintShapeList<C, CID> =
     ColouredItemSpapeList<CollnPaint<C, CID>, CollnPaintShape<C, CID>>;
 
 // WHEEL
+#[derive(Wrapper)]
 pub struct CollnPaintHueAttrWheelCore<C, CID>
 where
     C: CharacteristicsInterface + 'static,
@@ -293,10 +289,17 @@ where
     graticule: Graticule,
 }
 
-impl_widget_wrapper!(graticule.drawing_area() -> gtk::DrawingArea, CollnPaintHueAttrWheelCore<C, CID>
-    where   C: CharacteristicsInterface + 'static,
-            CID: CollnIdInterface + 'static,
-);
+impl<C, CID> PackableWidgetObject for CollnPaintHueAttrWheelCore<C, CID>
+where
+    C: CharacteristicsInterface + 'static,
+    CID: CollnIdInterface + 'static,
+{
+    type PWT = gtk::DrawingArea;
+
+    fn pwo(&self) -> Self::PWT {
+        self.graticule.drawing_area().clone()
+    }
+}
 
 pub type CollnPaintHueAttrWheel<C, CID> = Rc<CollnPaintHueAttrWheelCore<C, CID>>;
 
@@ -394,6 +397,7 @@ where
 }
 
 // WIDGET
+#[derive(PWO, Wrapper)]
 pub struct CollnPaintCollnWidgetCore<A, C, CID>
 where
     A: ColourAttributesInterface + 'static,
@@ -410,12 +414,6 @@ where
     current_target: RefCell<Option<Colour>>,
     paint_selected_callbacks: RefCell<Vec<Box<dyn Fn(&CollnPaint<C, CID>)>>>,
 }
-
-impl_widget_wrapper!(vbox: gtk::Box, CollnPaintCollnWidgetCore<A, C, CID>
-    where   A: ColourAttributesInterface + 'static,
-            C: CharacteristicsInterface + 'static,
-            CID: CollnIdInterface + 'static,
-);
 
 pub type CollnPaintCollnWidget<A, C, CID> = Rc<CollnPaintCollnWidgetCore<A, C, CID>>;
 

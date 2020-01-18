@@ -20,6 +20,7 @@ use super::collection::*;
 use super::*;
 use crate::basic_paint::*;
 
+#[derive(PWO, Wrapper)]
 pub struct CollnPaintCollnBinderCore<A, C, CID>
 where
     A: ColourAttributesInterface + 'static,
@@ -34,12 +35,6 @@ where
     paint_collns: RefCell<Vec<(CollnPaintCollnWidget<A, C, CID>, PathBuf)>>,
     paint_colln_files_data_path: PathBuf,
 }
-
-impl_widget_wrapper!(vbox: gtk::Box, CollnPaintCollnBinderCore<A, C, CID>
-    where   A: ColourAttributesInterface + 'static,
-            C: CharacteristicsInterface + 'static,
-            CID: CollnIdInterface + 'static,
-);
 
 impl<A, C, CID> CollnPaintCollnBinderCore<A, C, CID>
 where

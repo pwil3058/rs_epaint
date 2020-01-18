@@ -57,6 +57,7 @@ pub trait CollnIdInterface:
     }
 }
 
+#[derive(PWO, Wrapper)]
 pub struct CollnIdEntryData<CID>
 where
     CID: CollnIdInterface,
@@ -67,10 +68,6 @@ where
     changed_callbacks: RefCell<Vec<Box<dyn Fn()>>>,
     phantom_data: PhantomData<CID>,
 }
-
-impl_widget_wrapper!(grid: gtk::Grid, CollnIdEntryData<CID>
-    where   CID: CollnIdInterface
-);
 
 pub type CollnIdEntry<CID> = Rc<CollnIdEntryData<CID>>;
 

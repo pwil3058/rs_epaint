@@ -259,6 +259,7 @@ where
     }
 }
 
+#[derive(PWO, Wrapper)]
 pub struct PaintComponentListViewCore<A, C>
 where
     A: ColourAttributesInterface + 'static,
@@ -331,11 +332,6 @@ where
         }
     }
 }
-
-impl_widget_wrapper!(scrolled_window: gtk::ScrolledWindow, PaintComponentListViewCore<A, C>
-    where   A: ColourAttributesInterface + 'static,
-            C: CharacteristicsInterface + 'static,
-);
 
 pub type PaintComponentListView<A, C> = Rc<PaintComponentListViewCore<A, C>>;
 

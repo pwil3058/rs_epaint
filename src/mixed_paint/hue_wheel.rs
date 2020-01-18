@@ -175,6 +175,7 @@ impl ColouredItemShapeInterface<TargetColour> for TargetColourShape {
 pub type TargetColourShapeList = ColouredItemSpapeList<TargetColour, TargetColourShape>;
 
 // WHEEL
+#[derive(Wrapper)]
 pub struct MixerHueAttrWheelCore<A, C>
 where
     C: CharacteristicsInterface + 'static,
@@ -192,10 +193,17 @@ where
     mixed_paint_dialogs: RefCell<HashMap<u32, MixedPaintDisplayDialog<A, C>>>,
 }
 
-impl_widget_wrapper!(graticule.drawing_area() -> gtk::DrawingArea, MixerHueAttrWheelCore<A, C>
-    where   C: CharacteristicsInterface + 'static,
-            A: ColourAttributesInterface + 'static
-);
+impl<A, C> PackableWidgetObject for MixerHueAttrWheelCore<A, C>
+where
+    C: CharacteristicsInterface + 'static,
+    A: ColourAttributesInterface + 'static,
+{
+    type PWT = gtk::DrawingArea;
+
+    fn pwo(&self) -> Self::PWT {
+        self.graticule.drawing_area().clone()
+    }
+}
 
 pub type MixerHueAttrWheel<A, C> = Rc<MixerHueAttrWheelCore<A, C>>;
 

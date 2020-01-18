@@ -32,6 +32,7 @@ where
     fn inform_remove_me(&self);
 }
 
+#[derive(PWO, Wrapper)]
 pub struct PaintPartsSpinButtonCore<A, C, P, D>
 where
     C: CharacteristicsInterface + 'static,
@@ -61,13 +62,6 @@ where
         self.paint == other.paint
     }
 }
-
-impl_widget_wrapper!(event_box: gtk::EventBox, PaintPartsSpinButtonCore<A, C, P, D>
-    where   C: CharacteristicsInterface + 'static,
-            A: ColourAttributesInterface + 'static,
-            P: BasicPaintInterface<C> + 'static,
-            D: PaintDisplayWithCurrentTarget<A, C, P> + 'static,
-);
 
 pub type PaintPartsSpinButton<A, C, P, D> = Rc<PaintPartsSpinButtonCore<A, C, P, D>>;
 
@@ -275,6 +269,7 @@ where
     fn iter_colour_components(&self) -> ColourPartsIter<A, C, P, D>;
 }
 
+#[derive(PWO, Wrapper)]
 pub struct PaintComponentsBoxCore<A, C, P, D>
 where
     C: CharacteristicsInterface + 'static,
@@ -293,13 +288,6 @@ where
     contributions_changed_callbacks: RefCell<Vec<Box<dyn Fn()>>>,
     removal_requested_callbacks: RefCell<Vec<Box<dyn Fn(&P)>>>,
 }
-
-impl_widget_wrapper!(vbox: gtk::Box, PaintComponentsBoxCore<A, C, P, D>
-    where   C: CharacteristicsInterface + 'static,
-            A: ColourAttributesInterface + 'static,
-            P: BasicPaintInterface<C> + 'static,
-            D: PaintDisplayWithCurrentTarget<A, C, P> + 'static
-);
 
 impl<A, C, P, D> PaintComponentsBoxCore<A, C, P, D>
 where

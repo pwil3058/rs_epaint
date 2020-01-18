@@ -63,6 +63,7 @@ where
 pub type BasicPaintShapeList<C> = ColouredItemSpapeList<BasicPaint<C>, BasicPaintShape<C>>;
 
 // WHEEL
+#[derive(Wrapper)]
 pub struct BasicPaintHueAttrWheelCore<C>
 where
     C: CharacteristicsInterface + 'static,
@@ -72,9 +73,16 @@ where
     graticule: Graticule,
 }
 
-impl_widget_wrapper!(graticule.drawing_area() -> gtk::DrawingArea, BasicPaintHueAttrWheelCore<C>
-    where   C: CharacteristicsInterface + 'static,
-);
+impl<C> PackableWidgetObject for BasicPaintHueAttrWheelCore<C>
+where
+    C: CharacteristicsInterface + 'static,
+{
+    type PWT = gtk::DrawingArea;
+
+    fn pwo(&self) -> Self::PWT {
+        self.graticule.drawing_area().clone()
+    }
+}
 
 pub type BasicPaintHueAttrWheel<C> = Rc<BasicPaintHueAttrWheelCore<C>>;
 

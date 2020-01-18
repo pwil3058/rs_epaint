@@ -41,6 +41,7 @@ pub trait CreateInterface {
     fn create(extra_buttons: &Vec<gtk::Button>) -> Self;
 }
 
+#[derive(PWO, Wrapper)]
 pub struct BasicPaintSpecEntryCore<A, C>
 where
     C: CharacteristicsInterface + 'static,
@@ -54,11 +55,6 @@ where
     colour_editor: ColourEditor<A>,
     status_changed_callbacks: RefCell<Vec<Box<dyn Fn(EntryStatus)>>>,
 }
-
-impl_widget_wrapper!(vbox: gtk::Box, BasicPaintSpecEntryCore<A, C>
-    where   C: CharacteristicsInterface + 'static,
-            A: ColourAttributesInterface + 'static
-);
 
 impl<A, C> BasicPaintSpecEntryCore<A, C>
 where

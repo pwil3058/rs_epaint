@@ -63,6 +63,7 @@ pub trait ColourEditorInterface {
     fn create(extra_buttons: &Vec<gtk::Button>) -> Self;
 }
 
+#[derive(PWO, Wrapper)]
 pub struct ColourEditorCore<A>
 where
     A: ColourAttributesInterface + 'static,
@@ -88,10 +89,6 @@ where
     auto_match_on_paste_btn: gtk::CheckButton,
     colour_changed_callbacks: RefCell<Vec<Box<dyn Fn(&Colour)>>>,
 }
-
-impl_widget_wrapper!(vbox: gtk::Box, ColourEditorCore<A>
-    where   A: ColourAttributesInterface + 'static,
-);
 
 impl<A> ColourEditorCore<A>
 where

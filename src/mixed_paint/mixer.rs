@@ -49,6 +49,7 @@ where
 pub type SeriesPaintComponentBox<A, C> =
     PaintComponentsBox<A, C, SeriesPaint<C>, SeriesPaintDisplayDialog<A, C>>;
 
+#[derive(PWO, Wrapper)]
 pub struct PaintMixerCore<A, C, MC>
 where
     A: ColourAttributesInterface + 'static,
@@ -342,12 +343,6 @@ where
         chunks
     }
 }
-
-impl_widget_wrapper!(vbox: gtk::Box, PaintMixerCore<A, C, MC>
-    where   A: ColourAttributesInterface + 'static,
-            C: CharacteristicsInterface + 'static,
-            MC: MixerConfig + 'static,
-);
 
 pub type PaintMixer<A, C, MC> = Rc<PaintMixerCore<A, C, MC>>;
 

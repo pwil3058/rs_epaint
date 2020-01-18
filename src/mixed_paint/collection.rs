@@ -206,6 +206,7 @@ where
 pub type MixedPaintComponentBox<A, C> =
     PaintComponentsBox<A, C, MixedPaint<C>, MixedPaintDisplayDialog<A, C>>;
 
+#[derive(PWO, Wrapper)]
 pub struct MixedPaintCollectionWidgetCore<A, C>
 where
     A: ColourAttributesInterface + 'static,
@@ -365,11 +366,6 @@ where
         self.components.clone()
     }
 }
-
-impl_widget_wrapper!(vbox: gtk::Box, MixedPaintCollectionWidgetCore<A, C>
-    where   A: ColourAttributesInterface + 'static,
-            C: CharacteristicsInterface + 'static,
-);
 
 pub type MixedPaintCollectionWidget<A, C> = Rc<MixedPaintCollectionWidgetCore<A, C>>;
 
