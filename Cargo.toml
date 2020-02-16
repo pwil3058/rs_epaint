@@ -6,6 +6,7 @@ edition = "2018"
 
 [dependencies]
 colour_math = { git = "https://github.com/pwil3058/rs_colour_math.git" }
+colour_math_gtk = { git = "https://github.com/pwil3058/rs_colour_math.git" }
 normalised_angles = { git = "https://github.com/pwil3058/rs_normalised_angles.git" }
 pw_gix = { git = "https://github.com/pwil3058/rs_pw_gix.git" }
 pw_pathux = { git = "https://github.com/pwil3058/rs_pw_pathux.git" }

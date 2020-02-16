@@ -8,7 +8,6 @@ use std::fmt;
 use std::rc::Rc;
 use std::str::FromStr;
 
-use pw_gix::colour::attributes::*;
 use pw_gix::gtkx::tree_view_column::*;
 pub use pw_gix::wrapper::*;
 
@@ -24,6 +23,7 @@ use crate::series_paint::*;
 pub use crate::basic_paint::entry::*;
 pub use crate::mixed_paint::mixer::*;
 pub use crate::struct_traits::SimpleCreation;
+use colour_math_gtk::attributes::*;
 
 #[derive(Debug, PartialEq, Hash, Clone, Copy)]
 pub struct ArtPaintCharacteristics {
@@ -212,19 +212,19 @@ impl CharacteristicsEntryInterface<ArtPaintCharacteristics> for ArtPaintCharacte
 #[derive(PWO, Wrapper)]
 pub struct ArtPaintAttributes {
     vbox: gtk::Box,
-    hue_cad: HueCAD,
-    chroma_cad: ChromaCAD,
-    value_cad: ValueCAD,
-    warmth_cad: WarmthCAD,
+    hue_cad: Rc<HueCAD>,
+    chroma_cad: Rc<ChromaCAD>,
+    value_cad: Rc<ValueCAD>,
+    warmth_cad: Rc<WarmthCAD>,
 }
 
 impl ColourAttributesInterface for ArtPaintAttributes {
     fn create() -> Rc<ArtPaintAttributes> {
         let vbox = gtk::Box::new(gtk::Orientation::Vertical, 1);
-        let hue_cad = HueCAD::create();
-        let chroma_cad = ChromaCAD::create();
-        let value_cad = ValueCAD::create();
-        let warmth_cad = WarmthCAD::create();
+        let hue_cad = HueCAD::new();
+        let chroma_cad = ChromaCAD::new();
+        let value_cad = ValueCAD::new();
+        let warmth_cad = WarmthCAD::new();
         vbox.pack_start(&hue_cad.pwo(), true, true, 0);
         vbox.pack_start(&chroma_cad.pwo(), true, true, 0);
         vbox.pack_start(&value_cad.pwo(), true, true, 0);
@@ -273,17 +273,33 @@ impl ColourAttributesInterface for ArtPaintAttributes {
     }
 
     fn set_colour(&self, colour: Option<&Colour>) {
-        self.hue_cad.set_colour(colour);
-        self.chroma_cad.set_colour(colour);
-        self.value_cad.set_colour(colour);
-        self.warmth_cad.set_colour(colour);
+        if let Some(colour) = colour {
+            let rgb = colour.rgb();
+            self.hue_cad.set_rgb(Some(&rgb));
+            self.chroma_cad.set_rgb(Some(&rgb));
+            self.value_cad.set_rgb(Some(&rgb));
+            self.warmth_cad.set_rgb(Some(&rgb));
+        } else {
+            self.hue_cad.set_rgb(None);
+            self.chroma_cad.set_rgb(None);
+            self.value_cad.set_rgb(None);
+            self.warmth_cad.set_rgb(None);
+        }
     }
 
     fn set_target_colour(&self, target_colour: Option<&Colour>) {
-        self.hue_cad.set_target_colour(target_colour);
-        self.chroma_cad.set_target_colour(target_colour);
-        self.value_cad.set_target_colour(target_colour);
-        self.warmth_cad.set_target_colour(target_colour);
+        if let Some(target_colour) = target_colour {
+            let target_rgb = target_colour.rgb();
+            self.hue_cad.set_target_rgb(Some(&target_rgb));
+            self.chroma_cad.set_target_rgb(Some(&target_rgb));
+            self.value_cad.set_target_rgb(Some(&target_rgb));
+            self.warmth_cad.set_target_rgb(Some(&target_rgb));
+        } else {
+            self.hue_cad.set_target_rgb(None);
+            self.chroma_cad.set_target_rgb(None);
+            self.value_cad.set_target_rgb(None);
+            self.warmth_cad.set_target_rgb(None);
+        }
     }
 }
 

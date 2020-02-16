@@ -8,9 +8,10 @@ use std::fmt;
 use std::rc::Rc;
 use std::str::FromStr;
 
-use pw_gix::colour::attributes::*;
 use pw_gix::gtkx::tree_view_column::*;
 pub use pw_gix::wrapper::*;
+
+use colour_math_gtk::attributes::*;
 
 use crate::basic_paint::factory::*;
 use crate::basic_paint::*;
@@ -313,17 +314,17 @@ impl CharacteristicsEntryInterface<ModelPaintCharacteristics>
 #[derive(PWO, Wrapper)]
 pub struct ModelPaintAttributes {
     vbox: gtk::Box,
-    hue_cad: HueCAD,
-    greyness_cad: GreynessCAD,
-    value_cad: ValueCAD,
+    hue_cad: Rc<HueCAD>,
+    greyness_cad: Rc<GreynessCAD>,
+    value_cad: Rc<ValueCAD>,
 }
 
 impl ColourAttributesInterface for ModelPaintAttributes {
     fn create() -> Rc<ModelPaintAttributes> {
         let vbox = gtk::Box::new(gtk::Orientation::Vertical, 1);
-        let hue_cad = HueCAD::create();
-        let greyness_cad = GreynessCAD::create();
-        let value_cad = ValueCAD::create();
+        let hue_cad = HueCAD::new();
+        let greyness_cad = GreynessCAD::new();
+        let value_cad = ValueCAD::new();
         vbox.pack_start(&hue_cad.pwo(), true, true, 0);
         vbox.pack_start(&greyness_cad.pwo(), true, true, 0);
         vbox.pack_start(&value_cad.pwo(), true, true, 0);
@@ -369,15 +370,31 @@ impl ColourAttributesInterface for ModelPaintAttributes {
     }
 
     fn set_colour(&self, colour: Option<&Colour>) {
-        self.hue_cad.set_colour(colour);
-        self.greyness_cad.set_colour(colour);
-        self.value_cad.set_colour(colour);
+        if let Some(colour) = colour {
+            let rgb = colour.rgb();
+
+            self.hue_cad.set_rgb(Some(&rgb));
+            self.greyness_cad.set_rgb(Some(&rgb));
+            self.value_cad.set_rgb(Some(&rgb));
+        } else {
+            self.hue_cad.set_rgb(None);
+            self.greyness_cad.set_rgb(None);
+            self.value_cad.set_rgb(None);
+        }
     }
 
     fn set_target_colour(&self, target_colour: Option<&Colour>) {
-        self.hue_cad.set_target_colour(target_colour);
-        self.greyness_cad.set_target_colour(target_colour);
-        self.value_cad.set_target_colour(target_colour);
+        if let Some(target_colour) = target_colour {
+            let target_rgb = target_colour.rgb();
+
+            self.hue_cad.set_target_rgb(Some(&target_rgb));
+            self.greyness_cad.set_target_rgb(Some(&target_rgb));
+            self.value_cad.set_target_rgb(Some(&target_rgb));
+        } else {
+            self.hue_cad.set_target_rgb(None);
+            self.greyness_cad.set_target_rgb(None);
+            self.value_cad.set_target_rgb(None);
+        }
     }
 }
 
