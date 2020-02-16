@@ -13,10 +13,11 @@ use normalised_angles::Degrees;
 
 use pw_gix::cairox::*;
 use pw_gix::gtkx::coloured::*;
-use pw_gix::gtkx::entry::*;
 use pw_gix::gtkx::menu::*;
 
 pub use pw_gix::wrapper::*;
+
+use colour_math_gtk::rgb_entry::{RGBHexEntry, RGBHexEntryBuilder};
 
 use crate::basic_paint::*;
 use crate::colour::*;
@@ -71,7 +72,7 @@ where
     vbox: gtk::Box,
     rgb_manipulator: RefCell<RGBManipulator>,
     cads: Rc<A>,
-    rgb_entry: RGBHexEntryBox,
+    rgb_entry: Rc<RGBHexEntry<u16>>,
     drawing_area: gtk::DrawingArea,
     incr_value_btn: gtk::Button,
     decr_value_btn: gtk::Button,
@@ -96,7 +97,7 @@ where
 {
     pub fn set_rgb(&self, rgb: RGB) -> Colour {
         let colour = Colour::from(rgb);
-        self.rgb_entry.set_rgb(rgb);
+        self.rgb_entry.set_rgb(&rgb.into());
         self.rgb_manipulator.borrow_mut().set_rgb(&rgb);
         self.cads.set_colour(Some(&colour));
         self.incr_value_btn
@@ -206,11 +207,12 @@ where
     A: ColourAttributesInterface + 'static,
 {
     fn create(extra_buttons: &Vec<gtk::Button>) -> Self {
+        let rgb_entry = RGBHexEntryBuilder::new().build();
         let ced = Rc::new(ColourEditorCore::<A> {
             vbox: gtk::Box::new(gtk::Orientation::Vertical, 0),
             rgb_manipulator: RefCell::new(RGBManipulator::new(false)),
             cads: A::create(),
-            rgb_entry: RGBHexEntryBox::create(),
+            rgb_entry,
             drawing_area: gtk::DrawingArea::new(),
             incr_value_btn: gtk::Button::new_with_label("Value++"),
             decr_value_btn: gtk::Button::new_with_label("Value--"),
@@ -397,7 +399,7 @@ where
 
         let ced_c = ced.clone();
         ced.rgb_entry.connect_value_changed(move |rgb| {
-            ced_c.set_rgb_and_inform(rgb);
+            ced_c.set_rgb_and_inform(rgb.into());
         });
 
         let ced_c = ced.clone();
