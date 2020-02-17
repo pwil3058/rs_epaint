@@ -24,16 +24,133 @@ pub mod struct_traits {
 }
 
 pub mod colour {
+    use std::cmp::Ordering;
+
+    use serde_derive::*;
+
+    use normalised_angles::Degrees;
+
     pub use colour_math::{
         rgb::{RGBError, RGB16, RGB8},
         ColourInterface, HueConstants, RGBConstants, ScalarAttribute,
     };
     use gdk;
 
-    pub type Colour = colour_math::Colour<f64>;
     pub type Hue = colour_math::hue::Hue<f64>;
     pub type RGB = colour_math::rgb::RGB<f64>;
     pub type RGBManipulator = colour_math::manipulator::RGBManipulator<f64>;
+
+    #[derive(Serialize, Deserialize, Debug, Clone, Copy)]
+    pub struct Colour {
+        rgb: RGB,
+        hue: Option<Hue>,
+    }
+
+    impl PartialEq for Colour {
+        fn eq(&self, other: &Self) -> bool {
+            self.rgb == other.rgb
+        }
+    }
+
+    impl Eq for Colour {}
+
+    impl PartialOrd for Colour {
+        fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+            if self.rgb == other.rgb {
+                Some(Ordering::Equal)
+            } else if let Some(hue) = self.hue {
+                if let Some(other_hue) = other.hue {
+                    // This orders via hue from CYAN to CYAN via GREEN, RED, BLUE in that order
+                    match hue.partial_cmp(&other_hue) {
+                        Some(Ordering::Less) => Some(Ordering::Less),
+                        Some(Ordering::Greater) => Some(Ordering::Greater),
+                        Some(Ordering::Equal) => self.rgb.value().partial_cmp(&other.rgb.value()),
+                        None => None,
+                    }
+                } else {
+                    Some(Ordering::Greater)
+                }
+            } else if other.hue.is_some() {
+                Some(Ordering::Less)
+            } else {
+                self.rgb.value().partial_cmp(&other.rgb.value())
+            }
+        }
+    }
+
+    impl From<RGB> for Colour {
+        fn from(rgb: RGB) -> Self {
+            use std::convert::TryInto;
+            let hue: Option<Hue> = if let Ok(hue) = rgb.try_into() {
+                Some(hue)
+            } else {
+                None
+            };
+            Self { rgb, hue }
+        }
+    }
+
+    impl ColourInterface<f64> for Colour {
+        fn rgb(&self) -> RGB {
+            self.rgb
+        }
+
+        fn rgba(&self, alpha: f64) -> [f64; 4] {
+            self.rgb.rgba(alpha)
+        }
+
+        fn hue(&self) -> Option<Hue> {
+            self.hue
+        }
+
+        fn hue_angle(&self) -> Option<Degrees<f64>> {
+            if let Some(hue) = self.hue {
+                Some(hue.angle())
+            } else {
+                None
+            }
+        }
+
+        fn is_grey(&self) -> bool {
+            self.hue.is_none()
+        }
+
+        fn chroma(&self) -> f64 {
+            self.rgb.chroma()
+        }
+
+        fn greyness(&self) -> f64 {
+            self.rgb.greyness()
+        }
+
+        fn value(&self) -> f64 {
+            self.rgb.value()
+        }
+
+        fn max_chroma_rgb(&self) -> RGB {
+            if let Some(hue) = self.hue {
+                hue.max_chroma_rgb()
+            } else {
+                self.rgb()
+            }
+        }
+
+        fn warmth(&self) -> f64 {
+            self.rgb.warmth()
+        }
+
+        fn best_foreground_rgb(&self) -> RGB {
+            self.rgb.best_foreground_rgb()
+        }
+
+        fn monochrome_rgb(&self) -> RGB {
+            self.rgb.monochrome_rgb()
+        }
+
+        fn warmth_rgb(&self) -> RGB {
+            self.rgb.warmth_rgb()
+        }
+    }
 
     pub trait GdkConvert {
         fn into_gdk_rgba(&self) -> gdk::RGBA;
