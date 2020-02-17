@@ -6,7 +6,7 @@ use std::marker::PhantomData;
 
 use cairo;
 
-use pw_gix::cairox::*;
+use crate::cairox::*;
 
 use crate::basic_paint::*;
 use crate::colour::*;

@@ -11,8 +11,8 @@ use gtk::prelude::*;
 
 use normalised_angles::Degrees;
 
+use crate::cairox::*;
 use colour_math_gtk::coloured::*;
-use pw_gix::cairox::*;
 use pw_gix::gtkx::menu::*;
 
 pub use pw_gix::wrapper::*;

@@ -8,7 +8,7 @@ use gdk_pixbuf::Pixbuf;
 use gtk;
 use gtk::prelude::*;
 
-use pw_gix::cairox::*;
+use crate::cairox::*;
 
 use pw_gix::gtkx::menu::*;
 pub use pw_gix::wrapper::*;

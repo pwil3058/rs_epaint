@@ -11,7 +11,7 @@ use gtk::prelude::*;
 
 use normalised_angles::Degrees;
 
-use pw_gix::cairox::*;
+use crate::cairox::*;
 
 use crate::colour::*;
 use crate::shape::*;

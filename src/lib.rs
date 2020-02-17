@@ -313,6 +313,7 @@ pub mod dialogue {
 
 pub mod art_paint;
 pub mod basic_paint;
+pub mod cairox;
 pub mod characteristics;
 pub mod colln_paint;
 pub mod colour_edit;

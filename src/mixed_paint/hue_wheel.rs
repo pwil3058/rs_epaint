@@ -9,7 +9,7 @@ use gdk;
 use gtk;
 use gtk::prelude::*;
 
-use pw_gix::cairox::*;
+use crate::cairox::*;
 use pw_gix::gtkx::menu::*;
 use pw_gix::wrapper::*;
 

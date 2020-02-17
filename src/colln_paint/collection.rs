@@ -10,7 +10,7 @@ use glib::signal::SignalHandlerId;
 use gtk;
 use gtk::prelude::*;
 
-use pw_gix::cairox::*;
+use crate::cairox::*;
 use pw_gix::gtkx::list_store::*;
 use pw_gix::gtkx::menu::*;
 use pw_gix::gtkx::paned::*;

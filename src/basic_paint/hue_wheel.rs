@@ -9,7 +9,7 @@ use glib::signal::SignalHandlerId;
 use gtk;
 use gtk::prelude::*;
 
-use pw_gix::cairox::*;
+use crate::cairox::*;
 use pw_gix::wrapper::*;
 
 use crate::basic_paint::*;
