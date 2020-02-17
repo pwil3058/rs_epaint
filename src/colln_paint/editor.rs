@@ -6,7 +6,7 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
-use pw_gix::gtkx::coloured::*;
+use colour_math_gtk::coloured::*;
 use pw_gix::gtkx::paned::RememberPosition;
 use pw_gix::recollections::{recall, remember};
 pub use pw_gix::wrapper::WidgetWrapper;
@@ -519,7 +519,7 @@ where
         });
         bpe.file_path_text.set_justify(gtk::Justification::Left);
         bpe.file_path_text.set_xalign(0.01);
-        bpe.file_path_text.set_widget_colour_rgb(RGB::WHITE);
+        bpe.file_path_text.set_widget_colour_rgb(&RGB::WHITE);
         let hbox = gtk::Box::new(gtk::Orientation::Horizontal, 2);
         hbox.pack_start(&bpe.new_colln_btn, false, false, 0);
         hbox.pack_start(&bpe.load_colln_btn, false, false, 0);

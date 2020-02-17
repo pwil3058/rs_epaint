@@ -11,8 +11,8 @@ use gtk::prelude::*;
 
 use normalised_angles::Degrees;
 
+use colour_math_gtk::coloured::*;
 use pw_gix::cairox::*;
-use pw_gix::gtkx::coloured::*;
 use pw_gix::gtkx::menu::*;
 
 pub use pw_gix::wrapper::*;
@@ -101,28 +101,29 @@ where
         self.rgb_manipulator.borrow_mut().set_rgb(&rgb);
         self.cads.set_colour(Some(&colour));
         self.incr_value_btn
-            .set_widget_colour_rgb(rgb * 0.8 + RGB::WHITE * 0.2);
-        self.decr_value_btn.set_widget_colour_rgb(rgb * 0.8);
+            .set_widget_colour_rgb(&(rgb * 0.8 + RGB::WHITE * 0.2));
+        self.decr_value_btn.set_widget_colour_rgb(&(rgb * 0.8));
         if colour.is_grey() {
-            self.incr_greyness_btn.set_widget_colour_rgb(rgb);
-            self.decr_greyness_btn.set_widget_colour_rgb(rgb);
-            self.incr_chroma_btn.set_widget_colour_rgb(rgb);
-            self.decr_chroma_btn.set_widget_colour_rgb(rgb);
-            self.hue_left_btn.set_widget_colour_rgb(rgb);
-            self.hue_right_btn.set_widget_colour_rgb(rgb);
+            self.incr_greyness_btn.set_widget_colour_rgb(&rgb);
+            self.decr_greyness_btn.set_widget_colour_rgb(&rgb);
+            self.incr_chroma_btn.set_widget_colour_rgb(&rgb);
+            self.decr_chroma_btn.set_widget_colour_rgb(&rgb);
+            self.hue_left_btn.set_widget_colour_rgb(&rgb);
+            self.hue_right_btn.set_widget_colour_rgb(&rgb);
         } else {
             let low_chroma_rgb = rgb * 0.8 + colour.monochrome_rgb() * 0.2;
             let high_chroma_rgb = rgb * 0.8 + colour.max_chroma_rgb() * 0.2;
-            self.incr_greyness_btn.set_widget_colour_rgb(low_chroma_rgb);
+            self.incr_greyness_btn
+                .set_widget_colour_rgb(&low_chroma_rgb);
             self.decr_greyness_btn
-                .set_widget_colour_rgb(high_chroma_rgb);
-            self.incr_chroma_btn.set_widget_colour_rgb(high_chroma_rgb);
-            self.decr_chroma_btn.set_widget_colour_rgb(low_chroma_rgb);
+                .set_widget_colour_rgb(&high_chroma_rgb);
+            self.incr_chroma_btn.set_widget_colour_rgb(&high_chroma_rgb);
+            self.decr_chroma_btn.set_widget_colour_rgb(&low_chroma_rgb);
 
             self.hue_left_btn
-                .set_widget_colour_rgb(rgb.components_rotated(Degrees::DEG_30));
+                .set_widget_colour_rgb(&rgb.components_rotated(Degrees::DEG_30));
             self.hue_right_btn
-                .set_widget_colour_rgb(rgb.components_rotated(-Degrees::DEG_30));
+                .set_widget_colour_rgb(&rgb.components_rotated(-Degrees::DEG_30));
         }
         self.drawing_area.queue_draw();
         colour

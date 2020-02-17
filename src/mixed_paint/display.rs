@@ -9,7 +9,7 @@ use gdk;
 use gtk;
 use gtk::prelude::*;
 
-use pw_gix::gtkx::coloured::*;
+use colour_math_gtk::coloured::*;
 use pw_gix::gtkx::dialog::*;
 use pw_gix::gtkx::list_store::*;
 use pw_gix::gtkx::menu::*;
@@ -145,7 +145,7 @@ where
     fn set_current_target(&self, new_current_target: Option<&Colour>) {
         if let Some(ref colour) = new_current_target {
             self.current_target_label.set_label("Current Target");
-            self.current_target_label.set_widget_colour(&colour);
+            self.current_target_label.set_widget_colour(*colour);
             self.cads.set_target_colour(Some(&colour));
             self.components_view.set_target_colour(Some(&colour));
         } else {

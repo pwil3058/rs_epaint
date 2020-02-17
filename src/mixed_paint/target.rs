@@ -8,7 +8,7 @@ use gtk::{self, WidgetExt};
 use std::cmp::*;
 use std::rc::Rc;
 
-use pw_gix::gtkx::coloured::*;
+use colour_math_gtk::coloured::*;
 use pw_gix::gtkx::dialog::*;
 
 use crate::app_name;

@@ -6,7 +6,7 @@ use std::rc::Rc;
 use gtk;
 use gtk::prelude::*;
 
-use pw_gix::gtkx::coloured::*;
+use colour_math_gtk::coloured::*;
 use pw_gix::gtkx::dialog::*;
 
 use super::*;
@@ -157,7 +157,7 @@ where
         if CID::display_current_target() {
             if let Some(ref colour) = new_current_target {
                 self.current_target_label.set_label("Current Target");
-                self.current_target_label.set_widget_colour(&colour);
+                self.current_target_label.set_widget_colour(*colour);
                 self.cads.set_target_colour(Some(&colour));
             } else {
                 self.current_target_label.set_label("");
