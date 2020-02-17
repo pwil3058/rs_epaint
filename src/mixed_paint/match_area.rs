@@ -40,13 +40,15 @@ impl ColourMatchAreaCore {
 
     fn draw(&self, drawing_area: &gtk::DrawingArea, cairo_context: &cairo::Context) {
         if let Some(ref colour) = *self.mixed_colour.borrow() {
-            cairo_context.set_source_colour(&colour);
+            let rgb = colour.rgb();
+            cairo_context.set_source_rgb(rgb[0], rgb[1], rgb[2]);
         } else {
-            cairo_context.set_source_colour_rgb(RGB::BLACK);
+            cairo_context.set_source_rgb(0.0, 0.0, 0.0);
         };
         cairo_context.paint();
         if let Some(ref colour) = *self.target_colour.borrow() {
-            cairo_context.set_source_colour(&colour);
+            let rgb = colour.rgb();
+            cairo_context.set_source_rgb(rgb[0], rgb[1], rgb[2]);
             let width = drawing_area.get_allocated_width() as f64;
             let height = drawing_area.get_allocated_height() as f64;
             cairo_context.rectangle(width / 4.0, height / 4.0, width / 2.0, height / 2.0);

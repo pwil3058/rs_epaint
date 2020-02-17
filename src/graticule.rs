@@ -133,10 +133,10 @@ impl GraticuleCore {
     }
 
     fn draw(&self, cairo_context: &cairo::Context) {
-        cairo_context.set_source_colour_rgb(RGB::WHITE * 0.5);
+        cairo_context.set_source_rgb(0.5, 0.5, 0.5);
         cairo_context.paint();
 
-        cairo_context.set_source_colour_rgb(RGB::WHITE * 0.75);
+        cairo_context.set_source_rgb(0.75, 0.75, 0.75);
         let n_rings: u8 = 10;
         for i in 0..n_rings {
             let radius = self.radius.get() * (i as f64 + 1.0) / n_rings as f64;
@@ -148,7 +148,8 @@ impl GraticuleCore {
             let angle = Degrees::DEG_60 * i;
             let hue = Hue::from(angle);
             let g_angle: normalised_angles::Angle<f64> = angle.into();
-            cairo_context.set_source_colour_rgb(hue.max_chroma_rgb());
+            let rgb = hue.max_chroma_rgb();
+            cairo_context.set_source_rgb(rgb[0], rgb[1], rgb[2]);
             let eol = self.transform(Point::from((g_angle, 1.0)));
             cairo_context.draw_line(self.centre.get(), eol);
             cairo_context.stroke();

@@ -58,29 +58,29 @@ pub trait ColourShapeInterface {
         let side = canvas.scaled(SHAPE_SIDE);
         match self.shape_type() {
             ShapeType::Square => {
-                cairo_context.set_source_colour_rgb(fill_rgb);
+                cairo_context.set_source_rgb(fill_rgb[0], fill_rgb[1], fill_rgb[2]);
                 cairo_context.draw_square(point, side, true);
-                cairo_context.set_source_colour_rgb(outline_rgb);
+                cairo_context.set_source_rgb(outline_rgb[0], outline_rgb[1], outline_rgb[2]);
                 cairo_context.draw_square(point, side, false);
             }
             ShapeType::Diamond => {
-                cairo_context.set_source_colour_rgb(fill_rgb);
+                cairo_context.set_source_rgb(fill_rgb[0], fill_rgb[1], fill_rgb[2]);
                 cairo_context.draw_diamond(point, side, true);
-                cairo_context.set_source_colour_rgb(outline_rgb);
+                cairo_context.set_source_rgb(outline_rgb[0], outline_rgb[1], outline_rgb[2]);
                 cairo_context.draw_diamond(point, side, false);
             }
             ShapeType::Circle => {
                 let radius = canvas.scaled(SHAPE_RADIUS);
-                cairo_context.set_source_colour_rgb(fill_rgb);
+                cairo_context.set_source_rgb(fill_rgb[0], fill_rgb[1], fill_rgb[2]);
                 cairo_context.draw_circle(point, radius, true);
-                cairo_context.set_source_colour_rgb(outline_rgb);
+                cairo_context.set_source_rgb(outline_rgb[0], outline_rgb[1], outline_rgb[2]);
                 cairo_context.draw_circle(point, radius, false);
             }
             ShapeType::BackSight => {
                 let radius = canvas.scaled(SHAPE_RADIUS);
-                cairo_context.set_source_colour_rgb(fill_rgb);
+                cairo_context.set_source_rgb(fill_rgb[0], fill_rgb[1], fill_rgb[2]);
                 cairo_context.draw_circle(point, radius, true);
-                cairo_context.set_source_colour_rgb(outline_rgb);
+                cairo_context.set_source_rgb(outline_rgb[0], outline_rgb[1], outline_rgb[2]);
                 cairo_context.draw_circle(point, radius, false);
 
                 let half_len = canvas.scaled(SHAPE_SIDE);

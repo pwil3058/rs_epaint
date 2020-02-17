@@ -146,7 +146,7 @@ where
 
     fn draw(&self, _drawing_area: &gtk::DrawingArea, cairo_context: &cairo::Context) {
         let rgb = *self.rgb_manipulator.borrow().rgb();
-        cairo_context.set_source_colour_rgb(rgb);
+        cairo_context.set_source_rgb(rgb[0], rgb[1], rgb[2]);
         cairo_context.paint();
         for sample in self.samples.borrow().iter() {
             cairo_context.set_source_pixbuf_at(&sample.pix_buf, sample.position);
