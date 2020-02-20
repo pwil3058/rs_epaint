@@ -31,7 +31,7 @@ pub mod colour {
     use normalised_angles::Degrees;
 
     pub use colour_math::{
-        rgb::{RGBError, RGB16, RGB8},
+        urgb::{URGBError, RGB16, RGB8},
         ColourInterface, HueConstants, RGBConstants, ScalarAttribute,
     };
     use gdk;
@@ -258,10 +258,10 @@ pub mod error {
         }
     }
 
-    impl<C: CharacteristicsInterface> From<RGBError> for PaintError<C> {
-        fn from(rgb_error: RGBError) -> PaintError<C> {
+    impl<C: CharacteristicsInterface> From<URGBError> for PaintError<C> {
+        fn from(rgb_error: URGBError) -> PaintError<C> {
             match rgb_error {
-                RGBError::MalformedText(string) => PaintErrorType::MalformedText(string).into(),
+                URGBError::MalformedText(string) => PaintErrorType::MalformedText(string).into(),
             }
         }
     }
