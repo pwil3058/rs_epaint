@@ -360,7 +360,7 @@ where
         for (index, component) in components.iter().enumerate() {
             list_store.append_row(&component.tv_rows(index as u32));
         }
-        let view = gtk::TreeView::new_with_model(&list_store.clone());
+        let view = gtk::TreeView::with_model(&list_store.clone());
         view.set_headers_visible(true);
         view.get_selection().set_mode(gtk::SelectionMode::None);
 

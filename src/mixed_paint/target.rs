@@ -187,15 +187,10 @@ where
         });
         let ntcd_c = ntcd.clone();
         ntcd.notes.connect_changed(move |entry| {
-            if let Some(text) = entry.get_text() {
-                ntcd_c
-                    .dialog
-                    .set_response_sensitive(gtk::ResponseType::Accept.into(), text.len() > 0)
-            } else {
-                ntcd_c
-                    .dialog
-                    .set_response_sensitive(gtk::ResponseType::Accept.into(), false)
-            }
+            ntcd_c.dialog.set_response_sensitive(
+                gtk::ResponseType::Accept.into(),
+                entry.get_text().len() > 0,
+            )
         });
 
         ntcd
@@ -208,13 +203,14 @@ where
 {
     pub fn get_new_target(&self) -> Option<(String, Colour)> {
         if gtk::ResponseType::from(self.dialog.run()) == gtk::ResponseType::Ok {
-            if let Some(notes) = self.notes.get_text() {
+            let notes = self.notes.get_text();
+            if notes.len() > 0 {
                 let colour = self.colour_editor.get_colour();
-                self.dialog.destroy();
+                unsafe { self.dialog.destroy() };
                 return Some((String::from(notes), colour));
             }
         };
-        self.dialog.destroy();
+        unsafe { self.dialog.destroy() };
         None
     }
 }

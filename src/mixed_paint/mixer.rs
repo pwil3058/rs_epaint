@@ -93,11 +93,7 @@ where
     }
 
     fn has_notes(&self) -> bool {
-        if let Some(text) = self.mixed_paint_notes.get_text() {
-            text.len() > 0
-        } else {
-            false
-        }
+        self.mixed_paint_notes.get_text().len() > 0
     }
 
     pub fn add_series_paint(&self, paint: &SeriesPaint<C>) {
@@ -208,11 +204,7 @@ where
     }
 
     fn accept_new_mixture(&self) {
-        let notes: String = if let Some(text) = self.mixed_paint_notes.get_text() {
-            String::from(text)
-        } else {
-            "".to_string()
-        };
+        let notes: String = String::from(self.mixed_paint_notes.get_text());
         let o_matched_colour = self.colour_match_area.get_target_colour();
         let sp_components = self.series_paint_components.get_paint_components();
         let mp_components = self.mixed_paints.components().get_paint_components();
@@ -272,8 +264,9 @@ where
 
         let mut text = format!("<b>{}</b> ", escape_str_attribute("Mix/Match Description:"));
         text += &format!("{}\n", Local::now().format("%X: %A %x"));
-        if let Some(notes) = self.notes.get_text() {
-            if text.len() > 0 {
+        {
+            let notes = self.notes.get_text();
+            if notes.len() > 0 {
                 text += &format!("\n{}\n", notes);
             }
         };
@@ -380,12 +373,12 @@ where
             mixed_paint_notes: gtk::Entry::new(),
             // Buttons
             print_report_btn: gtk::Button::new(),
-            new_mixture_btn: gtk::Button::new_with_label("New"),
-            accept_mixture_btn: gtk::Button::new_with_label("Accept"),
-            cancel_btn: gtk::Button::new_with_label("Cancel"),
-            reset_parts_btn: gtk::Button::new_with_label("Reset"),
-            remove_unused_btn: gtk::Button::new_with_label("Remove Unused Paints"),
-            simplify_parts_btn: gtk::Button::new_with_label("Simplify Parts"),
+            new_mixture_btn: gtk::Button::with_label("New"),
+            accept_mixture_btn: gtk::Button::with_label("Accept"),
+            cancel_btn: gtk::Button::with_label("Cancel"),
+            reset_parts_btn: gtk::Button::with_label("Reset"),
+            remove_unused_btn: gtk::Button::with_label("Remove Unused Paints"),
+            simplify_parts_btn: gtk::Button::with_label("Simplify Parts"),
             // Managers
             series_paint_manager: SeriesPaintManager::<A, C>::create(series_paint_data_path),
             o_paint_standards_manager: o_paint_standards_manager,

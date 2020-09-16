@@ -215,19 +215,19 @@ where
             cads: A::create(),
             rgb_entry,
             drawing_area: gtk::DrawingArea::new(),
-            incr_value_btn: gtk::Button::new_with_label("Value++"),
-            decr_value_btn: gtk::Button::new_with_label("Value--"),
-            hue_left_btn: gtk::Button::new_with_label("<"),
-            hue_right_btn: gtk::Button::new_with_label(">"),
-            decr_greyness_btn: gtk::Button::new_with_label("Greyness--"),
-            incr_greyness_btn: gtk::Button::new_with_label("Greyness++"),
-            decr_chroma_btn: gtk::Button::new_with_label("Chroma--"),
-            incr_chroma_btn: gtk::Button::new_with_label("Chroma++"),
+            incr_value_btn: gtk::Button::with_label("Value++"),
+            decr_value_btn: gtk::Button::with_label("Value--"),
+            hue_left_btn: gtk::Button::with_label("<"),
+            hue_right_btn: gtk::Button::with_label(">"),
+            decr_greyness_btn: gtk::Button::with_label("Greyness--"),
+            incr_greyness_btn: gtk::Button::with_label("Greyness++"),
+            decr_chroma_btn: gtk::Button::with_label("Chroma--"),
+            incr_chroma_btn: gtk::Button::with_label("Chroma++"),
             popup_menu: WrappedMenu::new(&vec![]),
             samples: RefCell::new(Vec::new()),
             delta_size: Cell::new(DeltaSize::Normal),
-            auto_match_btn: gtk::Button::new_with_label("Auto Match"),
-            auto_match_on_paste_btn: gtk::CheckButton::new_with_label("On Paste?"),
+            auto_match_btn: gtk::Button::with_label("Auto Match"),
+            auto_match_on_paste_btn: gtk::CheckButton::with_label("On Paste?"),
             popup_menu_position: Cell::new(Point(0.0, 0.0)),
             colour_changed_callbacks: RefCell::new(Vec::new()),
         });
@@ -279,9 +279,11 @@ where
         let ced_c = ced.clone();
         ced.vbox.connect_key_press_event(move |_, event| {
             let key = event.get_keyval();
-            if key == gdk::enums::key::Shift_L || key == gdk::enums::key::Shift_R {
+            if key == gdk::keys::constants::Shift_L || key == gdk::keys::constants::Shift_R {
                 ced_c.delta_size.set(DeltaSize::Large);
-            } else if key == gdk::enums::key::Control_L || key == gdk::enums::key::Control_R {
+            } else if key == gdk::keys::constants::Control_L
+                || key == gdk::keys::constants::Control_R
+            {
                 ced_c.delta_size.set(DeltaSize::Small);
             };
             gtk::Inhibit(false)
@@ -289,10 +291,10 @@ where
         let ced_c = ced.clone();
         ced.vbox.connect_key_release_event(move |_, event| {
             let key = event.get_keyval();
-            if key == gdk::enums::key::Shift_L
-                || key == gdk::enums::key::Shift_R
-                || key == gdk::enums::key::Control_L
-                || key == gdk::enums::key::Control_R
+            if key == gdk::keys::constants::Shift_L
+                || key == gdk::keys::constants::Shift_R
+                || key == gdk::keys::constants::Control_L
+                || key == gdk::keys::constants::Control_R
             {
                 ced_c.delta_size.set(DeltaSize::Normal);
             };

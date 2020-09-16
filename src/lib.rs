@@ -215,7 +215,7 @@ pub mod error {
                 }
                 PaintErrorType::NotFound(ref text) => format!("{}: not found.", text),
                 PaintErrorType::IOError(ref io_error) => {
-                    format!("I/O Error: {}", io_error.description())
+                    format!("I/O Error: {}", io_error.to_string())
                 }
                 PaintErrorType::NoSubstantiveComponents => {
                     "Contains no nonzero components.".to_string()
@@ -235,7 +235,7 @@ pub mod error {
 
     impl<C: CharacteristicsInterface> From<CharacteristicError> for PaintError<C> {
         fn from(ch_error: CharacteristicError) -> PaintError<C> {
-            let text = ch_error.description().to_string();
+            let text = ch_error.to_string();
             PaintError {
                 error_type: PaintErrorType::MalformedText(text.clone()),
                 msg: text,
@@ -312,7 +312,7 @@ pub mod dialogue {
         W: WidgetWrapper,
     {
         let title = format!("{}: {}", app_name(), title);
-        let dialog = gtk::Dialog::new_with_buttons(
+        let dialog = gtk::Dialog::with_buttons(
             Some(title.as_str()),
             parent_none(),
             gtk::DialogFlags::USE_HEADER_BAR,

@@ -466,13 +466,13 @@ where
     CID: CollnIdInterface + 'static,
 {
     fn create() -> CollnPaintEditor<A, C, CID> {
-        let add_paint_btn = gtk::Button::new_with_label("Add");
+        let add_paint_btn = gtk::Button::with_label("Add");
         add_paint_btn.set_tooltip_text(Some(
             "Add the paint defined by this specification to the collection",
         ));
-        let accept_changes_btn = gtk::Button::new_with_label("Accept");
+        let accept_changes_btn = gtk::Button::with_label("Accept");
         accept_changes_btn.set_tooltip_text(Some("Accept the changes to the paint being edited"));
-        let reset_entry_btn = gtk::Button::new_with_label("Reset");
+        let reset_entry_btn = gtk::Button::with_label("Reset");
         reset_entry_btn.set_tooltip_text(Some("Reset in preparation for defining a new paint"));
         let extra_buttons = vec![
             add_paint_btn.clone(),

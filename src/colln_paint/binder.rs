@@ -1,7 +1,6 @@
 // Copyright 2017 Peter Williams <pwil3058@gmail.com> <pwil3058@bigpond.net.au>
 
 use std::cell::{Cell, RefCell};
-use std::error::Error;
 use std::fs::File;
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
@@ -252,7 +251,7 @@ where
             },
             Err(err) => match err.error_type() {
                 &PaintErrorType::IOError(ref io_error) => {
-                    let expln = format!("\"{:?}\" \"{}\"\n", path, io_error.description());
+                    let expln = format!("\"{:?}\" \"{}\"\n", path, io_error.to_string());
                     let msg = "I/O Error";
                     self.warn_user(msg, Some(expln.as_str()));
                 }
@@ -309,7 +308,7 @@ where
                     );
                 }
                 Err(err) => {
-                    let expln = format!("\"{:?}\" \"{}\"\n", path, err.description());
+                    let expln = format!("\"{:?}\" \"{}\"\n", path, err.to_string());
                     let msg = "I/O Error";
                     self.warn_user(msg, Some(expln.as_str()));
                 }

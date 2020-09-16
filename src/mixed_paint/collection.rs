@@ -385,7 +385,7 @@ where
     fn create(mixing_mode: MixingMode) -> MixedPaintCollectionWidget<A, C> {
         let len = MixedPaint::<C>::tv_row_len();
         let list_store = gtk::ListStore::new(&MIXED_PAINT_ROW_SPEC[0..len]);
-        let view = gtk::TreeView::new_with_model(&list_store.clone());
+        let view = gtk::TreeView::with_model(&list_store.clone());
         view.set_headers_visible(true);
         view.get_selection().set_mode(gtk::SelectionMode::Single);
 

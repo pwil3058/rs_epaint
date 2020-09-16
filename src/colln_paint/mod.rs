@@ -123,13 +123,11 @@ where
     CID: CollnIdInterface,
 {
     pub fn get_colln_id(&self) -> Option<Rc<CID>> {
-        if let Some(colln_name) = self.colln_name_entry.get_text() {
-            if colln_name.len() > 0 {
-                if let Some(colln_owner) = self.colln_owner_entry.get_text() {
-                    if colln_owner.len() > 0 {
-                        return Some(CID::rc_new(&colln_name, &colln_owner));
-                    }
-                }
+        let colln_name = self.colln_name_entry.get_text();
+        if colln_name.len() > 0 {
+            let colln_owner = self.colln_owner_entry.get_text();
+            if colln_owner.len() > 0 {
+                return Some(CID::rc_new(&colln_name, &colln_owner));
             }
         };
         None

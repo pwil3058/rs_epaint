@@ -81,22 +81,18 @@ where
 
     pub fn get_basic_paint_spec(&self) -> Option<BasicPaintSpec<C>> {
         if let Some(characteristics) = self.characteristics_entry.get_characteristics() {
-            if let Some(name) = self.name_entry.get_text() {
-                let notes = if let Some(text) = self.notes_entry.get_text() {
-                    String::from(text)
-                } else {
-                    "".to_string()
-                };
-                let spec = BasicPaintSpec::<C> {
-                    rgb: self.colour_editor.get_rgb(),
-                    name: String::from(name),
-                    notes: notes,
-                    characteristics: characteristics,
-                };
-                return Some(spec);
-            }
-        };
-        None
+            let name = self.name_entry.get_text();
+            let notes = String::from(self.notes_entry.get_text());
+            let spec = BasicPaintSpec::<C> {
+                rgb: self.colour_editor.get_rgb(),
+                name: String::from(name),
+                notes: notes,
+                characteristics: characteristics,
+            };
+            Some(spec)
+        } else {
+            None
+        }
     }
 
     pub fn matches_edited_spec(&self) -> bool {

@@ -194,7 +194,7 @@ where
         for paint in colln.get_paints().iter() {
             list_store.append_row(&paint.tv_rows());
         }
-        let view = gtk::TreeView::new_with_model(&list_store.clone());
+        let view = gtk::TreeView::with_model(&list_store.clone());
         view.set_headers_visible(true);
         view.get_selection().set_mode(gtk::SelectionMode::None);
 

@@ -25,7 +25,7 @@ impl CharacteristicError {
 
 impl fmt::Display for CharacteristicError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "CharacteristicError({}).", self.description())?;
+        write!(f, "CharacteristicError({}).", self.to_string())?;
         Ok(())
     }
 }
