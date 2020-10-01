@@ -160,8 +160,8 @@ pub mod colour {
         fn into_gdk_rgba(&self) -> gdk::RGBA {
             gdk::RGBA {
                 red: self[0],
-                blue: self[1],
-                green: self[2],
+                green: self[1],
+                blue: self[2],
                 alpha: 1.0,
             }
         }
