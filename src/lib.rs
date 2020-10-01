@@ -34,7 +34,7 @@ pub mod colour {
         urgb::{URGBError, RGB16, RGB8},
         ColourInterface, HueConstants, RGBConstants, ScalarAttribute,
     };
-    use gdk;
+    use pw_gix::gdk;
 
     pub type Hue = colour_math::hue::Hue<f64>;
     pub type RGB = colour_math::rgb::RGB<f64>;
@@ -286,10 +286,11 @@ pub mod dialogue {
     use std::cell::RefCell;
     use std::rc::Rc;
 
-    use glib::signal::SignalHandlerId;
-    use gtk::{self, prelude::GtkWindowExtManual, DialogExt, GtkWindowExt, WidgetExt};
-
-    use pw_gix::wrapper::{parent_none, WidgetWrapper};
+    use pw_gix::{
+        glib::signal::SignalHandlerId,
+        gtk::{self, prelude::GtkWindowExtManual, DialogExt, GtkWindowExt, WidgetExt},
+        wrapper::{parent_none, WidgetWrapper},
+    };
 
     use super::app_name;
     use super::basic_paint::{

@@ -5,18 +5,15 @@ use std::collections::HashMap;
 use std::marker::PhantomData;
 use std::rc::Rc;
 
-use gdk;
-use glib::signal::SignalHandlerId;
-use gtk;
-use gtk::prelude::*;
-
-use crate::cairox::*;
-use pw_gix::gtkx::list_store::*;
-use pw_gix::gtkx::menu::*;
-use pw_gix::gtkx::paned::*;
-use pw_gix::gtkx::tree_view_column::*;
+use pw_gix::{
+    gdk,
+    glib::signal::SignalHandlerId,
+    gtk::{self, prelude::*},
+    gtkx::{list_store::*, menu::*, paned::*, tree_view_column::*},
+};
 
 use crate::basic_paint::*;
+use crate::cairox::*;
 use crate::graticule::*;
 use crate::shape::*;
 

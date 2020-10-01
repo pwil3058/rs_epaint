@@ -4,9 +4,11 @@ use std::cell::RefCell;
 use std::cmp::Ordering;
 use std::rc::Rc;
 
-use gdk;
-use glib::{StaticType, ToValue};
-use gtk;
+use pw_gix::{
+    gdk,
+    glib::{self, StaticType, ToValue},
+    gtk,
+};
 
 use crate::basic_paint::*;
 use crate::colour::*;

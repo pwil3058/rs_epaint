@@ -3,11 +3,11 @@
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 
-use cairo;
-use gdk;
-use glib::signal::SignalHandlerId;
-use gtk;
-use gtk::prelude::*;
+use pw_gix::{
+    cairo, gdk,
+    glib::signal::SignalHandlerId,
+    gtk::{self, prelude::*},
+};
 
 use normalised_angles::Degrees;
 

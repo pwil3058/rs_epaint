@@ -3,15 +3,15 @@
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 
-use cairo;
-use gdk_pixbuf::Pixbuf;
-use gtk;
-use gtk::prelude::*;
+use pw_gix::{
+    cairo,
+    gdk_pixbuf::Pixbuf,
+    gtk::{self, prelude::*},
+    gtkx::menu::*,
+    wrapper::*,
+};
 
 use crate::cairox::*;
-
-use pw_gix::gtkx::menu::*;
-pub use pw_gix::wrapper::*;
 
 use crate::colour::*;
 

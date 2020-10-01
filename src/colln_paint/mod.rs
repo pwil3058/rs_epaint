@@ -12,10 +12,10 @@ use std::path::Path;
 use std::rc::Rc;
 use std::str::FromStr;
 
-use gtk;
-use gtk::prelude::*;
-
-use pw_gix::wrapper::*;
+use pw_gix::{
+    gtk::{self, prelude::*},
+    wrapper::*,
+};
 
 pub mod binder;
 pub mod collection;

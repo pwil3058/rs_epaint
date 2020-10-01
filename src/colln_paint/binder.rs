@@ -6,12 +6,11 @@ use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
-use gtk;
-use gtk::prelude::*;
-
-use pw_gix::gtkx::notebook::*;
-use pw_gix::recollections::{recall, remember};
-use pw_gix::wrapper::*;
+use pw_gix::{
+    gtkx::notebook::*,
+    recollections::{recall, remember},
+    wrapper::*,
+};
 
 use pw_pathux;
 

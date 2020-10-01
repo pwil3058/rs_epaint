@@ -5,16 +5,14 @@ use std::collections::HashMap;
 use std::marker::PhantomData;
 use std::rc::Rc;
 
-use gdk;
-use gtk;
-use gtk::prelude::*;
+use pw_gix::{
+    gdk, glib,
+    gtk::{self, prelude::*},
+    gtkx::{dialog::*, list_store::*, menu::*, tree_view_column::*},
+    wrapper::*,
+};
 
 use colour_math_gtk::coloured::*;
-use pw_gix::gtkx::dialog::*;
-use pw_gix::gtkx::list_store::*;
-use pw_gix::gtkx::menu::*;
-use pw_gix::gtkx::tree_view_column::*;
-use pw_gix::wrapper::*;
 
 use crate::basic_paint::*;
 use crate::colour::*;

@@ -4,15 +4,15 @@ use std::cell::RefCell;
 use std::marker::PhantomData;
 use std::rc::Rc;
 
-use gdk;
-use glib::signal::SignalHandlerId;
-use gtk;
-use gtk::prelude::*;
-
-use crate::cairox::*;
-use pw_gix::wrapper::*;
+use pw_gix::{
+    gdk,
+    glib::signal::SignalHandlerId,
+    gtk::{self, prelude::*},
+    wrapper::*,
+};
 
 use crate::basic_paint::*;
+use crate::cairox::*;
 use crate::graticule::*;
 use crate::shape::*;
 

@@ -5,13 +5,14 @@ use std::rc::Rc;
 
 use num::Integer;
 
-use gdk;
-use gtk;
-use gtk::prelude::*;
+use pw_gix::{
+    gdk,
+    gtk::{self, prelude::*},
+    gtkx::menu::*,
+    wrapper::*,
+};
 
 use colour_math_gtk::coloured::*;
-use pw_gix::gtkx::menu::*;
-use pw_gix::wrapper::*;
 
 use crate::basic_paint::*;
 use crate::colour::*;

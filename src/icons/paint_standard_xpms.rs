@@ -1,7 +1,6 @@
 // Copyright 2017 Peter Williams <pwil3058@gmail.com> <pwil3058@bigpond.net.au>
 
-use gdk_pixbuf;
-use gtk;
+use pw_gix::{gdk_pixbuf, gtk};
 
 /* XPM */
 static PAINT_STANDARD_XPM: &[&str] = &[

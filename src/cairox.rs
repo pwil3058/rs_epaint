@@ -2,11 +2,7 @@
 
 use std::f64::consts;
 
-use cairo;
-use gdk::prelude::GdkContextExt;
-use gdk_pixbuf::Pixbuf;
-
-pub use pw_gix::geometry::*;
+pub use pw_gix::{cairo, gdk::prelude::GdkContextExt, gdk_pixbuf::Pixbuf, geometry::*};
 
 /// Direction in which to draw indicators
 pub enum Dirn {

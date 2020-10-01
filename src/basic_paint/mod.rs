@@ -8,14 +8,14 @@ use std::hash::*;
 use std::rc::Rc;
 use std::str::FromStr;
 
-use gdk;
-use glib::StaticType;
-use gtk;
-use gtk::prelude::*;
-
 use regex::*;
 
-use pw_gix::wrapper::*;
+use pw_gix::{
+    gdk,
+    glib::{self, StaticType},
+    gtk::{self, prelude::*},
+    wrapper::*,
+};
 
 use crate::colour::*;
 use crate::error::*;

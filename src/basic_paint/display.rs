@@ -2,11 +2,9 @@
 
 use std::rc::Rc;
 
-use gtk;
-use gtk::prelude::*;
+use pw_gix::gtkx::dialog::*;
 
 use colour_math_gtk::coloured::*;
-use pw_gix::gtkx::dialog::*;
 
 use crate::basic_paint::*;
 pub use crate::dialogue::*;

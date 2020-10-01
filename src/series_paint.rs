@@ -3,12 +3,12 @@
 use std::path::Path;
 use std::rc::Rc;
 
-use gdk_pixbuf::Pixbuf;
-use gtk;
-use gtk::prelude::*;
-
-use pw_gix::gtkx::window::*;
-use pw_gix::wrapper::*;
+use pw_gix::{
+    gdk_pixbuf::Pixbuf,
+    gtk::{self, prelude::*},
+    gtkx::window::*,
+    wrapper::*,
+};
 
 use crate::basic_paint::*;
 use crate::colln_paint::binder::*;

@@ -3,21 +3,20 @@
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 
-use cairo;
-use gdk;
-use gdk_pixbuf;
-use gtk;
-use gtk::prelude::*;
+use pw_gix::{
+    cairo, gdk, gdk_pixbuf,
+    gtk::{self, prelude::*},
+    gtkx::menu::*,
+    wrapper::*,
+};
 
 use normalised_angles::Degrees;
 
 use crate::cairox::*;
-use colour_math_gtk::coloured::*;
-use pw_gix::gtkx::menu::*;
-
-pub use pw_gix::wrapper::*;
-
-use colour_math_gtk::rgb_entry::{RGBHexEntry, RGBHexEntryBuilder};
+use colour_math_gtk::{
+    coloured::*,
+    rgb_entry::{RGBHexEntry, RGBHexEntryBuilder},
+};
 
 use crate::basic_paint::*;
 use crate::colour::*;

@@ -1,15 +1,16 @@
 // Copyright 2017 Peter Williams <pwil3058@gmail.com> <pwil3058@bigpond.net.au>
 
-use std::marker::PhantomData;
-
-use gtk::prelude::*;
-use gtk::{self, WidgetExt};
-
 use std::cmp::*;
+use std::marker::PhantomData;
 use std::rc::Rc;
 
+use pw_gix::{
+    gtk::{self, prelude::*, WidgetExt},
+    gtkx::dialog::*,
+    wrapper::*,
+};
+
 use colour_math_gtk::coloured::*;
-use pw_gix::gtkx::dialog::*;
 
 use crate::app_name;
 use crate::basic_paint::*;

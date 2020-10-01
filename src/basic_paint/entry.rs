@@ -3,9 +3,6 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use gtk;
-use gtk::prelude::*;
-
 use crate::basic_paint::*;
 use crate::colour_edit::*;
 

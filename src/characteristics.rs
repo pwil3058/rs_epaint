@@ -5,8 +5,7 @@ use std::fmt;
 use std::rc::Rc;
 use std::str::FromStr;
 
-use gtk;
-use gtk::{prelude::ComboBoxExtManual, ComboBoxTextExt};
+use pw_gix::gtk::{self, prelude::ComboBoxExtManual, ComboBoxTextExt};
 
 use regex::*;
 

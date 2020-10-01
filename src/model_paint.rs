@@ -1,15 +1,16 @@
 // Copyright 2017 Peter Williams <pwil3058@gmail.com> <pwil3058@bigpond.net.au>
 
-use gtk;
-use gtk::prelude::*;
-
 use std::cell::RefCell;
 use std::fmt;
 use std::rc::Rc;
 use std::str::FromStr;
 
-use pw_gix::gtkx::tree_view_column::*;
-pub use pw_gix::wrapper::*;
+use pw_gix::{
+    glib,
+    gtk::{self, prelude::*},
+    gtkx::tree_view_column::*,
+    wrapper::*,
+};
 
 use colour_math_gtk::attributes::*;
 

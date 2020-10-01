@@ -9,12 +9,12 @@ use num::Integer;
 use chrono::prelude::*;
 use xml::escape::*;
 
-use gdk_pixbuf::Pixbuf;
-use gtk;
-use gtk::prelude::*;
-
-use pw_gix::gtkx::paned::*;
-pub use pw_gix::wrapper::*;
+use pw_gix::{
+    gdk_pixbuf::Pixbuf,
+    gtk::{self, prelude::*},
+    gtkx::paned::*,
+    wrapper::*,
+};
 
 use crate::basic_paint::*;
 use crate::colour::*;
