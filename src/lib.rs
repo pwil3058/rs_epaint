@@ -39,7 +39,8 @@ pub mod colour {
 
     pub type Hue = colour_math::hue::Hue<f64>;
     pub type RGB = colour_math::rgb::RGB<f64>;
-    pub type RGBManipulator = colour_math::manipulator::RGBManipulator<f64>;
+    pub type RGBManipulator = colour_math::manipulator::ColourManipulator<f64>;
+    pub type ColourManipulatorBuilder = colour_math::manipulator::ColourManipulatorBuilder<f64>;
 
     #[derive(Serialize, Deserialize, Debug, Clone, Copy)]
     pub struct Colour {

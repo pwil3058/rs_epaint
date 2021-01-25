@@ -129,11 +129,11 @@ where
     }
 
     pub fn get_rgb(&self) -> RGB {
-        *self.rgb_manipulator.borrow().rgb()
+        self.rgb_manipulator.borrow().rgb()
     }
 
     pub fn get_colour(&self) -> Colour {
-        (*self.rgb_manipulator.borrow().rgb()).into()
+        self.rgb_manipulator.borrow().rgb().into()
     }
 
     fn set_rgb_and_inform(&self, rgb: RGB) {
@@ -144,7 +144,7 @@ where
     }
 
     fn draw(&self, _drawing_area: &gtk::DrawingArea, cairo_context: &cairo::Context) {
-        let rgb = *self.rgb_manipulator.borrow().rgb();
+        let rgb = self.rgb_manipulator.borrow().rgb();
         cairo_context.set_source_rgb(rgb[0], rgb[1], rgb[2]);
         cairo_context.paint();
         for sample in self.samples.borrow().iter() {
@@ -210,7 +210,7 @@ where
         let rgb_entry = RGBHexEntryBuilder::new().build();
         let ced = Rc::new(ColourEditorCore::<A> {
             vbox: gtk::Box::new(gtk::Orientation::Vertical, 0),
-            rgb_manipulator: RefCell::new(RGBManipulator::new(false)),
+            rgb_manipulator: RefCell::new(ColourManipulatorBuilder::new().clamped(false).build()),
             cads: A::create(),
             rgb_entry,
             drawing_area: gtk::DrawingArea::new(),
@@ -313,7 +313,7 @@ where
                     .borrow_mut()
                     .decr_chroma(ced_c.delta_size.get().for_chroma());
                 if changed {
-                    let new_rgb = *ced_c.rgb_manipulator.borrow().rgb();
+                    let new_rgb = ced_c.rgb_manipulator.borrow().rgb();
                     ced_c.set_rgb_and_inform(new_rgb);
                 };
             });
@@ -324,7 +324,7 @@ where
                     .borrow_mut()
                     .incr_chroma(ced_c.delta_size.get().for_chroma());
                 if changed {
-                    let new_rgb = *ced_c.rgb_manipulator.borrow().rgb();
+                    let new_rgb = ced_c.rgb_manipulator.borrow().rgb();
                     ced_c.set_rgb_and_inform(new_rgb);
                 };
             });
@@ -336,7 +336,7 @@ where
                     .borrow_mut()
                     .decr_chroma(ced_c.delta_size.get().for_chroma());
                 if changed {
-                    let new_rgb = *ced_c.rgb_manipulator.borrow().rgb();
+                    let new_rgb = ced_c.rgb_manipulator.borrow().rgb();
                     ced_c.set_rgb_and_inform(new_rgb);
                 };
             });
@@ -347,7 +347,7 @@ where
                     .borrow_mut()
                     .incr_chroma(ced_c.delta_size.get().for_chroma());
                 if changed {
-                    let new_rgb = *ced_c.rgb_manipulator.borrow().rgb();
+                    let new_rgb = ced_c.rgb_manipulator.borrow().rgb();
                     ced_c.set_rgb_and_inform(new_rgb);
                 };
             });
@@ -360,7 +360,7 @@ where
                 .borrow_mut()
                 .decr_value(ced_c.delta_size.get().for_value());
             if changed {
-                let new_rgb = *ced_c.rgb_manipulator.borrow().rgb();
+                let new_rgb = ced_c.rgb_manipulator.borrow().rgb();
                 ced_c.set_rgb_and_inform(new_rgb);
             };
         });
@@ -371,7 +371,7 @@ where
                 .borrow_mut()
                 .incr_value(ced_c.delta_size.get().for_value());
             if changed {
-                let new_rgb = *ced_c.rgb_manipulator.borrow().rgb();
+                let new_rgb = ced_c.rgb_manipulator.borrow().rgb();
                 ced_c.set_rgb_and_inform(new_rgb);
             };
         });
@@ -383,7 +383,7 @@ where
                 .borrow_mut()
                 .rotate(ced_c.delta_size.get().for_hue());
             if changed {
-                let new_rgb = *ced_c.rgb_manipulator.borrow().rgb();
+                let new_rgb = ced_c.rgb_manipulator.borrow().rgb();
                 ced_c.set_rgb_and_inform(new_rgb);
             };
         });
@@ -394,7 +394,7 @@ where
                 .borrow_mut()
                 .rotate(-ced_c.delta_size.get().for_hue());
             if changed {
-                let new_rgb = *ced_c.rgb_manipulator.borrow().rgb();
+                let new_rgb = ced_c.rgb_manipulator.borrow().rgb();
                 ced_c.set_rgb_and_inform(new_rgb);
             };
         });
