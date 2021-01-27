@@ -430,14 +430,14 @@ pub type ModelPaintStandardEditor =
 const IDEAL_PAINT_STR: &str =
 "Manufacturer: Imaginary
 Series: Ideal Paint Colours Series
-ModelPaint(name=\"Black\", rgb=RGB16(red=0x0, green=0x0, blue=0x0), transparency=\"O\", finish=\"G\", metallic=\"NM\", fluorescence=\"NF\", notes=\"\")
-ModelPaint(name=\"Blue\", rgb=RGB16(red=0x0, green=0x0, blue=0xFFFF), transparency=\"O\", finish=\"G\", metallic=\"NM\", fluorescence=\"NF\", notes=\"\")
-ModelPaint(name=\"Cyan\", rgb=RGB16(red=0x0, green=0xFFFF, blue=0xFFFF), transparency=\"O\", finish=\"G\", metallic=\"NM\", fluorescence=\"NF\", notes=\"\")
-ModelPaint(name=\"Green\", rgb=RGB16(red=0x0, green=0xFFFF, blue=0x0), transparency=\"O\", finish=\"G\", metallic=\"NM\", fluorescence=\"NF\", notes=\"\")
-ModelPaint(name=\"Magenta\", rgb=RGB16(red=0xFFFF, green=0x0, blue=0xFFFF), transparency=\"O\", finish=\"G\", metallic=\"NM\", fluorescence=\"NF\", notes=\"\")
-ModelPaint(name=\"Red\", rgb=RGB16(red=0xFFFF, green=0x0, blue=0x0), transparency=\"O\", finish=\"G\", metallic=\"NM\", fluorescence=\"NF\", notes=\"\")
+ModelPaint(name=\"Black\", rgb=RGB16(red=0x0000, green=0x0000, blue=0x0000), transparency=\"O\", finish=\"G\", metallic=\"NM\", fluorescence=\"NF\", notes=\"\")
+ModelPaint(name=\"Blue\", rgb=RGB16(red=0x0000, green=0x0000, blue=0xFFFF), transparency=\"O\", finish=\"G\", metallic=\"NM\", fluorescence=\"NF\", notes=\"\")
+ModelPaint(name=\"Cyan\", rgb=RGB16(red=0x0000, green=0xFFFF, blue=0xFFFF), transparency=\"O\", finish=\"G\", metallic=\"NM\", fluorescence=\"NF\", notes=\"\")
+ModelPaint(name=\"Green\", rgb=RGB16(red=0x0000, green=0xFFFF, blue=0x0000), transparency=\"O\", finish=\"G\", metallic=\"NM\", fluorescence=\"NF\", notes=\"\")
+ModelPaint(name=\"Magenta\", rgb=RGB16(red=0xFFFF, green=0x0000, blue=0xFFFF), transparency=\"O\", finish=\"G\", metallic=\"NM\", fluorescence=\"NF\", notes=\"\")
+ModelPaint(name=\"Red\", rgb=RGB16(red=0xFFFF, green=0x0000, blue=0x0000), transparency=\"O\", finish=\"G\", metallic=\"NM\", fluorescence=\"NF\", notes=\"\")
 ModelPaint(name=\"White\", rgb=RGB16(red=0xFFFF, green=0xFFFF, blue=0xFFFF), transparency=\"O\", finish=\"G\", metallic=\"NM\", fluorescence=\"NF\", notes=\"\")
-ModelPaint(name=\"Yellow\", rgb=RGB16(red=0xFFFF, green=0xFFFF, blue=0x0), transparency=\"O\", finish=\"G\", metallic=\"NM\", fluorescence=\"NF\", notes=\"\")";
+ModelPaint(name=\"Yellow\", rgb=RGB16(red=0xFFFF, green=0xFFFF, blue=0x0000), transparency=\"O\", finish=\"G\", metallic=\"NM\", fluorescence=\"NF\", notes=\"\")";
 
 pub fn create_ideal_model_paint_series() -> ModelPaintSeries {
     let spec = ModelPaintSeriesSpec::from_str(IDEAL_PAINT_STR).unwrap();

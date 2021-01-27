@@ -331,14 +331,14 @@ pub type ArtPaintSeriesSpec = SeriesPaintCollnSpec<ArtPaintCharacteristics>;
 const IDEAL_PAINT_STR: &str =
 "Manufacturer: Imaginary
 Series: Ideal Paint Colours Series
-ArtPaint(name=\"Black\", rgb=RGB16(red=0x0, green=0x0, blue=0x0), transparency=\"O\", permanence=\"A\", notes=\"\")
-ArtPaint(name=\"Blue\", rgb=RGB16(red=0x0, green=0x0, blue=0xFFFF), transparency=\"O\", permanence=\"A\", notes=\"\")
-ArtPaint(name=\"Cyan\", rgb=RGB16(red=0x0, green=0xFFFF, blue=0xFFFF), transparency=\"O\", permanence=\"A\", notes=\"\")
-ArtPaint(name=\"Green\", rgb=RGB16(red=0x0, green=0xFFFF, blue=0x0), transparency=\"O\", permanence=\"A\", notes=\"\")
-ArtPaint(name=\"Magenta\", rgb=RGB16(red=0xFFFF, green=0x0, blue=0xFFFF), transparency=\"O\", permanence=\"A\", notes=\"\")
-ArtPaint(name=\"Red\", rgb=RGB16(red=0xFFFF, green=0x0, blue=0x0), transparency=\"O\", permanence=\"A\", notes=\"\")
+ArtPaint(name=\"Black\", rgb=RGB16(red=0x0000, green=0x0000, blue=0x0000), transparency=\"O\", permanence=\"A\", notes=\"\")
+ArtPaint(name=\"Blue\", rgb=RGB16(red=0x0000, green=0x0000, blue=0xFFFF), transparency=\"O\", permanence=\"A\", notes=\"\")
+ArtPaint(name=\"Cyan\", rgb=RGB16(red=0x0000, green=0xFFFF, blue=0xFFFF), transparency=\"O\", permanence=\"A\", notes=\"\")
+ArtPaint(name=\"Green\", rgb=RGB16(red=0x0000, green=0xFFFF, blue=0x0000), transparency=\"O\", permanence=\"A\", notes=\"\")
+ArtPaint(name=\"Magenta\", rgb=RGB16(red=0xFFFF, green=0x0000, blue=0xFFFF), transparency=\"O\", permanence=\"A\", notes=\"\")
+ArtPaint(name=\"Red\", rgb=RGB16(red=0xFFFF, green=0x0000, blue=0x0000), transparency=\"O\", permanence=\"A\", notes=\"\")
 ArtPaint(name=\"White\", rgb=RGB16(red=0xFFFF, green=0xFFFF, blue=0xFFFF), transparency=\"O\", permanence=\"A\", notes=\"\")
-ArtPaint(name=\"Yellow\", rgb=RGB16(red=0xFFFF, green=0xFFFF, blue=0x0), transparency=\"O\", permanence=\"A\", notes=\"\")";
+ArtPaint(name=\"Yellow\", rgb=RGB16(red=0xFFFF, green=0xFFFF, blue=0x0000), transparency=\"O\", permanence=\"A\", notes=\"\")";
 
 pub fn create_ideal_art_paint_series() -> ArtPaintSeries {
     let spec = ArtPaintSeriesSpec::from_str(IDEAL_PAINT_STR).unwrap();
@@ -507,27 +507,30 @@ mod tests {
 
     #[test]
     fn art_paint_spec_ideal_series() {
-        if let Ok(spec) = ArtPaintSeriesSpec::from_str(IDEAL_PAINT_STR) {
-            for pair in [
-                ("Red", RGB::RED),
-                ("Green", RGB::GREEN),
-                ("Blue", RGB::BLUE),
-                ("Cyan", RGB::CYAN),
-                ("Magenta", RGB::MAGENTA),
-                ("Yellow", RGB::YELLOW),
-                ("Black", RGB::BLACK),
-                ("White", RGB::WHITE),
-            ]
-            .iter()
-            {
-                if let Some(index) = spec.get_index_for_name(pair.0) {
-                    assert_eq!(spec.paint_specs[index].rgb, pair.1);
-                } else {
-                    panic!("File: {:?} Line: {:?}", file!(), line!())
+        match ArtPaintSeriesSpec::from_str(IDEAL_PAINT_STR) {
+            Ok(spec) => {
+                for pair in [
+                    ("Red", RGB::RED),
+                    ("Green", RGB::GREEN),
+                    ("Blue", RGB::BLUE),
+                    ("Cyan", RGB::CYAN),
+                    ("Magenta", RGB::MAGENTA),
+                    ("Yellow", RGB::YELLOW),
+                    ("Black", RGB::BLACK),
+                    ("White", RGB::WHITE),
+                ]
+                .iter()
+                {
+                    if let Some(index) = spec.get_index_for_name(pair.0) {
+                        assert_eq!(spec.paint_specs[index].rgb, pair.1);
+                    } else {
+                        panic!("File: {:?} Line: {:?}", file!(), line!())
+                    }
                 }
             }
-        } else {
-            panic!("File: {:?} Line: {:?}", file!(), line!())
+            Err(err) => {
+                panic!("File: {:?} Line: {:?} Error: {:?}", file!(), line!(), err)
+            }
         }
     }
 
