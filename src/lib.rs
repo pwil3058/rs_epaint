@@ -30,7 +30,7 @@ pub mod colour {
 
     use normalised_angles::Degrees;
 
-    use colour_math::RGBA;
+    use colour_math::{RGBA, HCV};
     pub use colour_math::{
         urgb::{URGBError, RGB16, RGB8},
         ColourInterface, HueConstants, RGBConstants, ScalarAttribute,
@@ -100,6 +100,8 @@ pub mod colour {
         fn rgba(&self) -> RGBA<f64> {
             self.rgb.rgba()
         }
+
+        fn hcv(&self) -> HCV<f64> {self.rgb.hcv()}
 
         fn hue(&self) -> Option<Hue> {
             self.hue
