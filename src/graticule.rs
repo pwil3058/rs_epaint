@@ -15,7 +15,6 @@ use crate::cairox::*;
 
 use crate::colour::*;
 use crate::shape::*;
-use colour_math::chroma::HueData;
 
 // CURRENT TARGET SHAPE
 pub struct CurrentTargetShape {
@@ -147,7 +146,7 @@ impl GraticuleCore {
         cairo_context.set_line_width(4.0);
         for i in 0..6 {
             let angle = Degrees::DEG_60 * i;
-            let hue = HueData::from(angle);
+            let hue = Hue::from(angle);
             let g_angle: normalised_angles::Angle<f64> = angle.into();
             let rgb = hue.max_chroma_rgb();
             cairo_context.set_source_rgb(rgb[0], rgb[1], rgb[2]);
