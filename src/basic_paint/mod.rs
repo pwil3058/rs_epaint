@@ -62,7 +62,7 @@ pub trait ColouredItemInterface {
         self.colour().rgb()
     }
 
-    fn hue(&self) -> Option<Hue> {
+    fn hue(&self) -> Option<colour_math::hue::Hue<f64>> {
         self.colour().hue()
     }
 

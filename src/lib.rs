@@ -37,7 +37,9 @@ pub mod colour {
     };
     use pw_gix::gdk;
 
+    pub type HCV = colour_math::hcv::HCV<f64>;
     pub type Hue = colour_math::hue::Hue<f64>;
+    pub type HueData = colour_math::chroma::HueData<f64>;
     pub type RGB = colour_math::rgb::RGB<f64>;
     pub type RGBManipulator = colour_math::manipulator::ColourManipulator<f64>;
     pub type ColourManipulatorBuilder = colour_math::manipulator::ColourManipulatorBuilder<f64>;
@@ -45,7 +47,7 @@ pub mod colour {
     #[derive(Serialize, Deserialize, Debug, Clone, Copy)]
     pub struct Colour {
         rgb: RGB,
-        hue: Option<Hue>,
+        hcv: HCV,
     }
 
     impl PartialEq for Colour {
@@ -83,12 +85,8 @@ pub mod colour {
     impl From<RGB> for Colour {
         fn from(rgb: RGB) -> Self {
             use std::convert::TryInto;
-            let hue: Option<Hue> = if let Ok(hue) = rgb.try_into() {
-                Some(hue)
-            } else {
-                None
-            };
-            Self { rgb, hue }
+            let hcv: HCV = rgb.into();
+            Self { rgb, hcv }
         }
     }
 
@@ -101,42 +99,36 @@ pub mod colour {
             self.rgb.rgba()
         }
 
-        fn hcv(&self) -> HCV<f64> {self.rgb.hcv()}
+        fn hcv(&self) -> HCV {
+            *self.rgb.hcv
+        }
 
         fn hue(&self) -> Option<Hue> {
             self.hue
         }
 
         fn hue_angle(&self) -> Option<Degrees<f64>> {
-            if let Some(hue) = self.hue {
-                Some(hue.angle())
-            } else {
-                None
-            }
+            self.hcv.hue_angle()
         }
 
         fn is_grey(&self) -> bool {
-            self.hue.is_none()
+            self.hcv.is_grey()
         }
 
         fn chroma(&self) -> f64 {
-            self.rgb.chroma()
+            self.hcv.chroma()
         }
 
         fn greyness(&self) -> f64 {
-            self.rgb.greyness()
+            self.hcv.greyness()
         }
 
         fn value(&self) -> f64 {
-            self.rgb.value()
+            self.hcv.value()
         }
 
         fn max_chroma_rgb(&self) -> RGB {
-            if let Some(hue) = self.hue {
-                hue.max_chroma_rgb()
-            } else {
-                self.rgb()
-            }
+            self.hcv.max_chroma_rgb()
         }
 
         fn warmth(&self) -> f64 {
@@ -148,7 +140,7 @@ pub mod colour {
         }
 
         fn monochrome_rgb(&self) -> RGB {
-            self.rgb.monochrome_rgb()
+            self.hcv.monochrome_rgb()
         }
 
         fn warmth_rgb(&self) -> RGB {
