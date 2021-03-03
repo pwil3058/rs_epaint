@@ -86,9 +86,9 @@ impl<C: CharacteristicsInterface> MixedPaintFactoryCore<C> {
                 parts /= gcd;
                 let weight: f64 = parts as f64 / total_parts as f64;
                 let rgb = series_paint.rgb();
-                new_rgb_array[0] += rgb[0] * weight;
-                new_rgb_array[1] += rgb[1] * weight;
-                new_rgb_array[2] += rgb[2] * weight;
+                new_rgb_array[0] += rgb[CCI::Red] * weight;
+                new_rgb_array[1] += rgb[CCI::Green] * weight;
+                new_rgb_array[2] += rgb[CCI::Blue] * weight;
                 let floats = series_paint.characteristics().to_floats();
                 for (i, val) in new_c_floats.iter_mut().enumerate() {
                     *val = *val + floats[i] * weight;
@@ -102,9 +102,9 @@ impl<C: CharacteristicsInterface> MixedPaintFactoryCore<C> {
                 parts /= gcd;
                 let weight: f64 = parts as f64 / total_parts as f64;
                 let rgb = mixed_paint.rgb();
-                new_rgb_array[0] += rgb[0] * weight;
-                new_rgb_array[1] += rgb[1] * weight;
-                new_rgb_array[2] += rgb[2] * weight;
+                new_rgb_array[0] += rgb[CCI::Red] * weight;
+                new_rgb_array[1] += rgb[CCI::Green] * weight;
+                new_rgb_array[2] += rgb[CCI::Blue] * weight;
                 let floats = mixed_paint.characteristics().to_floats();
                 for (i, val) in new_c_floats.iter_mut().enumerate() {
                     *val = *val + floats[i] * weight;

@@ -30,11 +30,11 @@ pub mod colour {
 
     use normalised_angles::Degrees;
 
-    use colour_math::{RGBA, HCV};
     pub use colour_math::{
         urgb::{URGBError, RGB16, RGB8},
-        ColourInterface, HueConstants, RGBConstants, ScalarAttribute,
+        ColourInterface, HueConstants, RGBConstants, ScalarAttribute, CCI,
     };
+    use colour_math::{HCV, RGBA};
     use pw_gix::gdk;
 
     pub type Hue = colour_math::hue::Hue<f64>;
@@ -101,7 +101,9 @@ pub mod colour {
             self.rgb.rgba()
         }
 
-        fn hcv(&self) -> HCV<f64> {self.rgb.hcv()}
+        fn hcv(&self) -> HCV<f64> {
+            self.rgb.hcv()
+        }
 
         fn hue(&self) -> Option<Hue> {
             self.hue
@@ -163,9 +165,9 @@ pub mod colour {
     impl GdkConvert for RGB {
         fn into_gdk_rgba(&self) -> gdk::RGBA {
             gdk::RGBA {
-                red: self[0],
-                green: self[1],
-                blue: self[2],
+                red: self[CCI::Red],
+                green: self[CCI::Green],
+                blue: self[CCI::Blue],
                 alpha: 1.0,
             }
         }

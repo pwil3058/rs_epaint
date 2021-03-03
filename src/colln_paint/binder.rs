@@ -264,7 +264,7 @@ where
                     let msg = "Malformed Collection (Duplicate Paints)";
                     self.warn_user(msg, Some(expln.as_str()));
                 }
-                _ => panic!("File: {} Line: {}: unexpected error."),
+                _ => panic!("Unexpected error."),
             },
         }
     }

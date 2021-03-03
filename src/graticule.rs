@@ -149,7 +149,7 @@ impl GraticuleCore {
             let hue = Hue::from(angle);
             let g_angle: normalised_angles::Angle<f64> = angle.into();
             let rgb = hue.max_chroma_rgb();
-            cairo_context.set_source_rgb(rgb[0], rgb[1], rgb[2]);
+            cairo_context.set_source_rgb(rgb[CCI::Red], rgb[CCI::Green], rgb[CCI::Blue]);
             let eol = self.transform(Point::from((g_angle, 1.0)));
             cairo_context.draw_line(self.centre.get(), eol);
             cairo_context.stroke();

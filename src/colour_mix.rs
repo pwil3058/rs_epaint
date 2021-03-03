@@ -45,9 +45,9 @@ impl ColourMixer {
 
     pub fn add(&mut self, colour: &Colour, parts: u32) {
         self.total_parts += parts;
-        self.rgb_sum[0] += colour.rgb()[0] * parts as f64;
-        self.rgb_sum[1] += colour.rgb()[1] * parts as f64;
-        self.rgb_sum[2] += colour.rgb()[2] * parts as f64;
+        self.rgb_sum[0] += colour.rgb()[CCI::Red] * parts as f64;
+        self.rgb_sum[1] += colour.rgb()[CCI::Green] * parts as f64;
+        self.rgb_sum[2] += colour.rgb()[CCI::Blue] * parts as f64;
     }
 }
 
